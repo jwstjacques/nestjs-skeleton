@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,14 +9,16 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // CORS configuration
-  const corsOrigin = configService.get<string>('CORS_ORIGIN');
+  const corsOrigin = configService.get<string>("CORS_ORIGIN");
+
   app.enableCors({
-    origin: corsOrigin?.split(',') || '*',
+    origin: corsOrigin?.split(",") || "*",
     credentials: true,
   });
 
   // Global prefix
-  const apiPrefix = configService.get<string>('API_PREFIX') || 'api/v1';
+  const apiPrefix = configService.get<string>("API_PREFIX") || "api/v1";
+
   app.setGlobalPrefix(apiPrefix);
 
   // Global validation pipe
@@ -32,14 +34,12 @@ async function bootstrap() {
   );
 
   // Port configuration
-  const port = configService.get<number>('PORT') || 3000;
+  const port = configService.get<number>("PORT") || 3000;
 
   await app.listen(port);
 
   console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(
-    `📚 API Documentation: http://localhost:${port}/${apiPrefix}/docs`,
-  );
+  console.log(`📚 API Documentation: http://localhost:${port}/${apiPrefix}/docs`);
 }
 
 void bootstrap();

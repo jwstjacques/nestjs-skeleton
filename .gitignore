@@ -68,3 +68,4 @@ dump.rdb
 # Misc
 .cache/
 .eslintcache
+/generated/prisma

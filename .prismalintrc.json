@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "model-name-pascal-case": ["error"],
+    "model-name-grammatical-number": ["error", { "style": "singular" }],
+    "field-name-camel-case": ["error"],
+    "field-name-mapping-snake-case": ["error"],
+    "enum-name-pascal-case": ["error"],
+    "enum-value-case": ["error", { "style": "snake", "case": "upper" }],
+    "require-field": ["error", { "require": ["id", "createdAt", "updatedAt"] }],
+    "forbid-required-ignored-field": ["error"]
+  }
+}

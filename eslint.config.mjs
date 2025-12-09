@@ -10,6 +10,7 @@ export default tseslint.config(
       "eslint.config.mjs",
       "commitlint.config.js",
       ".lintstagedrc.js",
+      "prisma.config.ts",
       "dist",
       "node_modules",
       "coverage",

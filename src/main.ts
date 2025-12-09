@@ -2,6 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { HttpExceptionFilter } from "./common/filters";
+import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +34,12 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global response interceptor
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Port configuration
   const port = configService.get<number>("PORT") || 3000;

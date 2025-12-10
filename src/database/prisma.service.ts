@@ -9,9 +9,30 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly pool: Pool;
 
   constructor() {
-    // Create PostgreSQL connection pool
+    // Validate DATABASE_URL exists
+    const dbUrl = process.env.DATABASE_URL;
+
+    if (!dbUrl) {
+      throw new Error("DATABASE_URL environment variable is not set");
+    }
+
+    // Parse DATABASE_URL to get connection details
+    let url: URL;
+
+    try {
+      url = new URL(dbUrl);
+    } catch {
+      throw new Error(`Invalid DATABASE_URL format: ${dbUrl}`);
+    }
+
+    // Create PostgreSQL connection pool with explicit configuration
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      host: url.hostname,
+      port: parseInt(url.port || "5432"),
+      user: url.username,
+      password: url.password,
+      database: url.pathname.slice(1), // Remove leading slash
+      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
     });
 
     // Create Prisma adapter for PostgreSQL

@@ -218,20 +218,6 @@
       "name": "Health & Info",
       "item": [
         {
-          "name": "Hello World",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/",
-              "host": ["{{baseUrl}}"],
-              "path": [""]
-            },
-            "description": "Simple hello world endpoint"
-          },
-          "response": []
-        },
-        {
           "name": "Health Check",
           "request": {
             "method": "GET",

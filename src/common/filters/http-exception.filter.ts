@@ -1,15 +1,9 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from "@nestjs/common";
+import { Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from "@nestjs/common";
+import { BaseExceptionFilter } from "@nestjs/core";
 import { Request, Response } from "express";
 
-@Catch()
-export class HttpExceptionFilter implements ExceptionFilter {
+@Catch(HttpException)
+export class HttpExceptionFilter extends BaseExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {

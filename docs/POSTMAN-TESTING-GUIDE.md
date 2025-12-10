@@ -46,13 +46,13 @@ Verify the app is running at: [http://localhost:3000/api/v1/](http://localhost:3
 2. Click **"Import"** button (top-left corner)
 3. Select **"File"** tab
 4. Click **"Choose Files"**
-5. Navigate to `docs/api-collection.json`
+5. Navigate to `postman/api-collection.json`
 6. Click **"Import"**
 
 ### Method 2: Drag and Drop
 
 1. Open Postman
-2. Drag `docs/api-collection.json` directly into the Postman window
+2. Drag `postman/api-collection.json` directly into the Postman window
 3. Collection will be imported automatically
 
 ### Verify Import

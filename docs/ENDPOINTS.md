@@ -9,24 +9,6 @@
 
 ## 📍 Available Endpoints
 
-### Root / Hello Endpoint
-
-**URL**: http://localhost:3000/api/v1/  
-**Method**: GET  
-**Description**: Returns a "Hello World!" message
-
-```bash
-curl http://localhost:3000/api/v1/
-```
-
-**Expected Response**:
-
-```
-Hello World!
-```
-
----
-
 ### Health Check Endpoint
 
 **URL**: http://localhost:3000/api/v1/health  
@@ -202,10 +184,9 @@ npm run prisma:studio
 
 You can also access these endpoints directly in your browser:
 
-- **Hello World**: http://localhost:3000/api/v1/
-- **Health Check**: http://localhost:3000/api/v1/health
-- **Stats**: http://localhost:3000/api/v1/stats
-- **Tasks List**: http://localhost:3000/api/v1/tasks
+- **Health Check**: <http://localhost:3000/api/v1/health>
+- **Stats**: <http://localhost:3000/api/v1/stats>
+- **Tasks List**: <http://localhost:3000/api/v1/tasks>
 - **Prisma Studio**: Run `npm run prisma:studio` and open the URL it provides
 
 ---
@@ -214,8 +195,8 @@ You can also access these endpoints directly in your browser:
 
 ### "Cannot GET /"
 
-**Problem**: Accessing http://localhost:3000/ returns 404  
-**Solution**: Use http://localhost:3000/api/v1/ instead
+**Problem**: Accessing <http://localhost:3000/> returns 404  
+**Solution**: Use <http://localhost:3000/api/v1/health> or <http://localhost:3000/api/v1/tasks> instead
 
 ### "Connection Refused"
 

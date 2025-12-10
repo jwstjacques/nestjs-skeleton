@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaService } from "../../database/prisma.service";
-import { Task, Prisma, TaskStatus } from "@prisma/client";
+import { Task, Prisma, TaskStatus, TaskPriority } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
 import { TaskNotFoundException } from "../../common/exceptions";
+import { TasksDal } from "./tasks.dal";
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly tasksDal: TasksDal) {}
 
   /**
    * Create a new task
@@ -16,12 +16,10 @@ export class TasksService {
   async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
     this.logger.log(`Creating task for user ${userId}`);
 
-    const task = await this.prisma.task.create({
-      data: {
-        ...createTaskDto,
-        userId,
-        dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
-      },
+    const task = await this.tasksDal.create({
+      ...createTaskDto,
+      user: { connect: { id: userId } },
+      dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
     });
 
     this.logger.log(`Task created with ID: ${task.id}`);
@@ -70,13 +68,8 @@ export class TasksService {
 
     // Execute queries
     const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy,
-      }),
-      this.prisma.task.count({ where }),
+      this.tasksDal.findMany(where, skip, limit, orderBy),
+      this.tasksDal.count(where),
     ]);
 
     this.logger.log(`Found ${tasks.length} tasks out of ${total} total`);
@@ -88,9 +81,7 @@ export class TasksService {
    * Find one task by ID
    */
   async findOne(id: string): Promise<Task> {
-    const task = await this.prisma.task.findUnique({
-      where: { id, deletedAt: null },
-    });
+    const task = await this.tasksDal.findUnique(id);
 
     if (!task) {
       throw new TaskNotFoundException(id);
@@ -131,10 +122,7 @@ export class TasksService {
       updateData.completedAt = null;
     }
 
-    const task = await this.prisma.task.update({
-      where: { id },
-      data: updateData,
-    });
+    const task = await this.tasksDal.update(id, updateData);
 
     this.logger.log(`Task ${id} updated successfully`);
 
@@ -150,10 +138,7 @@ export class TasksService {
 
     this.logger.log(`Soft deleting task ${id}`);
 
-    const task = await this.prisma.task.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
+    const task = await this.tasksDal.softDelete(id);
 
     this.logger.log(`Task ${id} soft deleted successfully`);
 
@@ -166,9 +151,7 @@ export class TasksService {
   async hardRemove(id: string): Promise<void> {
     this.logger.warn(`Hard deleting task ${id}`);
 
-    await this.prisma.task.delete({
-      where: { id },
-    });
+    await this.tasksDal.delete(id);
 
     this.logger.warn(`Task ${id} permanently deleted`);
   }
@@ -185,40 +168,45 @@ export class TasksService {
       where.userId = userId;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [total, byStatus, byPriority, overdue] = await Promise.all([
-      this.prisma.task.count({ where }),
-      this.prisma.task.groupBy({
+      this.tasksDal.count(where),
+      this.tasksDal.groupBy({
         by: ["status"],
         where,
         _count: true,
       }),
-      this.prisma.task.groupBy({
+      this.tasksDal.groupBy({
         by: ["priority"],
         where,
         _count: true,
       }),
-      this.prisma.task.count({
-        where: {
-          ...where,
-          dueDate: { lt: new Date() },
-          status: { not: TaskStatus.COMPLETED },
-        },
-      }),
+      this.tasksDal.countOverdue(userId),
     ]);
+
+    type GroupByResult = {
+      status?: TaskStatus;
+      priority?: TaskPriority;
+      _count: number;
+    };
 
     return {
       total,
-      byStatus: byStatus.reduce(
-        (acc, curr) => {
-          acc[curr.status] = curr._count;
+      byStatus: (byStatus as GroupByResult[]).reduce(
+        (acc: Record<string, number>, curr) => {
+          if (curr.status) {
+            acc[curr.status] = curr._count;
+          }
 
           return acc;
         },
         {} as Record<string, number>,
       ),
-      byPriority: byPriority.reduce(
-        (acc, curr) => {
-          acc[curr.priority] = curr._count;
+      byPriority: (byPriority as GroupByResult[]).reduce(
+        (acc: Record<string, number>, curr) => {
+          if (curr.priority) {
+            acc[curr.priority as string] = curr._count;
+          }
 
           return acc;
         },

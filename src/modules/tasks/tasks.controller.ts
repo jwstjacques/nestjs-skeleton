@@ -9,6 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Headers,
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, TaskResponseDto } from "./dto";
@@ -24,12 +25,15 @@ export class TasksController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTaskDto: CreateTaskDto): Promise<TaskResponseDto> {
+  async create(
+    @Body() createTaskDto: CreateTaskDto,
+    @Headers("x-user-id") userId?: string,
+  ): Promise<TaskResponseDto> {
     // TODO: Get userId from authenticated user (after auth is implemented)
-    // Using admin user CUID for testing until authentication is implemented
-    const userId = "cmixpvpir0000p9ypdk6za4qc"; // admin@example.com
+    // For now, accept from header for testing or use default
+    const effectiveUserId = userId || "cmixpvpir0000p9ypdk6za4qc"; // Default admin user
 
-    const task = await this.tasksService.create(createTaskDto, userId);
+    const task = await this.tasksService.create(createTaskDto, effectiveUserId);
 
     return new TaskResponseDto(task);
   }

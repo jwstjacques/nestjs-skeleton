@@ -120,7 +120,7 @@ describe("AppController", () => {
         tasksByStatus: {
           TODO: 15,
           IN_PROGRESS: 12,
-          DONE: 15,
+          COMPLETED: 15,
         },
       };
 
@@ -166,7 +166,7 @@ describe("AppController", () => {
       expect(result).toEqual(statsData);
       expect(result.tasksByStatus).toHaveProperty("TODO");
       expect(result.tasksByStatus).not.toHaveProperty("IN_PROGRESS");
-      expect(result.tasksByStatus).not.toHaveProperty("DONE");
+      expect(result.tasksByStatus).not.toHaveProperty("COMPLETED");
     });
 
     it("should return stats with all task statuses", async () => {
@@ -176,7 +176,7 @@ describe("AppController", () => {
         tasksByStatus: {
           TODO: 30,
           IN_PROGRESS: 40,
-          DONE: 30,
+          COMPLETED: 30,
         },
       };
 
@@ -188,7 +188,7 @@ describe("AppController", () => {
       expect(result.tasks).toBe(100);
       expect(result.tasksByStatus.TODO).toBe(30);
       expect(result.tasksByStatus.IN_PROGRESS).toBe(40);
-      expect(result.tasksByStatus.DONE).toBe(30);
+      expect(result.tasksByStatus.COMPLETED).toBe(30);
     });
 
     it("should handle large numbers correctly", async () => {
@@ -198,7 +198,7 @@ describe("AppController", () => {
         tasksByStatus: {
           TODO: 15000,
           IN_PROGRESS: 20000,
-          DONE: 15000,
+          COMPLETED: 15000,
         },
       };
 

@@ -99,7 +99,7 @@ export class TasksController {
   @ApiQuery({
     name: "status",
     required: false,
-    enum: ["TODO", "IN_PROGRESS", "DONE"],
+    enum: ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
     description: "Filter by task status",
   })
   @ApiQuery({
@@ -144,7 +144,7 @@ export class TasksController {
         byStatus: {
           TODO: 10,
           IN_PROGRESS: 15,
-          DONE: 17,
+          COMPLETED: 17,
         },
         byPriority: {
           LOW: 8,

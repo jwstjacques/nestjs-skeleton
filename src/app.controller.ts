@@ -44,7 +44,7 @@ export class AppController {
         tasksByStatus: {
           TODO: 15,
           IN_PROGRESS: 12,
-          DONE: 15,
+          COMPLETED: 15,
         },
       },
     },

@@ -146,7 +146,7 @@ describe("AppService", () => {
       mockAppDal.getTasksByStatus.mockResolvedValue([
         { status: "TODO", _count: 15 },
         { status: "IN_PROGRESS", _count: 12 },
-        { status: "DONE", _count: 15 },
+        { status: "COMPLETED", _count: 15 },
       ]);
 
       const result = await service.getStats();
@@ -157,7 +157,7 @@ describe("AppService", () => {
         tasksByStatus: {
           TODO: 15,
           IN_PROGRESS: 12,
-          DONE: 15,
+          COMPLETED: 15,
         },
       });
       expect(mockAppDal.getUserCount).toHaveBeenCalledTimes(1);
@@ -195,24 +195,24 @@ describe("AppService", () => {
       mockAppDal.getTasksByStatus.mockResolvedValue([
         { status: "TODO", _count: 30 },
         { status: "IN_PROGRESS", _count: 40 },
-        { status: "DONE", _count: 30 },
+        { status: "COMPLETED", _count: 30 },
       ]);
 
       const result = await service.getStats();
 
       expect(result.tasksByStatus.TODO).toBe(30);
       expect(result.tasksByStatus.IN_PROGRESS).toBe(40);
-      expect(result.tasksByStatus.DONE).toBe(30);
+      expect(result.tasksByStatus.COMPLETED).toBe(30);
     });
 
     it("should handle only one status type", async () => {
       mockAppDal.getUserCount.mockResolvedValue(1);
       mockAppDal.getTaskCount.mockResolvedValue(5);
-      mockAppDal.getTasksByStatus.mockResolvedValue([{ status: "DONE", _count: 5 }]);
+      mockAppDal.getTasksByStatus.mockResolvedValue([{ status: "COMPLETED", _count: 5 }]);
 
       const result = await service.getStats();
 
-      expect(result.tasksByStatus).toEqual({ DONE: 5 });
+      expect(result.tasksByStatus).toEqual({ COMPLETED: 5 });
       expect(Object.keys(result.tasksByStatus)).toHaveLength(1);
     });
 
@@ -222,7 +222,7 @@ describe("AppService", () => {
       mockAppDal.getTasksByStatus.mockResolvedValue([
         { status: "TODO", _count: 15000 },
         { status: "IN_PROGRESS", _count: 20000 },
-        { status: "DONE", _count: 15000 },
+        { status: "COMPLETED", _count: 15000 },
       ]);
 
       const result = await service.getStats();
@@ -249,7 +249,7 @@ describe("AppService", () => {
       mockAppDal.getTasksByStatus.mockResolvedValue([
         { status: "TODO", _count: 5 },
         { status: "IN_PROGRESS", _count: 5 },
-        { status: "DONE", _count: 5 },
+        { status: "COMPLETED", _count: 5 },
       ]);
 
       const result = await service.getStats();

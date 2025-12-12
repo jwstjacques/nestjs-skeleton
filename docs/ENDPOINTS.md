@@ -58,7 +58,7 @@ curl http://localhost:3000/api/v1/stats
   "tasksByStatus": {
     "TODO": 5,
     "IN_PROGRESS": 4,
-    "DONE": 2
+    "COMPLETED": 2
   }
 }
 ```

@@ -55,7 +55,7 @@ curl http://localhost:3000/stats
   "tasksByStatus": {
     "TODO": 15,
     "IN_PROGRESS": 12,
-    "DONE": 15
+    "COMPLETED": 15
   }
 }
 ```
@@ -210,7 +210,7 @@ Update an existing task.
 curl -X PATCH http://localhost:3000/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks \\
 -H "Content-Type: application/json" \\
 -d '{
-"status": "DONE",
+"status": "COMPLETED",
 "description": "Documentation completed with examples",
 "completedAt": "2025-12-11T12:00:00Z"
 }'
@@ -223,7 +223,7 @@ curl -X PATCH http://localhost:3000/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks \\
   "id": "cmixpvpir0001p9yp5xq8r7ks",
   "title": "Complete project documentation",
   "description": "Documentation completed with examples",
-  "status": "DONE",
+  "status": "COMPLETED",
   "priority": "HIGH",
   "dueDate": "2025-12-31T23:59:59.000Z",
   "completedAt": "2025-12-11T12:00:00.000Z",
@@ -268,7 +268,7 @@ curl http://localhost:3000/api/v1/tasks/statistics
   "byStatus": {
     "TODO": 10,
     "IN_PROGRESS": 15,
-    "DONE": 17
+    "COMPLETED": 17
   },
   "byPriority": {
     "LOW": 8,

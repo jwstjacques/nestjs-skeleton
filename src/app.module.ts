@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { AppDal } from "./app.dal";
 import { DatabaseModule } from "./database/database.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
 import paginationConfig from "./config/pagination.config";
@@ -16,6 +18,6 @@ import paginationConfig from "./config/pagination.config";
     TasksModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [AppService, AppDal],
 })
 export class AppModule {}

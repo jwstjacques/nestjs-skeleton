@@ -3,7 +3,10 @@
 ## Server Status
 
 ✅ **Application Running**: http://localhost:3000  
-✅ **API Base URL**: http://localhost:3000/api/v1
+✅ **API Base URL**: http://localhost:3000/api/v1  
+✅ **Swagger Documentation**: http://localhost:3000/api/v1/docs
+
+> **💡 Tip**: For interactive API testing, visit the [Swagger UI](http://localhost:3000/api/v1/docs) where you can try all endpoints directly in your browser.
 
 ---
 
@@ -55,7 +58,7 @@ curl http://localhost:3000/api/v1/stats
   "tasksByStatus": {
     "TODO": 5,
     "IN_PROGRESS": 4,
-    "COMPLETED": 2
+    "DONE": 2
   }
 }
 ```

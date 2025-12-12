@@ -44,7 +44,8 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "db:seed": "npx prisma db seed",
-    "prepare": "husky"
+    "prepare": "husky",
+    "openapi:export": "ts-node scripts/export-openapi.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -62,7 +63,8 @@
     "class-validator": "^0.14.3",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",

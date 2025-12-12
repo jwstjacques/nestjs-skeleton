@@ -4,6 +4,8 @@ import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { HttpExceptionFilter } from "./common/filters";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
+import { SwaggerModule } from "@nestjs/swagger";
+import { createSwaggerConfig } from "./config/swagger.config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,6 +42,24 @@ async function bootstrap() {
 
   // Global response interceptor
   app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Swagger configuration
+  const config = createSwaggerConfig();
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      tagsSorter: "alpha",
+      operationsSorter: "alpha",
+    },
+    customSiteTitle: "Task API Docs",
+    customfavIcon: "https://nestjs.com/img/logo-small.svg",
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 50px 0 }
+    `,
+  });
 
   // Port configuration
   const port = configService.get<number>("PORT") || 3000;

@@ -1,0 +1,35 @@
+import { NestFactory } from "@nestjs/core";
+import { SwaggerModule } from "@nestjs/swagger";
+import { AppModule } from "../src/app.module";
+import { createSwaggerConfig } from "../src/config/swagger.config";
+import * as fs from "fs";
+import * as path from "path";
+
+async function exportOpenAPI() {
+  const app = await NestFactory.create(AppModule, { logger: false });
+
+  // Use the shared Swagger configuration
+  const config = createSwaggerConfig();
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Ensure docs directory exists
+  const docsDir = path.resolve(__dirname, "../docs");
+
+  if (!fs.existsSync(docsDir)) {
+    fs.mkdirSync(docsDir, { recursive: true });
+  }
+
+  // Export as JSON
+  const jsonPath = path.join(docsDir, "openapi.json");
+
+  fs.writeFileSync(jsonPath, JSON.stringify(document, null, 2));
+
+  console.log(`✅ OpenAPI specification exported to ${jsonPath}`);
+
+  await app.close();
+}
+
+exportOpenAPI().catch((error) => {
+  console.error("❌ Failed to export OpenAPI specification:", error);
+  process.exit(1);
+});

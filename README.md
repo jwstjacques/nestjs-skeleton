@@ -118,6 +118,36 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## 📚 API Documentation
+
+Interactive API documentation is available via Swagger UI:
+
+**Development**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+
+**Production**: [https://api.yourdomain.com/api/docs](https://api.yourdomain.com/api/docs)
+
+### OpenAPI Specification
+
+The OpenAPI (Swagger) specification is available at:
+
+- JSON: `/api/docs-json`
+- YAML: `/api/docs-yaml`
+
+You can also export the specification:
+\`\`\`bash
+npm run openapi:export
+\`\`\`
+
+This generates `docs/openapi.json` which can be imported into:
+
+- Postman
+- Insomnia
+- API client generators
+
+### API Examples
+
+See [docs/API_EXAMPLES.md](./docs/API_EXAMPLES.md) for curl examples and sample responses.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
@@ -141,18 +171,11 @@ Check out a few resources that may come in handy when working with NestJS:
 - Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
 - Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
 - Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
 - Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 

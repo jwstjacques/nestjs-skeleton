@@ -1,0 +1,663 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Returns the health status of the API",
+        "operationId": "AppController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok",
+                    "timestamp": "2025-11-28T10:30:00.000Z",
+                    "uptime": 12345.67,
+                    "environment": "development",
+                    "database": {
+                      "status": "connected",
+                      "latency": "5ms"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check",
+        "tags": ["App"]
+      }
+    },
+    "/stats": {
+      "get": {
+        "description": "Returns statistics about users and tasks",
+        "operationId": "AppController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "users": 10,
+                    "tasks": 42,
+                    "tasksByStatus": {
+                      "TODO": 15,
+                      "IN_PROGRESS": 12,
+                      "DONE": 15
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get application statistics",
+        "tags": ["App"]
+      }
+    },
+    "/tasks": {
+      "post": {
+        "description": "Creates a new task for the authenticated user",
+        "operationId": "TasksController_create",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["title must be longer than or equal to 3 characters"],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new task",
+        "tags": ["tasks"]
+      },
+      "get": {
+        "description": "Retrieves a paginated list of tasks with optional filtering and sorting. Supports filtering by status, priority, and search term.",
+        "operationId": "TasksController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (default: 1)",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 10, max: 100)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by task status",
+            "schema": {
+              "enum": ["TODO", "IN_PROGRESS", "DONE"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "required": false,
+            "in": "query",
+            "description": "Filter by task priority",
+            "schema": {
+              "enum": ["LOW", "MEDIUM", "HIGH"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search in task title and description",
+            "schema": {
+              "example": "meeting",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by (default: CREATED_AT)",
+            "schema": {
+              "enum": ["CREATED_AT", "UPDATED_AT", "DUE_DATE", "TITLE", "PRIORITY", "STATUS"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (default: DESC)",
+            "schema": {
+              "enum": ["ASC", "DESC"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTasksResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all tasks",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/statistics": {
+      "get": {
+        "description": "Returns statistics about tasks including counts by status and priority",
+        "operationId": "TasksController_getStatistics",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "totalTasks": 42,
+                    "byStatus": {
+                      "TODO": 10,
+                      "IN_PROGRESS": 15,
+                      "DONE": 17
+                    },
+                    "byPriority": {
+                      "LOW": 8,
+                      "MEDIUM": 20,
+                      "HIGH": 14
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get task statistics",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "description": "Retrieves a single task by its UUID",
+        "operationId": "TasksController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Task CUID",
+            "schema": {
+              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid CUID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": "Validation failed",
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "error": "Not Found"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get a task by ID",
+        "tags": ["tasks"]
+      },
+      "patch": {
+        "description": "Updates an existing task. Only the task owner can update their tasks.",
+        "operationId": "TasksController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Task CUID",
+            "schema": {
+              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a task",
+        "tags": ["tasks"]
+      },
+      "delete": {
+        "description": "Soft deletes a task. The task will be marked as deleted but retained in the database.",
+        "operationId": "TasksController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Task CUID",
+            "schema": {
+              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Task successfully deleted"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a task",
+        "tags": ["tasks"]
+      }
+    }
+  },
+  "info": {
+    "title": "NestJS Task Management API",
+    "description": "A production-ready REST API for managing tasks with user authentication, built with NestJS, Prisma, and PostgreSQL.",
+    "version": "1.0",
+    "contact": {
+      "name": "Jason St. Jacques",
+      "url": "https://github.com/jwstjacques",
+      "email": "jw.stjacques@gmail.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "tasks",
+      "description": "Task management endpoints"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication endpoints (TBD)"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "Authorization",
+        "description": "Enter JWT token",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "CreateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Complete project documentation",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task",
+            "example": "Write comprehensive documentation for all API endpoints including examples and error codes",
+            "maxLength": 2000
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "TODO",
+            "default": "TODO"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "MEDIUM",
+            "default": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Due date for the task in ISO 8601 date string format",
+            "example": "2025-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["title"]
+      },
+      "TaskResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the task",
+            "example": "clxyz123456789"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Complete project documentation"
+          },
+          "description": {
+            "type": "object",
+            "description": "Detailed description of the task",
+            "example": "Write comprehensive documentation for all API endpoints"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "IN_PROGRESS"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "HIGH"
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Due date of the task",
+            "example": "2025-12-31T23:59:59.000Z"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was completed",
+            "example": "2025-12-10T15:30:00.000Z"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns the task",
+            "example": "cluserid123456"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was created",
+            "example": "2025-12-10T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was last updated",
+            "example": "2025-12-10T09:15:00.000Z"
+          }
+        },
+        "required": ["id", "title", "status", "priority", "userId", "createdAt", "updatedAt"]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of items",
+            "example": 42
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "description": "Number of items per page",
+            "example": 10
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages",
+            "example": 5
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "description": "Whether there is a next page",
+            "example": true
+          },
+          "hasPrevPage": {
+            "type": "boolean",
+            "description": "Whether there is a previous page",
+            "example": false
+          }
+        },
+        "required": ["total", "page", "limit", "totalPages", "hasNextPage", "hasPrevPage"]
+      },
+      "PaginatedTasksResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of tasks",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskResponseDto"
+            }
+          },
+          "meta": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetaDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "meta"]
+      },
+      "UpdateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Complete project documentation",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task",
+            "example": "Write comprehensive documentation for all API endpoints including examples and error codes",
+            "maxLength": 2000
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "IN_PROGRESS",
+            "default": "TODO"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "MEDIUM",
+            "default": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Due date for the task in ISO 8601 date string format",
+            "example": "2025-12-31T23:59:59.000Z",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Timestamp when the task was completed in ISO 8601 format",
+            "example": "2025-12-10T15:30:00.000Z",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

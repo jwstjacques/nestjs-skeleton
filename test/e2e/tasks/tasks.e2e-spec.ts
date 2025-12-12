@@ -116,6 +116,78 @@ describe("TasksController (e2e)", () => {
           ]);
         });
     });
+
+    it("should fail validation with invalid date format", () => {
+      return request(app.getHttpServer())
+        .post("/api/v1/tasks")
+        .set("x-user-id", userId)
+        .send({
+          title: "Valid Title",
+          dueDate: "invalid-date",
+        })
+        .expect(HttpStatus.BAD_REQUEST)
+        .then((res) => {
+          expect(res.body.message).toContain("Due date must be a valid ISO 8601 date string");
+        });
+    });
+
+    it("should fail validation with past date", () => {
+      const pastDate = new Date();
+
+      pastDate.setDate(pastDate.getDate() - 1); // Yesterday
+
+      return request(app.getHttpServer())
+        .post("/api/v1/tasks")
+        .set("x-user-id", userId)
+        .send({
+          title: "Valid Title",
+          dueDate: pastDate.toISOString(),
+        })
+        .expect(HttpStatus.BAD_REQUEST)
+        .then((res) => {
+          expect(res.body.message).toContain("Due date must be today or in the future");
+        });
+    });
+
+    it("should accept today's date", () => {
+      const today = new Date();
+
+      today.setHours(23, 59, 59, 999); // End of today
+
+      return request(app.getHttpServer())
+        .post("/api/v1/tasks")
+        .set("x-user-id", userId)
+        .send({
+          title: "Task with today's date",
+          dueDate: today.toISOString(),
+        })
+        .expect(HttpStatus.CREATED)
+        .then((res) => {
+          expect(res.body.data).toHaveProperty("id");
+          expect(res.body.data.dueDate).toBeDefined();
+          cleanup.trackTask(res.body.data.id);
+        });
+    });
+
+    it("should accept future date", () => {
+      const futureDate = new Date();
+
+      futureDate.setDate(futureDate.getDate() + 7); // Next week
+
+      return request(app.getHttpServer())
+        .post("/api/v1/tasks")
+        .set("x-user-id", userId)
+        .send({
+          title: "Task with future date",
+          dueDate: futureDate.toISOString(),
+        })
+        .expect(HttpStatus.CREATED)
+        .then((res) => {
+          expect(res.body.data).toHaveProperty("id");
+          expect(res.body.data.dueDate).toBeDefined();
+          cleanup.trackTask(res.body.data.id);
+        });
+    });
   });
 
   describe("GET /tasks", () => {
@@ -300,6 +372,68 @@ describe("TasksController (e2e)", () => {
         .expect((res: request.Response) => {
           expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
           expect(res.body.data.completedAt).not.toBeNull();
+        });
+    });
+
+    it("should fail validation with invalid status enum", () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .send({
+          status: "INVALID_STATUS",
+        })
+        .expect(HttpStatus.BAD_REQUEST)
+        .then((res) => {
+          expect(res.body.message).toContain(
+            "Status must be one of: TODO, IN_PROGRESS, COMPLETED, CANCELLED",
+          );
+        });
+    });
+
+    it("should fail validation with invalid completedAt format", () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .send({
+          completedAt: "invalid-date",
+        })
+        .expect(HttpStatus.BAD_REQUEST)
+        .then((res) => {
+          expect(res.body.message).toContain("Completed at must be a valid ISO 8601 date string");
+        });
+    });
+
+    it("should accept valid completedAt in the past", () => {
+      const pastDate = new Date();
+
+      pastDate.setDate(pastDate.getDate() - 7); // Last week
+
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .send({
+          status: TaskStatus.COMPLETED,
+          completedAt: pastDate.toISOString(),
+        })
+        .expect(HttpStatus.OK)
+        .then((res) => {
+          expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
+          expect(res.body.data.completedAt).toBeDefined();
+        });
+    });
+
+    it("should accept valid completedAt in the future", () => {
+      const futureDate = new Date();
+
+      futureDate.setDate(futureDate.getDate() + 1); // Tomorrow
+
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .send({
+          status: TaskStatus.COMPLETED,
+          completedAt: futureDate.toISOString(),
+        })
+        .expect(HttpStatus.OK)
+        .then((res) => {
+          expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
+          expect(res.body.data.completedAt).toBeDefined();
         });
     });
   });

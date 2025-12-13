@@ -49,14 +49,14 @@ describe("CorrelationService", () => {
     });
 
     it("should handle context with userId", () => {
-      const context = { correlationId: "test-id-789", userId: 42 };
-      let capturedUserId: number | undefined;
+      const context = { correlationId: "test-id-789", userId: "user_123abc" };
+      let capturedUserId: string | undefined;
 
       service.run(context, () => {
         capturedUserId = service.getUserId();
       });
 
-      expect(capturedUserId).toBe(42);
+      expect(capturedUserId).toBe("user_123abc");
     });
   });
 
@@ -76,10 +76,10 @@ describe("CorrelationService", () => {
 
   describe("getUserId", () => {
     it("should return userId when context exists with userId", () => {
-      const context = { correlationId: "test-id", userId: 100 };
+      const context = { correlationId: "test-id", userId: "user_100xyz" };
 
       service.run(context, () => {
-        expect(service.getUserId()).toBe(100);
+        expect(service.getUserId()).toBe("user_100xyz");
       });
     });
 
@@ -103,44 +103,44 @@ describe("CorrelationService", () => {
       service.run(context, () => {
         expect(service.getUserId()).toBeUndefined();
 
-        service.setUserId(999);
+        service.setUserId("user_999def");
 
-        expect(service.getUserId()).toBe(999);
+        expect(service.getUserId()).toBe("user_999def");
       });
     });
 
     it("should not throw when no context exists", () => {
-      expect(() => service.setUserId(123)).not.toThrow();
+      expect(() => service.setUserId("user_123ghi")).not.toThrow();
     });
 
     it("should not set userId when no context exists", () => {
-      service.setUserId(456);
+      service.setUserId("user_456jkl");
       expect(service.getUserId()).toBeUndefined();
     });
 
     it("should update existing userId", () => {
-      const context = { correlationId: "test-id", userId: 100 };
+      const context = { correlationId: "test-id", userId: "user_100xyz" };
 
       service.run(context, () => {
-        expect(service.getUserId()).toBe(100);
+        expect(service.getUserId()).toBe("user_100xyz");
 
-        service.setUserId(200);
+        service.setUserId("user_200mno");
 
-        expect(service.getUserId()).toBe(200);
+        expect(service.getUserId()).toBe("user_200mno");
       });
     });
   });
 
   describe("getContext", () => {
     it("should return full context when it exists", () => {
-      const context = { correlationId: "test-123", userId: 42 };
+      const context = { correlationId: "test-123", userId: "user_42pqr" };
 
       service.run(context, () => {
         const retrievedContext = service.getContext();
 
         expect(retrievedContext).toEqual(context);
         expect(retrievedContext?.correlationId).toBe("test-123");
-        expect(retrievedContext?.userId).toBe(42);
+        expect(retrievedContext?.userId).toBe("user_42pqr");
       });
     });
 
@@ -174,43 +174,45 @@ describe("CorrelationService", () => {
     });
 
     it("should return formatted correlation ID and userId", () => {
-      const context = { correlationId: "xyz-789", userId: 42 };
+      const context = { correlationId: "xyz-789", userId: "user_42stu" };
 
       service.run(context, () => {
-        expect(service.getLogContext()).toBe("[xyz-789] [user-42]");
+        expect(service.getLogContext()).toBe("[xyz-789] [user-user_42stu]");
       });
     });
 
     it("should handle long correlation IDs", () => {
       const context = {
         correlationId: "a1b2c3d4-e5f6-4789-90ab-cdef12345678",
-        userId: 999,
+        userId: "user_999vwx",
       };
 
       service.run(context, () => {
-        expect(service.getLogContext()).toBe("[a1b2c3d4-e5f6-4789-90ab-cdef12345678] [user-999]");
+        expect(service.getLogContext()).toBe(
+          "[a1b2c3d4-e5f6-4789-90ab-cdef12345678] [user-user_999vwx]",
+        );
       });
     });
 
     it("should handle userId of 0", () => {
-      const context = { correlationId: "test-id", userId: 0 };
+      const context = { correlationId: "test-id", userId: "0" };
 
       service.run(context, () => {
         const logContext = service.getLogContext();
 
-        // userId 0 is falsy, so it won't be included
-        expect(logContext).toBe("[test-id]");
+        // userId "0" is a valid string, so it will be included
+        expect(logContext).toBe("[test-id] [user-0]");
       });
     });
 
     it("should format multiple parts with space separator", () => {
-      const context = { correlationId: "req-123", userId: 100 };
+      const context = { correlationId: "req-123", userId: "user_100yza" };
 
       service.run(context, () => {
         const logContext = service.getLogContext();
 
         expect(logContext).toContain("[req-123]");
-        expect(logContext).toContain("[user-100]");
+        expect(logContext).toContain("[user-user_100yza]");
         expect(logContext.split(" ").length).toBe(2);
       });
     });
@@ -219,7 +221,7 @@ describe("CorrelationService", () => {
   describe("nested contexts", () => {
     it("should handle nested run calls", () => {
       const outerContext = { correlationId: "outer-123" };
-      const innerContext = { correlationId: "inner-456", userId: 42 };
+      const innerContext = { correlationId: "inner-456", userId: "user_42bcd" };
 
       service.run(outerContext, () => {
         expect(service.getCorrelationId()).toBe("outer-123");
@@ -227,7 +229,7 @@ describe("CorrelationService", () => {
 
         service.run(innerContext, () => {
           expect(service.getCorrelationId()).toBe("inner-456");
-          expect(service.getUserId()).toBe(42);
+          expect(service.getUserId()).toBe("user_42bcd");
         });
 
         // Should restore outer context
@@ -239,7 +241,7 @@ describe("CorrelationService", () => {
 
   describe("async operations", () => {
     it("should maintain context across async operations", async () => {
-      const context = { correlationId: "async-123", userId: 99 };
+      const context = { correlationId: "async-123", userId: "user_99efg" };
 
       await service.run(context, async () => {
         expect(service.getCorrelationId()).toBe("async-123");
@@ -247,7 +249,7 @@ describe("CorrelationService", () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         expect(service.getCorrelationId()).toBe("async-123");
-        expect(service.getUserId()).toBe(99);
+        expect(service.getUserId()).toBe("user_99efg");
       });
     });
 

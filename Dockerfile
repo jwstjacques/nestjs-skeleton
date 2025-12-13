@@ -39,7 +39,8 @@ RUN mkdir -p logs && chown -R nestjs:nodejs logs
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Use --ignore-scripts to skip prepare scripts (husky) in Docker
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
@@ -61,4 +62,4 @@ EXPOSE 3000
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]

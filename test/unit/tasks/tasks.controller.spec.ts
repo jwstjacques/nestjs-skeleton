@@ -1,12 +1,14 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TasksController } from "../../../src/modules/tasks/tasks.controller";
 import { TasksService } from "../../../src/modules/tasks/tasks.service";
-import { TaskPriority } from "@prisma/client";
+import { TaskPriority, UserRole } from "@prisma/client";
 import { mockTask } from "../../utils/mocks";
 import { PaginatedTasksResponseDto } from "../../../src/modules/tasks/dto";
 
 describe("TasksController", () => {
   let controller: TasksController;
+
+  const TEST_USER_ID = { id: "test-user-id", role: UserRole.USER }; // Match mockTask.userId
 
   const mockTasksService = {
     create: jest.fn(),
@@ -14,6 +16,7 @@ describe("TasksController", () => {
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    purge: jest.fn(),
     getStatistics: jest.fn(),
   };
 
@@ -53,17 +56,17 @@ describe("TasksController", () => {
         description: "Task description",
         priority: TaskPriority.HIGH,
       };
-      const userId = "user-123";
+      const user = { id: "user-123", role: UserRole.USER };
 
       mockTasksService.create.mockResolvedValue(mockTask);
 
-      const result = await controller.create(createTaskDto, userId);
+      const result = await controller.create(createTaskDto, user);
 
       expect(result).toBeDefined();
-      expect(mockTasksService.create).toHaveBeenCalledWith(createTaskDto, userId);
+      expect(mockTasksService.create).toHaveBeenCalledWith(createTaskDto, user);
     });
 
-    it("should create a task with default userId when no header provided", async () => {
+    it("should create a task with authenticated userId", async () => {
       const createTaskDto = {
         title: "New Task",
         description: "Task description",
@@ -72,13 +75,10 @@ describe("TasksController", () => {
 
       mockTasksService.create.mockResolvedValue(mockTask);
 
-      const result = await controller.create(createTaskDto);
+      const result = await controller.create(createTaskDto, TEST_USER_ID);
 
       expect(result).toBeDefined();
-      expect(mockTasksService.create).toHaveBeenCalledWith(
-        createTaskDto,
-        "cmixpvpir0000p9ypdk6za4qc",
-      );
+      expect(mockTasksService.create).toHaveBeenCalledWith(createTaskDto, TEST_USER_ID);
     });
   });
 
@@ -89,10 +89,10 @@ describe("TasksController", () => {
 
       mockTasksService.findAll.mockResolvedValue(paginatedResponse);
 
-      const result = await controller.findAll(query);
+      const result = await controller.findAll(query, TEST_USER_ID);
 
       expect(result).toEqual(paginatedResponse);
-      expect(mockTasksService.findAll).toHaveBeenCalledWith(query);
+      expect(mockTasksService.findAll).toHaveBeenCalledWith(query, TEST_USER_ID);
     });
   });
 
@@ -100,10 +100,10 @@ describe("TasksController", () => {
     it("should return a single task", async () => {
       mockTasksService.findOne.mockResolvedValue(mockTask);
 
-      const result = await controller.findOne("test-task-id");
+      const result = await controller.findOne("test-task-id", TEST_USER_ID);
 
       expect(result).toBeDefined();
-      expect(mockTasksService.findOne).toHaveBeenCalledWith("test-task-id");
+      expect(mockTasksService.findOne).toHaveBeenCalledWith("test-task-id", TEST_USER_ID);
     });
   });
 
@@ -114,10 +114,14 @@ describe("TasksController", () => {
 
       mockTasksService.update.mockResolvedValue(updatedTask);
 
-      const result = await controller.update("test-task-id", updateTaskDto);
+      const result = await controller.update("test-task-id", updateTaskDto, TEST_USER_ID);
 
       expect(result).toBeDefined();
-      expect(mockTasksService.update).toHaveBeenCalledWith("test-task-id", updateTaskDto);
+      expect(mockTasksService.update).toHaveBeenCalledWith(
+        "test-task-id",
+        updateTaskDto,
+        TEST_USER_ID,
+      );
     });
   });
 
@@ -125,14 +129,14 @@ describe("TasksController", () => {
     it("should remove a task", async () => {
       mockTasksService.remove.mockResolvedValue(undefined);
 
-      await controller.remove("test-task-id");
+      await controller.remove("test-task-id", TEST_USER_ID);
 
-      expect(mockTasksService.remove).toHaveBeenCalledWith("test-task-id");
+      expect(mockTasksService.remove).toHaveBeenCalledWith("test-task-id", TEST_USER_ID);
     });
   });
 
   describe("getStatistics", () => {
-    it("should return task statistics for all users", async () => {
+    it("should return task statistics for authenticated user", async () => {
       const stats = {
         total: 10,
         byStatus: { TODO: 5, COMPLETED: 5 },
@@ -142,14 +146,14 @@ describe("TasksController", () => {
 
       mockTasksService.getStatistics.mockResolvedValue(stats);
 
-      const result = await controller.getStatistics();
+      const result = await controller.getStatistics(TEST_USER_ID);
 
       expect(result).toEqual(stats);
-      expect(mockTasksService.getStatistics).toHaveBeenCalledWith(undefined);
+      expect(mockTasksService.getStatistics).toHaveBeenCalledWith(TEST_USER_ID);
     });
 
     it("should return task statistics for a specific user", async () => {
-      const userId = "user-123";
+      const user = { id: "user-123", role: UserRole.USER };
       const stats = {
         total: 5,
         byStatus: { TODO: 3, IN_PROGRESS: 2 },
@@ -159,10 +163,10 @@ describe("TasksController", () => {
 
       mockTasksService.getStatistics.mockResolvedValue(stats);
 
-      const result = await controller.getStatistics(userId);
+      const result = await controller.getStatistics(user);
 
       expect(result).toEqual(stats);
-      expect(mockTasksService.getStatistics).toHaveBeenCalledWith(userId);
+      expect(mockTasksService.getStatistics).toHaveBeenCalledWith(user);
     });
   });
 });

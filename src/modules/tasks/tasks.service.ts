@@ -1,8 +1,13 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { Task, Prisma, TaskStatus, TaskPriority } from "@prisma/client";
+import { Injectable, Logger, ForbiddenException } from "@nestjs/common";
+import { Task, Prisma, TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
 import { TaskNotFoundException } from "../../common/exceptions";
 import { TasksDal } from "./tasks.dal";
+
+interface UserContext {
+  id: string;
+  role: UserRole;
+}
 
 @Injectable()
 export class TasksService {
@@ -10,12 +15,12 @@ export class TasksService {
 
   constructor(private readonly tasksDal: TasksDal) {}
 
-  async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
-    this.logger.log(`Creating task for user ${userId}`);
+  async create(createTaskDto: CreateTaskDto, user: UserContext): Promise<Task> {
+    this.logger.log(`Creating task for user ${user.id}`);
 
     const task = await this.tasksDal.create({
       ...createTaskDto,
-      user: { connect: { id: userId } },
+      user: { connect: { id: user.id } },
       dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
     });
 
@@ -26,20 +31,19 @@ export class TasksService {
 
   /**
    * Find all tasks with pagination and filters
+   * Admins see all tasks, users see only their own
    */
-  async findAll(query: QueryTaskDto): Promise<PaginatedTasksResponseDto> {
-    const { page = 1, limit = 10, status, priority, search, sortBy, sortOrder, userId } = query;
+  async findAll(query: QueryTaskDto, user: UserContext): Promise<PaginatedTasksResponseDto> {
+    const { page = 1, limit = 10, status, priority, search, sortBy, sortOrder } = query;
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
+    // Build where clause - admins see all, users see only their own
     const where: Prisma.TaskWhereInput = {
       deletedAt: null,
+      // Only filter by userId if user is not an admin
+      ...(user.role !== UserRole.ADMIN && { userId: user.id }),
     };
-
-    if (userId) {
-      where.userId = userId;
-    }
 
     if (status) {
       where.status = status;
@@ -69,19 +73,27 @@ export class TasksService {
       this.tasksDal.count(where),
     ]);
 
-    this.logger.log(`Found ${tasks.length} tasks out of ${total} total`);
+    const userInfo = user.role === UserRole.ADMIN ? "all users" : `user ${user.id}`;
+
+    this.logger.log(`Found ${tasks.length} tasks out of ${total} total for ${userInfo}`);
 
     return new PaginatedTasksResponseDto(tasks, total, page, limit);
   }
 
   /**
    * Find one task by ID
+   * Admins can access any task, users only their own
    */
-  async findOne(id: string): Promise<Task> {
+  async findOne(id: string, user: UserContext): Promise<Task> {
     const task = await this.tasksDal.findUnique(id);
 
     if (!task) {
       throw new TaskNotFoundException(id);
+    }
+
+    // Verify user owns the task (unless admin)
+    if (user.role !== UserRole.ADMIN && task.userId !== user.id) {
+      throw new ForbiddenException("You do not have permission to access this task");
     }
 
     return task;
@@ -89,10 +101,11 @@ export class TasksService {
 
   /**
    * Update a task
+   * Admins can update any task, users only their own
    */
-  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    // Verify task exists
-    await this.findOne(id);
+  async update(id: string, updateTaskDto: UpdateTaskDto, user: UserContext): Promise<Task> {
+    // Verify task exists and user has access
+    await this.findOne(id, user);
 
     this.logger.log(`Updating task ${id}`);
 
@@ -128,10 +141,11 @@ export class TasksService {
 
   /**
    * Soft delete a task
+   * Admins can delete any task, users only their own
    */
-  async remove(id: string): Promise<Task> {
-    // Verify task exists
-    await this.findOne(id);
+  async remove(id: string, user: UserContext): Promise<Task> {
+    // Verify task exists and user has access
+    await this.findOne(id, user);
 
     this.logger.log(`Soft deleting task ${id}`);
 
@@ -143,9 +157,9 @@ export class TasksService {
   }
 
   /**
-   * Hard delete a task (use with caution)
+   * Hard delete a task (admin only - called via purge endpoint)
    */
-  async hardRemove(id: string): Promise<void> {
+  async purge(id: string): Promise<void> {
     this.logger.warn(`Hard deleting task ${id}`);
 
     await this.tasksDal.delete(id);
@@ -154,16 +168,15 @@ export class TasksService {
   }
 
   /**
-   * Get task statistics for a user
+   * Get task statistics
+   * Admins see stats for all tasks, users only their own
    */
-  async getStatistics(userId?: string): Promise<object> {
+  async getStatistics(user: UserContext): Promise<object> {
     const where: Prisma.TaskWhereInput = {
       deletedAt: null,
+      // Only filter by userId if user is not an admin
+      ...(user.role !== UserRole.ADMIN && { userId: user.id }),
     };
-
-    if (userId) {
-      where.userId = userId;
-    }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [total, byStatus, byPriority, overdue] = await Promise.all([
@@ -178,7 +191,14 @@ export class TasksService {
         where,
         _count: true,
       }),
-      this.tasksDal.countOverdue(userId),
+      // For overdue, we need to handle admin case differently
+      user.role === UserRole.ADMIN
+        ? this.tasksDal.count({
+            ...where,
+            status: { not: TaskStatus.COMPLETED },
+            dueDate: { lt: new Date() },
+          })
+        : this.tasksDal.countOverdue(user.id),
     ]);
 
     type GroupByResult = {

@@ -38,7 +38,26 @@ function parseCSPDirective(envValue: string | undefined, defaultValue: string[])
     return defaultValue;
   }
 
-  return envValue.split(",").map((val) => val.trim());
+  return envValue.split(",").map((val) => {
+    const trimmed = val.trim();
+
+    // CSP keywords that need single quotes
+    const keywords = [
+      "self",
+      "unsafe-inline",
+      "unsafe-eval",
+      "none",
+      "strict-dynamic",
+      "report-sample",
+    ];
+
+    // If the value is a keyword and doesn't have quotes, add them
+    if (keywords.includes(trimmed) && !trimmed.startsWith("'")) {
+      return `'${trimmed}'`;
+    }
+
+    return trimmed;
+  });
 }
 
 /**

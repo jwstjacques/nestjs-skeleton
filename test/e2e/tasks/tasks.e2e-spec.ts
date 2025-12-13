@@ -5,18 +5,36 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { HttpStatus, INestApplication, ValidationPipe } from "@nestjs/common";
 import request from "supertest";
+import { JwtService } from "@nestjs/jwt";
 import { AppModule } from "../../../src/app.module";
 import { PrismaService } from "../../../src/database/prisma.service";
-import { TaskStatus, TaskPriority } from "@prisma/client";
+import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { TestCleanup } from "../../utils/test-cleanup";
 import { TransformInterceptor } from "../../../src/common/interceptors/transform.interceptor";
 
 describe("TasksController (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let jwtService: JwtService;
   let cleanup: TestCleanup;
   let userId: string;
   let taskId: string;
+  let accessToken: string;
+
+  // Helper function to generate JWT token for test user
+  const generateAccessToken = (
+    uid: string,
+    username: string,
+    email: string,
+    role: UserRole = UserRole.USER,
+  ) => {
+    return jwtService.sign({
+      sub: uid,
+      username,
+      email,
+      role,
+    });
+  };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -25,6 +43,7 @@ describe("TasksController (e2e)", () => {
 
     app = moduleFixture.createNestApplication();
     prisma = app.get<PrismaService>(PrismaService);
+    jwtService = app.get<JwtService>(JwtService);
     cleanup = new TestCleanup(prisma);
 
     // Set global prefix to match main.ts configuration
@@ -57,6 +76,9 @@ describe("TasksController (e2e)", () => {
 
     userId = user.id;
     cleanup.trackUser(userId);
+
+    // Generate JWT token for authentication
+    accessToken = generateAccessToken(user.id, user.username, user.email, user.role);
   });
 
   afterEach(async () => {
@@ -72,7 +94,7 @@ describe("TasksController (e2e)", () => {
     it("should create a new task", () => {
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "E2E Test Task",
           description: "Testing task creation",
@@ -90,7 +112,7 @@ describe("TasksController (e2e)", () => {
     it("should fail validation with short title", () => {
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "AB",
           priority: TaskPriority.HIGH,
@@ -104,7 +126,7 @@ describe("TasksController (e2e)", () => {
     it("should fail validation with invalid priority", () => {
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Valid Title",
           priority: "INVALID_PRIORITY",
@@ -120,7 +142,7 @@ describe("TasksController (e2e)", () => {
     it("should fail validation with invalid date format", () => {
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Valid Title",
           dueDate: "invalid-date",
@@ -138,7 +160,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Valid Title",
           dueDate: pastDate.toISOString(),
@@ -156,7 +178,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Task with today's date",
           dueDate: today.toISOString(),
@@ -176,7 +198,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .post("/api/v1/tasks")
-        .set("x-user-id", userId)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Task with future date",
           dueDate: futureDate.toISOString(),
@@ -191,8 +213,8 @@ describe("TasksController (e2e)", () => {
   });
 
   describe("GET /tasks", () => {
-    beforeAll(async () => {
-      // Create test tasks
+    beforeEach(async () => {
+      // Create test tasks before each test to ensure they exist
       const task1 = await prisma.task.create({
         data: {
           title: "Test Task 1",
@@ -229,6 +251,7 @@ describe("TasksController (e2e)", () => {
     it("should return paginated tasks", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks")
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
           expect(res.body).toHaveProperty("data");
@@ -242,6 +265,7 @@ describe("TasksController (e2e)", () => {
     it("should filter tasks by status", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks")
+        .set("Authorization", `Bearer ${accessToken}`)
         .query({ status: TaskStatus.TODO })
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
@@ -258,6 +282,7 @@ describe("TasksController (e2e)", () => {
     it("should search tasks by title", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks")
+        .set("Authorization", `Bearer ${accessToken}`)
         .query({ search: "Test Task" })
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
@@ -268,6 +293,7 @@ describe("TasksController (e2e)", () => {
     it("should paginate results", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks")
+        .set("Authorization", `Bearer ${accessToken}`)
         .query({ page: 1, limit: 2 })
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
@@ -297,6 +323,7 @@ describe("TasksController (e2e)", () => {
     it("should return a single task", () => {
       return request(app.getHttpServer())
         .get(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
           expect(res.body.data.id).toBe(taskId);
@@ -311,6 +338,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .get(`/api/v1/tasks/${fakeId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
           expect(res.body.message).toBe(
@@ -322,6 +350,7 @@ describe("TasksController (e2e)", () => {
     it("should return 400 for invalid CUID format", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks/invalid-id")
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
           expect(res.body.message).toBe(
@@ -351,6 +380,7 @@ describe("TasksController (e2e)", () => {
     it("should update a task", () => {
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           title: "Updated E2E Task",
           status: TaskStatus.IN_PROGRESS,
@@ -365,6 +395,7 @@ describe("TasksController (e2e)", () => {
     it("should set completedAt when marking as completed", () => {
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           status: TaskStatus.COMPLETED,
         })
@@ -378,6 +409,7 @@ describe("TasksController (e2e)", () => {
     it("should fail validation with invalid status enum", () => {
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           status: "INVALID_STATUS",
         })
@@ -392,6 +424,7 @@ describe("TasksController (e2e)", () => {
     it("should fail validation with invalid completedAt format", () => {
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           completedAt: "invalid-date",
         })
@@ -408,6 +441,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           status: TaskStatus.COMPLETED,
           completedAt: pastDate.toISOString(),
@@ -426,6 +460,7 @@ describe("TasksController (e2e)", () => {
 
       return request(app.getHttpServer())
         .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({
           status: TaskStatus.COMPLETED,
           completedAt: futureDate.toISOString(),
@@ -458,6 +493,7 @@ describe("TasksController (e2e)", () => {
     it("should soft delete a task", () => {
       return request(app.getHttpServer())
         .delete(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.NO_CONTENT);
     });
 
@@ -465,11 +501,13 @@ describe("TasksController (e2e)", () => {
       // First soft delete the task
       await request(app.getHttpServer())
         .delete(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.NO_CONTENT);
 
       // Then verify it's not found
       return request(app.getHttpServer())
         .get(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.NOT_FOUND);
     });
   });
@@ -478,6 +516,7 @@ describe("TasksController (e2e)", () => {
     it("should return task statistics", () => {
       return request(app.getHttpServer())
         .get("/api/v1/tasks/statistics")
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
           expect(res.body.data).toHaveProperty("total");

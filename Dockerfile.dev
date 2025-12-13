@@ -9,7 +9,8 @@ RUN apk add --no-cache bash
 COPY package*.json ./
 
 # Install all dependencies (including dev)
-RUN npm install
+# Set HUSKY=0 to skip git hooks installation in Docker
+RUN HUSKY=0 npm install
 
 # Copy source
 COPY . .

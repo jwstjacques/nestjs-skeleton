@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from "async_hooks";
 
 export interface CorrelationContext {
   correlationId: string;
-  userId?: number;
+  userId?: string;
 }
 
 @Injectable()
@@ -33,14 +33,14 @@ export class CorrelationService {
   /**
    * Get current user ID
    */
-  getUserId(): number | undefined {
+  getUserId(): string | undefined {
     return this.asyncLocalStorage.getStore()?.userId;
   }
 
   /**
    * Set user ID in current context
    */
-  setUserId(userId: number): void {
+  setUserId(userId: string): void {
     const store = this.asyncLocalStorage.getStore();
 
     if (store) {

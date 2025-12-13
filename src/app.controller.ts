@@ -1,6 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiOperation, ApiOkResponse } from "@nestjs/swagger";
 import { SkipThrottle } from "@nestjs/throttler";
+import { Public } from "./auth/decorators";
 import { AppService } from "./app.service";
 
 @Controller()
@@ -8,6 +9,7 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get("status")
+  @Public() // Public endpoint for monitoring
   @SkipThrottle() // Status checks should not be rate limited (for monitoring tools)
   @ApiOperation({
     summary: "Simple status check",
@@ -34,6 +36,7 @@ export class AppController {
   }
 
   @Get("stats")
+  @Public() // Public endpoint for statistics
   @SkipThrottle() // Statistics are read-only and can be called frequently
   @ApiOperation({
     summary: "Get application statistics",

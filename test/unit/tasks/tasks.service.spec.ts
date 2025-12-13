@@ -2,12 +2,15 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TasksService } from "../../../src/modules/tasks/tasks.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
 import { TaskNotFoundException } from "../../../src/common/exceptions";
-import { TaskStatus, TaskPriority } from "@prisma/client";
+import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { TaskSortBy, SortOrder } from "../../../src/modules/tasks/dto/query-task.dto";
 import { mockTasksDal, mockTask } from "../../utils/mocks";
 
 describe("TasksService", () => {
   let service: TasksService;
+
+  const mockTestUser = { id: "test-user-id", role: UserRole.USER }; // Match mockTask.userId
+  const mockUser = { id: "user-123", role: UserRole.USER };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,16 +40,15 @@ describe("TasksService", () => {
         description: "Task description",
         priority: TaskPriority.HIGH,
       };
-      const userId = "user-123";
 
       mockTasksDal.create.mockResolvedValue(mockTask);
 
-      const result = await service.create(createTaskDto, userId);
+      const result = await service.create(createTaskDto, mockUser);
 
       expect(result).toEqual(mockTask);
       expect(mockTasksDal.create).toHaveBeenCalledWith({
         ...createTaskDto,
-        user: { connect: { id: userId } },
+        user: { connect: { id: mockUser.id } },
         dueDate: null,
       });
     });
@@ -58,15 +60,14 @@ describe("TasksService", () => {
         priority: TaskPriority.HIGH,
         dueDate: "2025-12-31T00:00:00.000Z",
       };
-      const userId = "user-123";
 
       mockTasksDal.create.mockResolvedValue(mockTask);
 
-      await service.create(createTaskDto, userId);
+      await service.create(createTaskDto, mockUser);
 
       expect(mockTasksDal.create).toHaveBeenCalledWith({
         ...createTaskDto,
-        user: { connect: { id: userId } },
+        user: { connect: { id: mockUser.id } },
         dueDate: new Date(createTaskDto.dueDate),
       });
     });
@@ -80,7 +81,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue(tasks);
       mockTasksDal.count.mockResolvedValue(1);
 
-      const result = await service.findAll(query);
+      const result = await service.findAll(query, mockTestUser);
 
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -94,7 +95,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -112,7 +113,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -125,16 +126,16 @@ describe("TasksService", () => {
     });
 
     it("should filter tasks by userId", async () => {
-      const query = { page: 1, limit: 10, userId: "user-123" };
+      const query = { page: 1, limit: 10 };
 
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: "user-123",
+          userId: mockTestUser.id,
         }),
         0,
         10,
@@ -148,7 +149,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -166,7 +167,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(expect.any(Object), 0, 10, {
         createdAt: "asc",
@@ -179,7 +180,7 @@ describe("TasksService", () => {
       mockTasksDal.findMany.mockResolvedValue([mockTask]);
       mockTasksDal.count.mockResolvedValue(1);
 
-      await service.findAll(query);
+      await service.findAll(query, mockTestUser);
 
       expect(mockTasksDal.findMany).toHaveBeenCalledWith(expect.any(Object), 0, 10, {
         createdAt: "desc",
@@ -191,7 +192,7 @@ describe("TasksService", () => {
     it("should return a task by id", async () => {
       mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
-      const result = await service.findOne("test-task-id");
+      const result = await service.findOne("test-task-id", mockTestUser);
 
       expect(result).toEqual(mockTask);
       expect(mockTasksDal.findUnique).toHaveBeenCalledWith("test-task-id");
@@ -200,7 +201,9 @@ describe("TasksService", () => {
     it("should throw TaskNotFoundException when task not found", async () => {
       mockTasksDal.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne("non-existent-id")).rejects.toThrow(TaskNotFoundException);
+      await expect(service.findOne("non-existent-id", mockTestUser)).rejects.toThrow(
+        TaskNotFoundException,
+      );
     });
   });
 
@@ -212,7 +215,7 @@ describe("TasksService", () => {
       mockTasksDal.findUnique.mockResolvedValue(mockTask);
       mockTasksDal.update.mockResolvedValue(updatedTask);
 
-      const result = await service.update("test-task-id", updateTaskDto);
+      const result = await service.update("test-task-id", updateTaskDto, mockTestUser);
 
       expect(result).toEqual(updatedTask);
       expect(mockTasksDal.update).toHaveBeenCalled();
@@ -228,7 +231,7 @@ describe("TasksService", () => {
         completedAt: new Date(),
       });
 
-      await service.update("test-task-id", updateTaskDto);
+      await service.update("test-task-id", updateTaskDto, mockTestUser);
 
       expect(mockTasksDal.update).toHaveBeenCalledWith(
         "test-task-id",
@@ -249,7 +252,7 @@ describe("TasksService", () => {
         completedAt: null,
       });
 
-      await service.update("test-task-id", updateTaskDto);
+      await service.update("test-task-id", updateTaskDto, mockTestUser);
 
       expect(mockTasksDal.update).toHaveBeenCalledWith(
         "test-task-id",
@@ -268,7 +271,7 @@ describe("TasksService", () => {
         dueDate: new Date(updateTaskDto.dueDate),
       });
 
-      await service.update("test-task-id", updateTaskDto);
+      await service.update("test-task-id", updateTaskDto, mockTestUser);
 
       expect(mockTasksDal.update).toHaveBeenCalledWith(
         "test-task-id",
@@ -287,7 +290,7 @@ describe("TasksService", () => {
         completedAt: new Date(updateTaskDto.completedAt),
       });
 
-      await service.update("test-task-id", updateTaskDto);
+      await service.update("test-task-id", updateTaskDto, mockTestUser);
 
       expect(mockTasksDal.update).toHaveBeenCalledWith(
         "test-task-id",
@@ -306,18 +309,18 @@ describe("TasksService", () => {
         deletedAt: new Date(),
       });
 
-      const result = await service.remove("test-task-id");
+      const result = await service.remove("test-task-id", mockTestUser);
 
       expect(result.deletedAt).toBeDefined();
       expect(mockTasksDal.softDelete).toHaveBeenCalledWith("test-task-id");
     });
   });
 
-  describe("hardRemove", () => {
+  describe("purge", () => {
     it("should permanently delete a task that exists", async () => {
       mockTasksDal.delete.mockResolvedValue(undefined);
 
-      await service.hardRemove("test-task-id");
+      await service.purge("test-task-id");
 
       expect(mockTasksDal.delete).toHaveBeenCalledWith("test-task-id");
       expect(mockTasksDal.delete).toHaveBeenCalledTimes(1);
@@ -326,7 +329,7 @@ describe("TasksService", () => {
     it("should handle deletion of a non-existent task", async () => {
       mockTasksDal.delete.mockRejectedValue(new Error("Task not found"));
 
-      await expect(service.hardRemove("non-existent-id")).rejects.toThrow("Task not found");
+      await expect(service.purge("non-existent-id")).rejects.toThrow("Task not found");
       expect(mockTasksDal.delete).toHaveBeenCalledWith("non-existent-id");
     });
   });
@@ -345,7 +348,7 @@ describe("TasksService", () => {
         ]);
       mockTasksDal.countOverdue.mockResolvedValueOnce(2);
 
-      const result = await service.getStatistics();
+      const result = await service.getStatistics(mockTestUser);
 
       expect(result).toHaveProperty("total");
       expect(result).toHaveProperty("byStatus");
@@ -354,7 +357,7 @@ describe("TasksService", () => {
     });
 
     it("should return task statistics for a specific user", async () => {
-      const userId = "user-123";
+      const user = { id: "user-123", role: UserRole.USER };
 
       mockTasksDal.count.mockResolvedValueOnce(5);
       mockTasksDal.groupBy
@@ -365,10 +368,10 @@ describe("TasksService", () => {
         .mockResolvedValueOnce([{ priority: TaskPriority.HIGH, _count: 5 }]);
       mockTasksDal.countOverdue.mockResolvedValueOnce(1);
 
-      const result = await service.getStatistics(userId);
+      const result = await service.getStatistics(user);
 
       expect(result).toHaveProperty("total", 5);
-      expect(mockTasksDal.countOverdue).toHaveBeenCalledWith(userId);
+      expect(mockTasksDal.countOverdue).toHaveBeenCalledWith(user.id);
     });
   });
 });

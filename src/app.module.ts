@@ -1,20 +1,23 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AppDal } from "./app.dal";
 import { DatabaseModule } from "./database/database.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
-import paginationConfig from "./config/pagination.config";
-import throttlerConfig from "./config/throttler.config";
-import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
-import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { AuthModule } from "./auth/auth.module";
+import { HealthModule } from "./health/health.module";
 import { CacheModule } from "./common/cache/cache.module";
-import { HttpCacheInterceptor, PerformanceInterceptor } from "./common/interceptors";
 import { LoggerModule } from "./common/logger/logger.module";
 import { CorrelationModule } from "./common/correlation";
 import { CorrelationIdMiddleware, RequestLoggerMiddleware } from "./common/middleware";
-import { HealthModule } from "./health/health.module";
+import { HttpCacheInterceptor, PerformanceInterceptor } from "./common/interceptors";
+import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
+import { RolesGuard } from "./auth/guards/roles.guard";
+import paginationConfig from "./config/pagination.config";
+import throttlerConfig from "./config/throttler.config";
 
 @Module({
   imports: [
@@ -48,6 +51,7 @@ import { HealthModule } from "./health/health.module";
     LoggerModule,
     CacheModule,
     DatabaseModule,
+    AuthModule,
     TasksModule,
     HealthModule,
   ],
@@ -55,6 +59,14 @@ import { HealthModule } from "./health/health.module";
   providers: [
     AppService,
     AppDal,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard, // Apply JWT authentication globally
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard, // Apply role-based access control globally
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

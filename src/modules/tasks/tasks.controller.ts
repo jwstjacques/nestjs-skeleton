@@ -9,7 +9,6 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Headers,
   UseInterceptors,
 } from "@nestjs/common";
 import {
@@ -24,9 +23,11 @@ import {
   ApiBearerAuth,
   ApiResponse,
   ApiTooManyRequestsResponse,
+  ApiForbiddenResponse,
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
+import { UserRole } from "@prisma/client";
 import { TasksService } from "./tasks.service";
 import {
   CreateTaskDto,
@@ -36,6 +37,7 @@ import {
   PaginatedTasksResponseDto,
 } from "./dto";
 import { ParseCuidPipe } from "../../common/pipes";
+import { CurrentUser, Roles } from "../../auth/decorators";
 import {
   THROTTLE_SHORT_LIMIT,
   THROTTLE_SHORT_TTL,
@@ -76,13 +78,9 @@ export class TasksController {
   })
   async create(
     @Body() createTaskDto: CreateTaskDto,
-    @Headers("x-user-id") userId?: string,
+    @CurrentUser() user: { id: string; role: UserRole },
   ): Promise<TaskResponseDto> {
-    // TODO: Get userId from authenticated user (after auth is implemented)
-    // For now, accept from header for testing or use default
-    const effectiveUserId = userId || "cmixpvpir0000p9ypdk6za4qc"; // Default admin user
-
-    const task = await this.tasksService.create(createTaskDto, effectiveUserId);
+    const task = await this.tasksService.create(createTaskDto, user);
 
     return new TaskResponseDto(task);
   }
@@ -145,8 +143,8 @@ export class TasksController {
     enum: ["ASC", "DESC"],
     description: "Sort order (default: DESC)",
   })
-  async findAll(@Query() query: QueryTaskDto) {
-    return this.tasksService.findAll(query);
+  async findAll(@Query() query: QueryTaskDto, @CurrentUser() user: { id: string; role: UserRole }) {
+    return this.tasksService.findAll(query, user);
   }
 
   @Get("statistics")
@@ -173,8 +171,8 @@ export class TasksController {
       },
     },
   })
-  async getStatistics(@Query("userId") userId?: string) {
-    return this.tasksService.getStatistics(userId);
+  async getStatistics(@CurrentUser() user: { id: string; role: UserRole }) {
+    return this.tasksService.getStatistics(user);
   }
 
   @Get(":id")
@@ -214,8 +212,14 @@ export class TasksController {
       },
     },
   })
-  async findOne(@Param("id", ParseCuidPipe) id: string): Promise<TaskResponseDto> {
-    const task = await this.tasksService.findOne(id);
+  @ApiForbiddenResponse({
+    description: "Cannot access other user's task",
+  })
+  async findOne(
+    @Param("id", ParseCuidPipe) id: string,
+    @CurrentUser() user: { id: string; role: UserRole },
+  ): Promise<TaskResponseDto> {
+    const task = await this.tasksService.findOne(id, user);
 
     return new TaskResponseDto(task);
   }
@@ -241,14 +245,18 @@ export class TasksController {
   @ApiBadRequestResponse({
     description: "Invalid input data",
   })
+  @ApiForbiddenResponse({
+    description: "Cannot update other user's task",
+  })
   @ApiTooManyRequestsResponse({
     description: "Too many requests",
   })
   async update(
     @Param("id", ParseCuidPipe) id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentUser() user: { id: string; role: UserRole },
   ): Promise<TaskResponseDto> {
-    const task = await this.tasksService.update(id, updateTaskDto);
+    const task = await this.tasksService.update(id, updateTaskDto, user);
 
     return new TaskResponseDto(task);
   }
@@ -273,10 +281,46 @@ export class TasksController {
   @ApiNotFoundResponse({
     description: "Task not found",
   })
+  @ApiForbiddenResponse({
+    description: "Cannot delete other user's task",
+  })
   @ApiTooManyRequestsResponse({
     description: "Too many requests",
   })
-  async remove(@Param("id", ParseCuidPipe) id: string): Promise<void> {
-    await this.tasksService.remove(id);
+  async remove(
+    @Param("id", ParseCuidPipe) id: string,
+    @CurrentUser() user: { id: string; role: UserRole },
+  ): Promise<void> {
+    await this.tasksService.remove(id, user);
+  }
+
+  @Delete("admin/purge/:id")
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
+  @ApiOperation({
+    summary: "Permanently delete a task (admin only)",
+    description: "Hard deletes a task from the database. Requires ADMIN role.",
+  })
+  @ApiParam({
+    name: "id",
+    description: "Task CUID",
+    example: "cmixpvpir0001p9yp5xq8r7ks",
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: "Task permanently deleted",
+  })
+  @ApiForbiddenResponse({
+    description: "Admin access required",
+  })
+  @ApiNotFoundResponse({
+    description: "Task not found",
+  })
+  @ApiTooManyRequestsResponse({
+    description: "Too many requests",
+  })
+  async purge(@Param("id", ParseCuidPipe) id: string): Promise<void> {
+    await this.tasksService.purge(id);
   }
 }

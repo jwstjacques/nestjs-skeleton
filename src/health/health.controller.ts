@@ -15,6 +15,7 @@ import {
   HEALTH_CHECK_DISK_THRESHOLD,
   HEALTH_CHECK_DISK_PATH,
 } from "../config/health.constants";
+import { Public } from "@app/auth/decorators";
 
 @ApiTags("health")
 @Controller("health")
@@ -28,6 +29,7 @@ export class HealthController {
     private prisma: PrismaService,
   ) {}
 
+  @Public()
   @Get()
   @HealthCheck()
   @ApiOperation({ summary: "Comprehensive health check" })
@@ -69,6 +71,7 @@ export class HealthController {
     ]);
   }
 
+  @Public()
   @Get("liveness")
   @HealthCheck()
   @ApiOperation({ summary: "Liveness probe (Kubernetes)" })
@@ -80,6 +83,7 @@ export class HealthController {
     ]);
   }
 
+  @Public()
   @Get("readiness")
   @HealthCheck()
   @ApiOperation({ summary: "Readiness probe (Kubernetes)" })

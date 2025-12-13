@@ -3,6 +3,7 @@ import { PrismaService } from "../../../src/database/prisma.service";
 import { AppDal } from "../../../src/app.dal";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { TestCleanup } from "../../utils/test-cleanup";
+import { CorrelationService } from "../../../src/common/correlation";
 
 /**
  * AppDal Integration Tests
@@ -11,27 +12,45 @@ import { TestCleanup } from "../../utils/test-cleanup";
  */
 describe("AppDal", () => {
   let appDal: AppDal;
-  let prisma: PrismaService;
-  let cleanup: TestCleanup;
+  let prisma: PrismaService = null as unknown as PrismaService;
+  let cleanup: TestCleanup = null as unknown as TestCleanup;
 
   beforeAll(async () => {
+    // Create actual instances instead of mocks to test real database interaction
+    const correlationService = new CorrelationService();
+
+    prisma = new PrismaService(correlationService);
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AppDal, PrismaService],
+      providers: [
+        AppDal,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: CorrelationService,
+          useValue: correlationService,
+        },
+      ],
     }).compile();
 
     appDal = module.get<AppDal>(AppDal);
-    prisma = module.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
   });
 
   afterEach(async () => {
     // Clean up test data created in each test
-    await cleanup.cleanupAll();
+    if (cleanup) {
+      await cleanup.cleanupAll();
+    }
   });
 
   afterAll(async () => {
     // Properly close all connections
-    await prisma.onModuleDestroy();
+    if (prisma) {
+      await prisma.onModuleDestroy();
+    }
   });
 
   describe("checkDatabaseConnection", () => {

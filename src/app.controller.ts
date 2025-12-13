@@ -7,11 +7,12 @@ import { AppService } from "./app.service";
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get("health")
-  @SkipThrottle() // Health checks should not be rate limited (for monitoring tools)
+  @Get("status")
+  @SkipThrottle() // Status checks should not be rate limited (for monitoring tools)
   @ApiOperation({
-    summary: "Health check",
-    description: "Returns the health status of the API",
+    summary: "Simple status check",
+    description:
+      "Returns basic API status for quick monitoring (uptime, environment, database connectivity)",
   })
   @ApiOkResponse({
     description: "API is healthy",
@@ -28,7 +29,7 @@ export class AppController {
       },
     },
   })
-  async getHealth() {
+  async getStatus() {
     return this.appService.getHealth();
   }
 

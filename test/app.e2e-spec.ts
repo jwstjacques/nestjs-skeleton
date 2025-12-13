@@ -20,10 +20,10 @@ describe("AppController (e2e)", () => {
     await app.close();
   });
 
-  describe("GET /health", () => {
-    it("should return health status", () => {
+  describe("GET /status", () => {
+    it("should return simple status check", () => {
       return request(app.getHttpServer())
-        .get("/health")
+        .get("/status")
         .expect(HttpStatus.OK)
         .expect((res: request.Response) => {
           expect(res.body).toHaveProperty("status", "ok");

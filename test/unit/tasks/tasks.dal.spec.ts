@@ -3,6 +3,7 @@ import { PrismaService } from "../../../src/database/prisma.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { TestCleanup } from "../../utils/test-cleanup";
+import { CorrelationService } from "../../../src/common/correlation";
 
 /**
  * TasksDal Integration Tests
@@ -11,17 +12,31 @@ import { TestCleanup } from "../../utils/test-cleanup";
  */
 describe("TasksDal", () => {
   let tasksDal: TasksDal;
-  let prisma: PrismaService;
-  let cleanup: TestCleanup;
+  let prisma: PrismaService = null as unknown as PrismaService;
+  let cleanup: TestCleanup = null as unknown as TestCleanup;
   let testUserId: string;
 
   beforeAll(async () => {
+    // Create actual instances instead of mocks to test real database interaction
+    const correlationService = new CorrelationService();
+
+    prisma = new PrismaService(correlationService);
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TasksDal, PrismaService],
+      providers: [
+        TasksDal,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: CorrelationService,
+          useValue: correlationService,
+        },
+      ],
     }).compile();
 
     tasksDal = module.get<TasksDal>(TasksDal);
-    prisma = module.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
 
     // Create a test user for all tests
@@ -42,15 +57,21 @@ describe("TasksDal", () => {
 
   afterEach(async () => {
     // Clean up tasks created in each test
-    await cleanup.cleanupTasks();
+    if (cleanup) {
+      await cleanup.cleanupTasks();
+    }
   });
 
   afterAll(async () => {
     // Clean up all test data
-    await cleanup.cleanupAll();
+    if (cleanup) {
+      await cleanup.cleanupAll();
+    }
 
     // Properly close all connections (calls onModuleDestroy internally)
-    await prisma.onModuleDestroy();
+    if (prisma) {
+      await prisma.onModuleDestroy();
+    }
   });
 
   describe("create", () => {

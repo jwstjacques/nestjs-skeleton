@@ -32,6 +32,9 @@ RUN apk add --no-cache dumb-init
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 
+# Create logs directory for application logging
+RUN mkdir -p logs && chown -R nestjs:nodejs logs
+
 # Copy package files
 COPY package*.json ./
 
@@ -58,4 +61,4 @@ EXPOSE 3000
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

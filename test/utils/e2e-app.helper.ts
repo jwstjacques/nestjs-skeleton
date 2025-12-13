@@ -7,7 +7,7 @@ import { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { TransformInterceptor } from "@app/common/interceptors/transform.interceptor";
 import { PrismaModule } from "@app/database/prisma.module";
-import { HttpAdapterHost } from "@nestjs/core";
+import { CorrelationService } from "@app/common/correlation";
 
 export async function createApp(
   prismaClient: PrismaClient,
@@ -18,9 +18,9 @@ export async function createApp(
 
   const app = moduleRef.createNestApplication();
 
-  const { httpAdapter } = app.get(HttpAdapterHost);
+  const correlationService = app.get(CorrelationService);
 
-  app.useGlobalFilters(new HttpExceptionFilter(httpAdapter));
+  app.useGlobalFilters(new HttpExceptionFilter(correlationService));
   app.useGlobalInterceptors(new TransformInterceptor());
 
   await app.init();

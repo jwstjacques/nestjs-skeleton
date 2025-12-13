@@ -146,14 +146,98 @@ npm run test:cov
 open coverage/lcov-report/index.html
 ```
 
+## Test Data Cleanup
+
+The application uses the `TestCleanup` utility class for safe test data management:
+
+```typescript
+import { TestCleanup } from "test/utils/test-cleanup";
+
+// Create test data
+const task = await tasksDal.create({ title: "Test", priority: TaskPriority.HIGH });
+cleanup.trackTask(task.id);
+
+const user = await prisma.user.create({ data: { email: "test@example.com" } });
+cleanup.trackUser(user.id);
+
+// Retrieve tracked data
+const taskIds = cleanup.getTrackedTaskIds();
+const userIds = cleanup.getTrackedUserIds();
+
+// Clean up only tracked entities (safe, granular)
+await cleanup.cleanupTasks(); // Delete only tracked tasks
+await cleanup.cleanupUsers(); // Delete only tracked users
+await cleanup.cleanupAll(); // Delete all tracked entities
+```
+
+**Why this pattern is used:**
+
+- ✅ Never uses `deleteMany()` (prevents accidental data loss)
+- ✅ Only deletes explicitly tracked entities
+- ✅ Test isolation: each test only cleans its own data
+- ✅ Safe by default, respects foreign key constraints
+- ✅ Clear intent: makes test expectations explicit
+
+**Usage Pattern in E2E Tests:**
+
+```typescript
+describe("Tasks API", () => {
+  let cleanup: TestCleanup;
+  let userId: string;
+
+  beforeAll(async () => {
+    // Setup: Create test user
+    const user = await prisma.user.create({
+      data: { email: "test@tasks.com" },
+    });
+    userId = user.id;
+    cleanup.trackUser(userId);
+  });
+
+  afterEach(async () => {
+    // Cleanup: Delete tasks created during test
+    await cleanup.cleanupTasks();
+  });
+
+  afterAll(async () => {
+    // Final cleanup: Delete all tracked entities
+    await cleanup.cleanupAll();
+  });
+
+  it("should create a task", () => {
+    return request(app.getHttpServer())
+      .post("/api/v1/tasks")
+      .set("x-user-id", userId)
+      .send({ title: "New Task", priority: TaskPriority.HIGH })
+      .expect(HttpStatus.CREATED)
+      .expect((res) => {
+        // Track created task for cleanup
+        cleanup.trackTask(res.body.data.id);
+      });
+  });
+});
+```
+
+**Comparison:**
+
+| Pattern           | Safety  | Isolation   | Control           | Best For                  |
+| ----------------- | ------- | ----------- | ----------------- | ------------------------- |
+| `cleanDatabase()` | ❌ Low  | ❌ Global   | ❌ All-or-nothing | ❌ Avoid - too dangerous  |
+| `TestCleanup`     | ✅ High | ✅ Per-test | ✅ Granular       | ✅ All tests - preferred  |
+| No cleanup        | ❌ None | ❌ None     | ❌ Manual         | ❌ Avoid - test pollution |
+
+---
+
 ## Best Practices
 
 1. **Test naming**: Use descriptive test names
 2. **AAA pattern**: Arrange, Act, Assert
 3. **One assertion per test**: Keep tests focused
 4. **Mock external dependencies**: Use mocks for databases, APIs
-5. **Clean up**: Clean database after E2E tests
+5. **Clean up**: Use `TestCleanup` utility to track and cleanup test data
 6. **Test edge cases**: Include error scenarios
+7. **Correlation IDs**: Tests automatically generate correlation IDs for tracing
+8. **Test isolation**: Each test should clean up its own data
 
 ## CI/CD
 

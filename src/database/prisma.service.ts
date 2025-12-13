@@ -2,13 +2,14 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/commo
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { CorrelationService } from "@app/common/correlation";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
   private readonly pool: Pool;
 
-  constructor() {
+  constructor(private readonly correlationService: CorrelationService) {
     // Validate DATABASE_URL exists
     const dbUrl = process.env.DATABASE_URL;
 
@@ -38,7 +39,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // Create Prisma adapter for PostgreSQL
     const adapter = new PrismaPg(pool);
 
-    // Initialize PrismaClient with adapter
+    // Initialize PrismaClient with adapter via parent constructor
     super({
       adapter,
       log:
@@ -54,9 +55,45 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleInit(): Promise<void> {
     try {
       await this.$connect();
-      this.logger.log("Successfully connected to database");
+
+      const context = this.correlationService.getLogContext();
+
+      this.logger.log(`${context} Successfully connected to database`);
+
+      // Log queries in development with correlation ID for performance debugging
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.$on("query" as never, (e: any) => {
+          const queryContext = this.correlationService.getLogContext();
+
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          this.logger.debug(`${queryContext} Query: ${e.query}`);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          this.logger.debug(`${queryContext} Duration: ${e.duration}ms`);
+        });
+      }
+
+      // Log errors with correlation ID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.$on("error" as never, (e: any) => {
+        const errorContext = this.correlationService.getLogContext();
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        this.logger.error(`${errorContext} Database error: ${e.message}`);
+      });
+
+      // Log warnings with correlation ID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.$on("warn" as never, (e: any) => {
+        const warnContext = this.correlationService.getLogContext();
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        this.logger.warn(`${warnContext} Database warning: ${e.message}`);
+      });
     } catch (error) {
-      this.logger.error("Failed to connect to database", error);
+      const context = this.correlationService.getLogContext();
+
+      this.logger.error(`${context} Failed to connect to database`, error);
       throw error;
     }
   }
@@ -65,26 +102,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     try {
       await this.$disconnect();
       await this.pool.end();
-      this.logger.log("Successfully disconnected from database");
+
+      const context = this.correlationService.getLogContext();
+
+      this.logger.log(`${context} Successfully disconnected from database`);
     } catch (error) {
-      this.logger.error("Failed to disconnect from database", error);
+      const context = this.correlationService.getLogContext();
+
+      this.logger.error(`${context} Failed to disconnect from database`, error);
     }
-  }
-
-  /**
-   * Clean up database (useful for testing)
-   * WARNING: This will delete all data!
-   */
-  async cleanDatabase(): Promise<void> {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Cannot clean database in production");
-    }
-
-    // Delete in order to respect foreign key constraints
-    await this.task.deleteMany();
-    await this.user.deleteMany();
-
-    this.logger.warn("Database cleaned");
   }
 
   /**

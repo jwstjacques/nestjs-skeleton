@@ -6,7 +6,8 @@ export class AppService {
   constructor(private readonly appDal: AppDal) {}
 
   /**
-   * Get health status of the API including database connectivity
+   * Get status of the API including database connectivity
+   * Simple, fast check for basic monitoring
    */
   async getHealth() {
     let dbStatus = "disconnected";

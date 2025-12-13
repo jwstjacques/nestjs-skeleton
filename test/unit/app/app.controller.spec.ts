@@ -30,7 +30,7 @@ describe("AppController", () => {
     expect(controller).toBeDefined();
   });
 
-  describe("getHealth", () => {
+  describe("getStatus", () => {
     it("should return health status from service", async () => {
       const healthData = {
         status: "ok",
@@ -45,7 +45,7 @@ describe("AppController", () => {
 
       mockAppService.getHealth.mockResolvedValue(healthData);
 
-      const result = await controller.getHealth();
+      const result = await controller.getStatus();
 
       expect(result).toEqual(healthData);
       expect(mockAppService.getHealth).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe("AppController", () => {
 
       mockAppService.getHealth.mockResolvedValue(healthData);
 
-      const result = await controller.getHealth();
+      const result = await controller.getStatus();
 
       expect(result).toEqual(healthData);
       expect(result.database.status).toBe("disconnected");
@@ -86,7 +86,7 @@ describe("AppController", () => {
 
       mockAppService.getHealth.mockResolvedValue(healthData);
 
-      const result = await controller.getHealth();
+      const result = await controller.getStatus();
 
       expect(result).toEqual(healthData);
       expect(result.database.status).toBe("error");
@@ -106,7 +106,7 @@ describe("AppController", () => {
 
       mockAppService.getHealth.mockResolvedValue(healthData);
 
-      const result = await controller.getHealth();
+      const result = await controller.getStatus();
 
       expect(result.environment).toBe("production");
     });

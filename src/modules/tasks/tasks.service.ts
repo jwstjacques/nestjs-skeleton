@@ -10,9 +10,6 @@ export class TasksService {
 
   constructor(private readonly tasksDal: TasksDal) {}
 
-  /**
-   * Create a new task
-   */
   async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
     this.logger.log(`Creating task for user ${userId}`);
 

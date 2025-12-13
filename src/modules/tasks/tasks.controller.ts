@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Headers,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,7 +23,10 @@ import {
   ApiQuery,
   ApiBearerAuth,
   ApiResponse,
+  ApiTooManyRequestsResponse,
 } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
+import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 import { TasksService } from "./tasks.service";
 import {
   CreateTaskDto,
@@ -32,6 +36,13 @@ import {
   PaginatedTasksResponseDto,
 } from "./dto";
 import { ParseCuidPipe } from "../../common/pipes";
+import {
+  THROTTLE_SHORT_LIMIT,
+  THROTTLE_SHORT_TTL,
+  THROTTLE_MEDIUM_LIMIT,
+  THROTTLE_MEDIUM_TTL,
+} from "../../config/throttler.constants";
+import { CACHE_TTL_LIST, CACHE_TTL_SINGLE } from "../../config/cache.constants";
 
 @ApiTags("tasks")
 @ApiBearerAuth("JWT-auth")
@@ -41,6 +52,7 @@ export class TasksController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
   @ApiOperation({
     summary: "Create a new task",
     description: "Creates a new task for the authenticated user",
@@ -59,6 +71,9 @@ export class TasksController {
       },
     },
   })
+  @ApiTooManyRequestsResponse({
+    description: "Too many requests",
+  })
   async create(
     @Body() createTaskDto: CreateTaskDto,
     @Headers("x-user-id") userId?: string,
@@ -73,6 +88,9 @@ export class TasksController {
   }
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_LIST)
+  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
   @ApiOperation({
     summary: "Get all tasks",
     description:
@@ -132,6 +150,7 @@ export class TasksController {
   }
 
   @Get("statistics")
+  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
   @ApiOperation({
     summary: "Get task statistics",
     description: "Returns statistics about tasks including counts by status and priority",
@@ -159,6 +178,9 @@ export class TasksController {
   }
 
   @Get(":id")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_SINGLE)
+  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
   @ApiOperation({
     summary: "Get a task by ID",
     description: "Retrieves a single task by its UUID",
@@ -199,6 +221,7 @@ export class TasksController {
   }
 
   @Patch(":id")
+  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
   @ApiOperation({
     summary: "Update a task",
     description: "Updates an existing task. Only the task owner can update their tasks.",
@@ -218,6 +241,9 @@ export class TasksController {
   @ApiBadRequestResponse({
     description: "Invalid input data",
   })
+  @ApiTooManyRequestsResponse({
+    description: "Too many requests",
+  })
   async update(
     @Param("id", ParseCuidPipe) id: string,
     @Body() updateTaskDto: UpdateTaskDto,
@@ -229,6 +255,7 @@ export class TasksController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
   @ApiOperation({
     summary: "Delete a task",
     description:
@@ -245,6 +272,9 @@ export class TasksController {
   })
   @ApiNotFoundResponse({
     description: "Task not found",
+  })
+  @ApiTooManyRequestsResponse({
+    description: "Too many requests",
   })
   async remove(@Param("id", ParseCuidPipe) id: string): Promise<void> {
     await this.tasksService.remove(id);

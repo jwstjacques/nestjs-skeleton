@@ -6,9 +6,13 @@ import { HttpExceptionFilter } from "./common/filters";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { SwaggerModule } from "@nestjs/swagger";
 import { createSwaggerConfig } from "./config/swagger.config";
+import compression from "compression";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Compression
+  app.use(compression());
 
   const configService = app.get(ConfigService);
 

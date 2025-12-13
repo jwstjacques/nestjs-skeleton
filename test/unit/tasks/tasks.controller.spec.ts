@@ -25,6 +25,15 @@ describe("TasksController", () => {
           provide: TasksService,
           useValue: mockTasksService,
         },
+        {
+          provide: "CACHE_MANAGER",
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+            reset: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

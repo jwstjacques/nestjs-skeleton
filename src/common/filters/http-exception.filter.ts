@@ -8,8 +8,9 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { CorrelationService } from "../correlation";
-
-export const CORRELATION_ID_HEADER = "x-correlation-id";
+import { HttpStatusUtil } from "../utils/http-status.util";
+import { LogContextUtil } from "../utils/log-context.util";
+import { DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_NAME } from "../constants/error-messages.constants";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -26,8 +27,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const userId = this.correlationService.getUserId();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = "Internal server error";
-    let error = "Internal Server Error";
+    let message = DEFAULT_ERROR_MESSAGE;
+    let error = DEFAULT_ERROR_NAME;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -53,17 +54,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     // Build correlation context string
-    const contextParts = [];
-
-    if (correlationId) {
-      contextParts.push(`[${correlationId}]`);
-    }
-
-    if (userId) {
-      contextParts.push(`[user-${userId}]`);
-    }
-
-    const context = contextParts.join(" ");
+    const context = LogContextUtil.buildContext(correlationId, userId);
 
     // Log the error with correlation ID
     const errorLog = {
@@ -78,9 +69,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       stack: exception instanceof Error ? exception.stack : undefined,
     };
 
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    // Use HttpStatusUtil to determine log level and log appropriately
+    if (HttpStatusUtil.isServerError(status)) {
       this.logger.error(`${context} Server Error: ${JSON.stringify(errorLog)}`);
-    } else if (status >= HttpStatus.BAD_REQUEST) {
+    } else if (HttpStatusUtil.isClientError(status)) {
       this.logger.warn(`${context} Client Error: ${JSON.stringify(errorLog)}`);
     }
 

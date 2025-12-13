@@ -7,6 +7,7 @@ import { CorrelationService } from "./common/correlation";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { SwaggerModule } from "@nestjs/swagger";
 import { createSwaggerConfig } from "./config/swagger.config";
+import { createHelmetConfig } from "./config/helmet.config";
 import compression from "compression";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import helmet from "helmet";
@@ -18,19 +19,7 @@ async function bootstrap() {
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   // Security headers
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https:"],
-        },
-      },
-      crossOriginEmbedderPolicy: false,
-    }),
-  );
+  app.use(helmet(createHelmetConfig()));
 
   // Compression
   app.use(compression());

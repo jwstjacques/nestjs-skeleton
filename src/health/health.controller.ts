@@ -9,6 +9,12 @@ import {
   DiskHealthIndicator,
 } from "@nestjs/terminus";
 import { PrismaService } from "../database/prisma.service";
+import {
+  HEALTH_CHECK_MEMORY_HEAP_THRESHOLD,
+  HEALTH_CHECK_MEMORY_RSS_THRESHOLD,
+  HEALTH_CHECK_DISK_THRESHOLD,
+  HEALTH_CHECK_DISK_PATH,
+} from "../config/health.constants";
 
 @ApiTags("health")
 @Controller("health")
@@ -50,12 +56,16 @@ export class HealthController {
     return this.health.check([
       // Database health
       () => this.prismaHealth.pingCheck("database", this.prisma),
-      // Memory heap check (max 150MB)
-      () => this.memory.checkHeap("memory_heap", 150 * 1024 * 1024),
-      // Memory RSS check (max 300MB)
-      () => this.memory.checkRSS("memory_rss", 300 * 1024 * 1024),
-      // Disk storage check (max 90% usage)
-      () => this.disk.checkStorage("storage", { thresholdPercent: 0.9, path: "/" }),
+      // Memory heap check
+      () => this.memory.checkHeap("memory_heap", HEALTH_CHECK_MEMORY_HEAP_THRESHOLD),
+      // Memory RSS check
+      () => this.memory.checkRSS("memory_rss", HEALTH_CHECK_MEMORY_RSS_THRESHOLD),
+      // Disk storage check
+      () =>
+        this.disk.checkStorage("storage", {
+          thresholdPercent: HEALTH_CHECK_DISK_THRESHOLD,
+          path: HEALTH_CHECK_DISK_PATH,
+        }),
     ]);
   }
 
@@ -79,7 +89,7 @@ export class HealthController {
       // Database must be available
       () => this.prismaHealth.pingCheck("database", this.prisma),
       // Memory within limits
-      () => this.memory.checkHeap("memory_heap", 150 * 1024 * 1024),
+      () => this.memory.checkHeap("memory_heap", HEALTH_CHECK_MEMORY_HEAP_THRESHOLD),
     ]);
   }
 }

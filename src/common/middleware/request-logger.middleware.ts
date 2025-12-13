@@ -1,6 +1,8 @@
 import { Injectable, NestMiddleware, Logger } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { CorrelationService } from "../correlation";
+import { HttpStatusUtil } from "../utils/http-status.util";
+import { LogContextUtil } from "../utils/log-context.util";
 
 @Injectable()
 export class RequestLoggerMiddleware implements NestMiddleware {
@@ -19,23 +21,14 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       const duration = Date.now() - startTime;
       const userId = this.correlationService.getUserId();
 
-      const contextParts = [correlationId ? `[${correlationId}]` : ""];
-
-      if (userId) {
-        contextParts.push(`[user-${userId}]`);
-      }
-
-      const context = contextParts.filter(Boolean).join(" ");
+      const context = LogContextUtil.buildContext(correlationId, userId);
 
       const logMessage = `${context} ${method} ${originalUrl} ${statusCode} ${duration}ms - ${ip} - ${userAgent}`;
 
-      if (statusCode >= 500) {
-        this.logger.error(logMessage);
-      } else if (statusCode >= 400) {
-        this.logger.warn(logMessage);
-      } else {
-        this.logger.log(logMessage);
-      }
+      // Use HttpStatusUtil to determine log level based on status code
+      const logLevel = HttpStatusUtil.getLogLevel(statusCode);
+
+      this.logger[logLevel](logMessage);
     });
 
     next();

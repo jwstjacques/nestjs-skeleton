@@ -65,7 +65,7 @@ export class TasksController {
     description: "Invalid input data",
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ["title must be longer than or equal to 3 characters"],
         error: "Bad Request",
       },
@@ -198,7 +198,7 @@ export class TasksController {
     description: "Task not found",
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
         error: "Not Found",
       },
@@ -208,7 +208,7 @@ export class TasksController {
     description: "Invalid CUID format",
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: "Validation failed",
         error: "Bad Request",
       },

@@ -2,8 +2,7 @@ import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { CorrelationService } from "../correlation";
-
-export const CORRELATION_ID_HEADER = "x-correlation-id";
+import { CORRELATION_ID_HEADER, UUID_V4_REGEX } from "../constants";
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
@@ -14,8 +13,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     const correlationId = (req.headers[CORRELATION_ID_HEADER] as string) || uuidv4();
 
     // Validate correlation ID format (UUID v4)
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(correlationId);
+    const isValidUUID = UUID_V4_REGEX.test(correlationId);
 
     const finalCorrelationId = isValidUUID ? correlationId : uuidv4();
 

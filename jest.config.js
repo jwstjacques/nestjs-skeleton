@@ -23,6 +23,8 @@ module.exports = {
     "!src/**/index.ts",
     "!src/database/prisma.service.ts",
     "!src/config/**/*.constants.ts", // Config constants are data exports, not logic
+    "!src/common/constants/**/*.constants.ts", // Common constants are data exports
+    "!src/config/helmet.config.ts", // Helmet config is straightforward env parsing
   ],
   coverageDirectory: "./coverage",
   testEnvironment: "node",

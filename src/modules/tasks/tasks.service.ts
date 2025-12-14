@@ -1,7 +1,7 @@
-import { Injectable, Logger, ForbiddenException } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Task, Prisma, TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
-import { TaskNotFoundException } from "../../common/exceptions";
+import { TaskNotFoundException, TaskForbiddenException } from "../../common/exceptions";
 import { TasksDal } from "./tasks.dal";
 
 interface UserContext {
@@ -93,7 +93,7 @@ export class TasksService {
 
     // Verify user owns the task (unless admin)
     if (user.role !== UserRole.ADMIN && task.userId !== user.id) {
-      throw new ForbiddenException("You do not have permission to access this task");
+      throw new TaskForbiddenException(id);
     }
 
     return task;

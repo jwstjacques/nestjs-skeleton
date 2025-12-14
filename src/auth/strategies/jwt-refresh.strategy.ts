@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../database/prisma.service";
 import { JwtPayload } from "./jwt.strategy";
+import { UserNotFoundException, UserInactiveException } from "../../common/exceptions";
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
@@ -25,8 +26,12 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
       where: { id: payload.sub, deletedAt: null },
     });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException("User not found or inactive");
+    if (!user) {
+      throw new UserNotFoundException(payload.sub);
+    }
+
+    if (!user.isActive) {
+      throw new UserInactiveException();
     }
 
     return {

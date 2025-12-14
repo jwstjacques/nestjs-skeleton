@@ -1,3 +1,4 @@
+import "tsconfig-paths/register";
 import { NestFactory } from "@nestjs/core";
 import { SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "../src/app.module";
@@ -27,6 +28,7 @@ async function exportOpenAPI() {
   console.log(`✅ OpenAPI specification exported to ${jsonPath}`);
 
   await app.close();
+  process.exit(0);
 }
 
 exportOpenAPI().catch((error) => {

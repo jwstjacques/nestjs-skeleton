@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { User } from "@prisma/client";
@@ -8,6 +8,12 @@ import { CorrelationService } from "../common/correlation";
 import { RegisterDto, LoginDto, AuthResponseDto, UserResponseDto } from "./dto";
 import { JwtPayload } from "./strategies";
 import { plainToInstance } from "class-transformer";
+import {
+  EmailExistsException,
+  UsernameExistsException,
+  InvalidCredentialsException,
+  UserNotFoundException,
+} from "../common/exceptions";
 
 @Injectable()
 export class AuthService {
@@ -37,11 +43,11 @@ export class AuthService {
     if (existingUser) {
       if (existingUser.email === email) {
         this.logger.warn(`${context} Registration failed: Email ${email} already registered`);
-        throw new ConflictException("Email already registered");
+        throw new EmailExistsException(email);
       }
 
       this.logger.warn(`${context} Registration failed: Username ${username} already taken`);
-      throw new ConflictException("Username already taken");
+      throw new UsernameExistsException(username);
     }
 
     // Hash password
@@ -81,7 +87,7 @@ export class AuthService {
 
     if (!user) {
       this.logger.warn(`${context} Login failed: Invalid credentials for ${loginDto.username}`);
-      throw new UnauthorizedException("Invalid credentials");
+      throw new InvalidCredentialsException();
     }
 
     this.logger.log(`${context} User logged in successfully: ${user.username} (ID: ${user.id})`);
@@ -141,7 +147,7 @@ export class AuthService {
 
     if (!user || !user.isActive) {
       this.logger.warn(`${context} Refresh token failed: User ${userId} not found or inactive`);
-      throw new UnauthorizedException("User not found or inactive");
+      throw new UserNotFoundException(userId);
     }
 
     this.logger.log(

@@ -11,6 +11,19 @@ import { CorrelationService } from "../correlation";
 import { HttpStatusUtil } from "../utils/http-status.util";
 import { LogContextUtil } from "../utils/log-context.util";
 import { DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_NAME } from "../constants/error-messages.constants";
+import { ApplicationException } from "../exceptions/application.exception";
+import { ErrorCode } from "../constants/error-codes.constants";
+
+interface ErrorResponse {
+  statusCode: number;
+  message: string | string[];
+  error: string;
+  errorCode?: ErrorCode;
+  timestamp: string;
+  path: string;
+  correlationId: string;
+  details?: unknown;
+}
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -27,30 +40,67 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const userId = this.correlationService.getUserId();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = DEFAULT_ERROR_MESSAGE;
+    let message: string | string[] = DEFAULT_ERROR_MESSAGE;
     let error = DEFAULT_ERROR_NAME;
+    let errorCode: ErrorCode | undefined;
+    let details: unknown;
 
-    if (exception instanceof HttpException) {
+    // Handle ApplicationException (our custom exceptions with error codes)
+    if (exception instanceof ApplicationException) {
+      status = exception.getStatus();
+      errorCode = exception.getErrorCode();
+      const exceptionResponse = exception.getResponse();
+
+      if (typeof exceptionResponse === "object" && exceptionResponse !== null) {
+        const responseObj = exceptionResponse as Record<string, unknown>;
+
+        message = (responseObj.message as string) || exception.message;
+        error = (responseObj.error as string) || exception.name;
+        details = responseObj.details;
+      } else {
+        message = String(exceptionResponse);
+        error = exception.name;
+      }
+    }
+    // Handle standard HttpException
+    else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === "object" && exceptionResponse !== null) {
-        const responseObj = exceptionResponse;
+        const responseObj = exceptionResponse as Record<string, unknown>;
+        const responseMessage = responseObj.message;
 
-        const responseMessage = (responseObj as Record<string, unknown>).message;
+        message = Array.isArray(responseMessage)
+          ? responseMessage
+          : typeof responseMessage === "string"
+            ? responseMessage
+            : exception.message;
 
-        message = typeof responseMessage === "string" ? responseMessage : exception.message;
-
-        const responseError = (responseObj as Record<string, unknown>).error;
+        const responseError = responseObj.error;
 
         error = typeof responseError === "string" ? responseError : exception.name;
+
+        // Try to extract errorCode if present
+        if (responseObj.errorCode && typeof responseObj.errorCode === "string") {
+          errorCode = responseObj.errorCode as ErrorCode;
+        }
       } else {
-        message = exceptionResponse;
+        message = String(exceptionResponse);
         error = exception.name;
       }
-    } else if (exception instanceof Error) {
+    }
+    // Handle standard Error
+    else if (exception instanceof Error) {
       message = exception.message;
       error = exception.name;
+      errorCode = ErrorCode.SYSTEM_INTERNAL_ERROR;
+    }
+    // Handle unknown errors
+    else {
+      message = DEFAULT_ERROR_MESSAGE;
+      error = DEFAULT_ERROR_NAME;
+      errorCode = ErrorCode.SYSTEM_INTERNAL_ERROR;
     }
 
     // Build correlation context string
@@ -66,6 +116,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode: status,
       message,
       error,
+      errorCode,
       stack: exception instanceof Error ? exception.stack : undefined,
     };
 
@@ -76,14 +127,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.warn(`${context} Client Error: ${JSON.stringify(errorLog)}`);
     }
 
-    // Include correlation ID in error response
-    response.status(status).json({
+    // Build error response
+    const errorResponse: ErrorResponse = {
       statusCode: status,
       message,
       error,
-      correlationId, // Include in response for debugging
       timestamp: new Date().toISOString(),
       path: request.url,
-    });
+      correlationId: correlationId || "unknown",
+    };
+
+    // Add error code if present
+    if (errorCode) {
+      errorResponse.errorCode = errorCode;
+    }
+
+    // Add details if present (for validation errors, etc.)
+    if (details) {
+      errorResponse.details = details;
+    }
+
+    // Send response
+    response.status(status).json(errorResponse);
   }
 }

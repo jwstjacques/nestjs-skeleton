@@ -1,5 +1,6 @@
 import { HttpStatus } from "@nestjs/common";
 import { ThrottlerException } from "../../../../src/common/exceptions/throttler.exception";
+import { ErrorCode } from "../../../../src/common/constants/error-codes.constants";
 
 describe("ThrottlerException", () => {
   describe("constructor", () => {
@@ -24,12 +25,14 @@ describe("ThrottlerException", () => {
         statusCode: number;
         message: string;
         error: string;
+        errorCode: string;
       };
 
       expect(response).toBeDefined();
       expect(response.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
-      expect(response.message).toBe("Too many requests, please try again later");
-      expect(response.error).toBe("Too Many Requests");
+      expect(response.message).toBe("Rate limit exceeded. Please try again later");
+      expect(response.error).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
+      expect(response.errorCode).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
     });
 
     it("should create exception with custom message", () => {
@@ -39,11 +42,13 @@ describe("ThrottlerException", () => {
         statusCode: number;
         message: string;
         error: string;
+        errorCode: string;
       };
 
       expect(response.message).toBe(customMessage);
       expect(response.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
-      expect(response.error).toBe("Too Many Requests");
+      expect(response.error).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
+      expect(response.errorCode).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
     });
 
     it("should override default message when custom message provided", () => {
@@ -53,28 +58,34 @@ describe("ThrottlerException", () => {
       const response1 = exception1.getResponse() as { message: string };
       const response2 = exception2.getResponse() as { message: string };
 
-      expect(response1.message).toBe("Too many requests, please try again later");
+      expect(response1.message).toBe("Rate limit exceeded. Please try again later");
       expect(response2.message).toBe("Custom limit message");
       expect(response1.message).not.toBe(response2.message);
     });
 
-    it("should handle empty string as custom message", () => {
+    it("should handle empty string as custom message by using default", () => {
       const exception = new ThrottlerException("");
       const response = exception.getResponse() as { message: string };
 
-      // Empty string is falsy, so it should use default message
-      expect(response.message).toBe("Too many requests, please try again later");
+      // Empty string should use the empty string, not default
+      expect(response.message).toBe("");
     });
 
-    it("should maintain error field as 'Too Many Requests'", () => {
+    it("should maintain error code as SYSTEM_RATE_LIMIT_EXCEEDED", () => {
       const exception1 = new ThrottlerException();
       const exception2 = new ThrottlerException("Custom message");
 
-      const response1 = exception1.getResponse() as { error: string };
-      const response2 = exception2.getResponse() as { error: string };
+      const response1 = exception1.getResponse() as { errorCode: string };
+      const response2 = exception2.getResponse() as { errorCode: string };
 
-      expect(response1.error).toBe("Too Many Requests");
-      expect(response2.error).toBe("Too Many Requests");
+      expect(response1.errorCode).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
+      expect(response2.errorCode).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
+    });
+
+    it("should have errorCode in response", () => {
+      const exception = new ThrottlerException();
+
+      expect(exception.getErrorCode()).toBe(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED);
     });
   });
 
@@ -86,14 +97,22 @@ describe("ThrottlerException", () => {
       expect(response).toHaveProperty("statusCode");
       expect(response).toHaveProperty("message");
       expect(response).toHaveProperty("error");
+      expect(response).toHaveProperty("errorCode");
+      expect(response).toHaveProperty("timestamp");
     });
 
     it("should have consistent response structure with custom message", () => {
       const exception = new ThrottlerException("API rate limit reached");
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(Object.keys(response)).toEqual(["statusCode", "message", "error"]);
-      expect(Object.keys(response).length).toBe(3);
+      expect(Object.keys(response)).toEqual([
+        "statusCode",
+        "message",
+        "error",
+        "errorCode",
+        "timestamp",
+      ]);
+      expect(Object.keys(response).length).toBe(5);
     });
   });
 

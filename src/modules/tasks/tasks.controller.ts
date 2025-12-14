@@ -70,6 +70,10 @@ export class TasksController {
         statusCode: HttpStatus.BAD_REQUEST,
         message: ["title must be longer than or equal to 3 characters"],
         error: "Bad Request",
+        errorCode: "VALIDATION_FAILED",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
       },
     },
   })
@@ -199,6 +203,10 @@ export class TasksController {
         statusCode: HttpStatus.NOT_FOUND,
         message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
         error: "Not Found",
+        errorCode: "TASK_NOT_FOUND",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
       },
     },
   })
@@ -207,13 +215,28 @@ export class TasksController {
     schema: {
       example: {
         statusCode: HttpStatus.BAD_REQUEST,
-        message: "Validation failed",
+        message: "Invalid CUID format: invalid-id",
         error: "Bad Request",
+        errorCode: "VALIDATION_INVALID_CUID",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/invalid-id",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
       },
     },
   })
   @ApiForbiddenResponse({
     description: "Cannot access other user's task",
+    schema: {
+      example: {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+        error: "Forbidden",
+        errorCode: "TASK_FORBIDDEN",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   async findOne(
     @Param("id", ParseCuidPipe) id: string,
@@ -241,12 +264,45 @@ export class TasksController {
   })
   @ApiNotFoundResponse({
     description: "Task not found",
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+        error: "Not Found",
+        errorCode: "TASK_NOT_FOUND",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiBadRequestResponse({
     description: "Invalid input data",
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: "Invalid CUID format: invalid-id",
+        error: "Bad Request",
+        errorCode: "VALIDATION_INVALID_CUID",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/invalid-id",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiForbiddenResponse({
     description: "Cannot update other user's task",
+    schema: {
+      example: {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+        error: "Forbidden",
+        errorCode: "TASK_FORBIDDEN",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiTooManyRequestsResponse({
     description: "Too many requests",
@@ -280,9 +336,31 @@ export class TasksController {
   })
   @ApiNotFoundResponse({
     description: "Task not found",
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+        error: "Not Found",
+        errorCode: "TASK_NOT_FOUND",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiForbiddenResponse({
     description: "Cannot delete other user's task",
+    schema: {
+      example: {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+        error: "Forbidden",
+        errorCode: "TASK_FORBIDDEN",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiTooManyRequestsResponse({
     description: "Too many requests",
@@ -313,9 +391,31 @@ export class TasksController {
   })
   @ApiForbiddenResponse({
     description: "Admin access required",
+    schema: {
+      example: {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: "Forbidden resource",
+        error: "Forbidden",
+        errorCode: "RESOURCE_FORBIDDEN",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiNotFoundResponse({
     description: "Task not found",
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+        error: "Not Found",
+        errorCode: "TASK_NOT_FOUND",
+        timestamp: "2025-12-13T10:30:00.000Z",
+        path: "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
+        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    },
   })
   @ApiTooManyRequestsResponse({
     description: "Too many requests",

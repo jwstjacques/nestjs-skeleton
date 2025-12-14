@@ -1,4 +1,4 @@
-import { BadRequestException } from "@nestjs/common";
+import { InvalidCuidException } from "../../../../src/common/exceptions";
 import { ParseCuidPipe } from "../../../../src/common/pipes/parse-cuid.pipe";
 
 describe("ParseCuidPipe", () => {
@@ -36,106 +36,86 @@ describe("ParseCuidPipe", () => {
     });
 
     describe("invalid CUIDs", () => {
-      it("should throw BadRequestException for CUID not starting with 'c'", () => {
+      it("should throw InvalidCuidException for CUID not starting with 'c'", () => {
         const invalidCuid = "dlh9k7x2a0000qmxbzv0q0001";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for CUID with uppercase letters", () => {
+      it("should throw InvalidCuidException for CUID with uppercase letters", () => {
         const invalidCuid = "clh9K7x2a0000qmxbzv0q0001";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for CUID that is too short", () => {
+      it("should throw InvalidCuidException for CUID that is too short", () => {
         const invalidCuid = "clh9k7x2a0000qmxbzv0q000";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for CUID that is too long", () => {
+      it("should throw InvalidCuidException for CUID that is too long", () => {
         const invalidCuid = "clh9k7x2a0000qmxbzv0q00011";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for empty string", () => {
+      it("should throw InvalidCuidException for empty string", () => {
         const invalidCuid = "";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for string with special characters", () => {
+      it("should throw InvalidCuidException for string with special characters", () => {
         const invalidCuid = "clh9k7x2a0000qmxbzv0q000!";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for string with spaces", () => {
+      it("should throw InvalidCuidException for string with spaces", () => {
         const invalidCuid = "clh9k7x2a0000qmxbzv0q 001";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for string with hyphens", () => {
+      it("should throw InvalidCuidException for string with hyphens", () => {
         const invalidCuid = "clh9k7x2a-000qmxbzv0q0001";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for null value", () => {
+      it("should throw InvalidCuidException for null value", () => {
         const invalidCuid = null as unknown as string;
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
       });
 
-      it("should throw BadRequestException for undefined value", () => {
+      it("should throw InvalidCuidException for undefined value", () => {
         const invalidCuid = undefined as unknown as string;
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
       });
 
-      it("should throw BadRequestException for CUID starting with uppercase C", () => {
+      it("should throw InvalidCuidException for CUID starting with uppercase C", () => {
         const invalidCuid = "Clh9k7x2a0000qmxbzv0q0001";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
 
-      it("should throw BadRequestException for numeric-only string without 'c' prefix", () => {
+      it("should throw InvalidCuidException for numeric-only string without 'c' prefix", () => {
         const invalidCuid = "1234567890123456789012345";
 
-        expect(() => pipe.transform(invalidCuid)).toThrow(BadRequestException);
-        expect(() => pipe.transform(invalidCuid)).toThrow(
-          `Validation failed (valid CUID is expected). Received: "${invalidCuid}"`,
-        );
+        expect(() => pipe.transform(invalidCuid)).toThrow(InvalidCuidException);
+        expect(() => pipe.transform(invalidCuid)).toThrow(`Invalid CUID format: ${invalidCuid}`);
       });
     });
   });

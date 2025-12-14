@@ -1,14 +1,9 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpStatus } from "@nestjs/common";
+import { ApplicationException } from "./application.exception";
+import { ErrorCode } from "../constants/error-codes.constants";
 
-export class ThrottlerException extends HttpException {
+export class ThrottlerException extends ApplicationException {
   constructor(message?: string) {
-    super(
-      {
-        statusCode: HttpStatus.TOO_MANY_REQUESTS,
-        message: message || "Too many requests, please try again later",
-        error: "Too Many Requests",
-      },
-      HttpStatus.TOO_MANY_REQUESTS,
-    );
+    super(ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED, message, HttpStatus.TOO_MANY_REQUESTS);
   }
 }

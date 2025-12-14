@@ -341,9 +341,8 @@ describe("TasksController (e2e)", () => {
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
-          expect(res.body.message).toBe(
-            `Validation failed (valid CUID is expected). Received: "${fakeId}"`,
-          );
+          expect(res.body.message).toBe(`Invalid CUID format: ${fakeId}`);
+          expect(res.body.errorCode).toBe("VALIDATION_INVALID_CUID");
         });
     });
 
@@ -353,9 +352,8 @@ describe("TasksController (e2e)", () => {
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
-          expect(res.body.message).toBe(
-            `Validation failed (valid CUID is expected). Received: "invalid-id"`,
-          );
+          expect(res.body.message).toBe(`Invalid CUID format: invalid-id`);
+          expect(res.body.errorCode).toBe("VALIDATION_INVALID_CUID");
         });
     });
   });

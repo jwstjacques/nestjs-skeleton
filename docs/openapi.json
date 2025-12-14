@@ -1,10 +1,10 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/health": {
+    "/status": {
       "get": {
-        "description": "Returns the health status of the API",
-        "operationId": "AppController_getHealth",
+        "description": "Returns basic API status for quick monitoring (uptime, environment, database connectivity)",
+        "operationId": "AppController_getStatus",
         "parameters": [],
         "responses": {
           "200": {
@@ -27,7 +27,7 @@
             }
           }
         },
-        "summary": "Health check",
+        "summary": "Simple status check",
         "tags": ["App"]
       }
     },
@@ -60,20 +60,206 @@
         "tags": ["App"]
       }
     },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or user already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "examples": {
+                    "validationError": {
+                      "value": {
+                        "statusCode": 400,
+                        "message": ["email must be an email"],
+                        "error": "Bad Request",
+                        "errorCode": "VALIDATION_FAILED",
+                        "timestamp": "2025-12-13T10:30:00.000Z",
+                        "path": "/api/v1/auth/register",
+                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                      }
+                    },
+                    "emailExists": {
+                      "value": {
+                        "statusCode": 409,
+                        "message": "Email already registered: test@example.com",
+                        "error": "Conflict",
+                        "errorCode": "AUTH_EMAIL_EXISTS",
+                        "timestamp": "2025-12-13T10:30:00.000Z",
+                        "path": "/api/v1/auth/register",
+                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                      }
+                    },
+                    "usernameExists": {
+                      "value": {
+                        "statusCode": 409,
+                        "message": "Username already taken: johndoe",
+                        "error": "Conflict",
+                        "errorCode": "AUTH_USERNAME_EXISTS",
+                        "timestamp": "2025-12-13T10:30:00.000Z",
+                        "path": "/api/v1/auth/register",
+                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a new user",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Invalid email or password",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_INVALID_CREDENTIALS",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/auth/login",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login with username/email and password",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tokens successfully refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "examples": {
+                    "tokenExpired": {
+                      "value": {
+                        "statusCode": 401,
+                        "message": "Authentication token has expired",
+                        "error": "Unauthorized",
+                        "errorCode": "AUTH_TOKEN_EXPIRED",
+                        "timestamp": "2025-12-13T10:30:00.000Z",
+                        "path": "/api/v1/auth/refresh",
+                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                      }
+                    },
+                    "tokenInvalid": {
+                      "value": {
+                        "statusCode": 401,
+                        "message": "Invalid authentication token",
+                        "error": "Unauthorized",
+                        "errorCode": "AUTH_TOKEN_INVALID",
+                        "timestamp": "2025-12-13T10:30:00.000Z",
+                        "path": "/api/v1/auth/refresh",
+                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Refresh access token using refresh token",
+        "tags": ["auth"]
+      }
+    },
     "/tasks": {
       "post": {
         "description": "Creates a new task for the authenticated user",
         "operationId": "TasksController_create",
-        "parameters": [
-          {
-            "name": "x-user-id",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -103,11 +289,18 @@
                   "example": {
                     "statusCode": 400,
                     "message": ["title must be longer than or equal to 3 characters"],
-                    "error": "Bad Request"
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
                   }
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too many requests"
           }
         },
         "security": [
@@ -223,16 +416,7 @@
       "get": {
         "description": "Returns statistics about tasks including counts by status and priority",
         "operationId": "TasksController_getStatistics",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Successfully retrieved statistics",
@@ -300,8 +484,30 @@
                 "schema": {
                   "example": {
                     "statusCode": 400,
-                    "message": "Validation failed",
-                    "error": "Bad Request"
+                    "message": "Invalid CUID format: invalid-id",
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_INVALID_CUID",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/invalid-id",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cannot access other user's task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
                   }
                 }
               }
@@ -315,7 +521,11 @@
                   "example": {
                     "statusCode": 404,
                     "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-                    "error": "Not Found"
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
                   }
                 }
               }
@@ -367,10 +577,61 @@
             }
           },
           "400": {
-            "description": "Invalid input data"
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": "Invalid CUID format: invalid-id",
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_INVALID_CUID",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/invalid-id",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cannot update other user's task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Task not found"
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests"
           }
         },
         "security": [
@@ -400,8 +661,44 @@
           "204": {
             "description": "Task successfully deleted"
           },
+          "403": {
+            "description": "Cannot delete other user's task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
           "404": {
-            "description": "Task not found"
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests"
           }
         },
         "security": [
@@ -411,6 +708,540 @@
         ],
         "summary": "Delete a task",
         "tags": ["tasks"]
+      }
+    },
+    "/tasks/admin/purge/{id}": {
+      "delete": {
+        "description": "Hard deletes a task from the database. Requires ADMIN role.",
+        "operationId": "TasksController_purge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Task CUID",
+            "schema": {
+              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Task permanently deleted"
+          },
+          "403": {
+            "description": "Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "Forbidden resource",
+                    "error": "Forbidden",
+                    "errorCode": "RESOURCE_FORBIDDEN",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "path": "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
+                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Permanently delete a task (admin only)",
+        "tags": ["tasks"]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Comprehensive health check",
+        "tags": ["health"]
+      }
+    },
+    "/health/liveness": {
+      "get": {
+        "operationId": "HealthController_checkLiveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liveness probe (Kubernetes)",
+        "tags": ["health"]
+      }
+    },
+    "/health/readiness": {
+      "get": {
+        "operationId": "HealthController_checkReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Readiness probe (Kubernetes)",
+        "tags": ["health"]
       }
     }
   },
@@ -456,6 +1287,140 @@
       }
     },
     "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique username",
+            "example": "johndoe",
+            "minLength": 3,
+            "maxLength": 30
+          },
+          "password": {
+            "type": "string",
+            "description": "User password (min 8 characters, must include uppercase, lowercase, number, and special character)",
+            "example": "SecureP@ssw0rd",
+            "minLength": 8
+          },
+          "firstName": {
+            "type": "string",
+            "description": "User's first name (optional)",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "User's last name (optional)",
+            "example": "Doe"
+          }
+        },
+        "required": ["email", "username", "password"]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe"
+          },
+          "firstName": {
+            "type": "object",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "object",
+            "example": "Doe"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["USER", "ADMIN"],
+            "example": "USER"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-11-28T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "firstName",
+          "lastName",
+          "role",
+          "isActive",
+          "createdAt"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT access token (expires in 15 minutes)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token (expires in 7 days)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "description": "User information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["accessToken", "refreshToken", "user"]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username or email",
+            "example": "johndoe"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "SecurePass123!"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": ["refreshToken"]
+      },
       "CreateTaskDto": {
         "type": "object",
         "properties": {

@@ -1,4 +1,5 @@
-import { PipeTransform, Injectable, BadRequestException } from "@nestjs/common";
+import { PipeTransform, Injectable } from "@nestjs/common";
+import { InvalidCuidException } from "../exceptions";
 
 /**
  * Validates that a string parameter is a valid CUID format
@@ -18,9 +19,7 @@ export class ParseCuidPipe implements PipeTransform<string, string> {
     const cuidRegex = /^c[a-z0-9]{24}$/;
 
     if (!cuidRegex.test(value)) {
-      throw new BadRequestException(
-        `Validation failed (valid CUID is expected). Received: "${value}"`,
-      );
+      throw new InvalidCuidException(value);
     }
 
     return value;

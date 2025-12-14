@@ -7,9 +7,14 @@ This guide walks you through testing the NestJS Task API using Postman.
 - [Prerequisites](#prerequisites)
 - [Importing the Collection](#importing-the-collection)
 - [Setting Up Environment](#setting-up-environment)
+- [Authentication Workflow](#-authentication-workflow)
 - [Running Tests](#running-tests)
 - [Test Scenarios](#test-scenarios)
 - [Troubleshooting](#troubleshooting)
+- [Best Practices](#best-practices)
+- [Error Codes Reference](#error-codes-reference)
+- [Advanced Features](#advanced-features)
+- [Summary](#summary)
 
 ---
 
@@ -59,10 +64,11 @@ Verify the app is running at: [http://localhost:3000/api/v1/](http://localhost:3
 
 After importing, you should see:
 
-- Collection name: **"NestJS Task API"**
-- Two folders:
+- Collection name: **"NestJS Task Management API"**
+- Three folders:
+  - **Authentication** (3 endpoints: Register, Login, Refresh Token)
   - **Tasks** (6 endpoints)
-  - **Health & Info** (3 endpoints)
+  - **Health & Info** (2 endpoints)
 
 ---
 
@@ -90,6 +96,121 @@ The collection already has a `baseUrl` variable configured. No additional setup 
 
 ---
 
+## 🔐 Authentication Workflow
+
+The API uses JWT-based authentication. All task endpoints require a valid access token.
+
+### Quick Start: Register and Login
+
+**Step 1: Register a New User**
+
+1. Open the **Authentication** folder
+2. Select **"Register"**
+3. The request body is already populated with example data:
+   ```json
+   {
+     "email": "john.doe@example.com",
+     "username": "johndoe",
+     "password": "SecurePass123!",
+     "firstName": "John",
+     "lastName": "Doe"
+   }
+   ```
+4. Click **"Send"**
+5. On success (201), you'll receive a response with user details
+
+**Step 2: Login to Get Tokens**
+
+1. Select **"Login"** from the Authentication folder
+2. Use the credentials from registration:
+   ```json
+   {
+     "identifier": "john.doe@example.com",
+     "password": "SecurePass123!"
+   }
+   ```
+3. Click **"Send"**
+4. On success (200), the response includes:
+   - `accessToken` - Used for API requests (expires in 15 minutes)
+   - `refreshToken` - Used to get new access tokens (expires in 7 days)
+
+**🎯 Automatic Token Management**
+
+The collection includes test scripts that automatically save tokens to environment variables:
+
+```javascript
+// Runs after successful login/refresh
+if (pm.response.code === 200) {
+  const jsonData = pm.response.json();
+  pm.environment.set("accessToken", jsonData.data.accessToken);
+  pm.environment.set("refreshToken", jsonData.data.refreshToken);
+}
+```
+
+After logging in, tokens are saved as `{{accessToken}}` and `{{refreshToken}}` variables.
+
+**Step 3: Test Authenticated Endpoints**
+
+1. Navigate to the **Tasks** folder
+2. All task requests automatically use the saved `{{accessToken}}`
+3. Try **"Create Task"** - it will work because folder-level auth is configured
+4. No need to manually add auth headers!
+
+**Step 4: Refresh Expired Tokens**
+
+When your access token expires (after 15 minutes):
+
+1. Select **"Refresh Token"** from the Authentication folder
+2. The request automatically uses your saved `{{refreshToken}}`
+3. Click **"Send"**
+4. New tokens are automatically saved, replacing the old ones
+
+### Authentication Error Scenarios
+
+The collection includes examples for common auth errors:
+
+**Register Errors:**
+
+- `AUTH_EMAIL_EXISTS` (409) - Email already registered
+- `AUTH_USERNAME_EXISTS` (409) - Username taken
+- `VALIDATION_FAILED` (400) - Invalid email format or weak password
+
+**Login Errors:**
+
+- `AUTH_INVALID_CREDENTIALS` (401) - Wrong email/username or password
+
+**Token Errors:**
+
+- `AUTH_TOKEN_EXPIRED` (401) - Access token expired, use refresh endpoint
+- `AUTH_TOKEN_INVALID` (401) - Token malformed or refresh token expired
+
+### How Folder-Level Auth Works
+
+The **Tasks** folder has Bearer authentication configured at the folder level:
+
+```json
+{
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}
+```
+
+This means:
+
+- All requests inside the Tasks folder automatically include: `Authorization: Bearer {{accessToken}}`
+- No need to configure auth on individual requests
+- When you refresh tokens, all task requests use the new token automatically
+
+---
+
 ## Running Tests
 
 ### Single Request Test
@@ -100,9 +221,16 @@ The collection already has a `baseUrl` variable configured. No additional setup 
 
 ### Testing the Complete Workflow
 
-Follow this sequence to test all CRUD operations:
+Follow this sequence to test all CRUD operations. **Note:** You must authenticate first (see [Authentication Workflow](#-authentication-workflow) above) before testing task endpoints.
 
-#### Step 1: Health Check
+#### Step 1: Authenticate
+
+1. **Register** a new user (Authentication → Register)
+2. **Login** to get tokens (Authentication → Login)
+3. Tokens are automatically saved to `{{accessToken}}` and `{{refreshToken}}`
+4. All task requests will now work with the saved token
+
+#### Step 2: Health Check
 
 **Request:** `Health & Info → Health Check`
 
@@ -124,7 +252,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 2: Create a Task
+#### Step 3: Create a Task
 
 **Request:** `Tasks → Create Task`
 
@@ -162,7 +290,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 3: Get All Tasks
+#### Step 4: Get All Tasks
 
 **Request:** `Tasks → Get All Tasks`
 
@@ -192,7 +320,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 4: Get Task by ID
+#### Step 5: Get Task by ID
 
 **Request:** `Tasks → Get Task by ID`
 
@@ -200,7 +328,7 @@ Follow this sequence to test all CRUD operations:
 
 1. Click on the request
 2. Click on **"Params"** tab
-3. In the URL, replace `:id` with the CUID you copied in Step 2
+3. In the URL, replace `:id` with the CUID you copied in Step 3
    - Example: `.../tasks/cmiympu7x00002tsaknh5dqql`
 
 **Expected Response (200 OK):**
@@ -221,7 +349,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 5: Update Task
+#### Step 6: Update Task
 
 **Request:** `Tasks → Update Task`
 
@@ -256,7 +384,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 6: Get Task Statistics
+#### Step 7: Get Task Statistics
 
 **Request:** `Tasks → Get Task Statistics`
 
@@ -283,7 +411,7 @@ Follow this sequence to test all CRUD operations:
 
 ---
 
-#### Step 7: Delete Task
+#### Step 8: Delete Task
 
 **Request:** `Tasks → Delete Task`
 
@@ -387,7 +515,7 @@ Sort by different fields:
 
 ### Scenario 5: Error Handling
 
-Test validation and error responses:
+Test validation and error responses with error codes for frontend translation:
 
 **Test 1: Invalid CUID Format**
 
@@ -399,11 +527,13 @@ Test validation and error responses:
 
 ```json
 {
-  "success": false,
   "statusCode": 400,
-  "message": "Validation failed (CUID is expected)",
-  "timestamp": "2025-12-09T10:40:00.000Z",
-  "path": "/api/v1/tasks/invalid-id"
+  "message": "Invalid CUID format: invalid-id",
+  "error": "Bad Request",
+  "errorCode": "VALIDATION_INVALID_CUID",
+  "timestamp": "2025-12-13T10:30:00.000Z",
+  "path": "/api/v1/tasks/invalid-id",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -419,11 +549,13 @@ Test validation and error responses:
 
 ```json
 {
-  "success": false,
   "statusCode": 404,
-  "message": "Task with ID caaaaaaaaaaaaaaaaaaaaaaaaa not found",
-  "timestamp": "2025-12-09T10:41:00.000Z",
-  "path": "/api/v1/tasks/caaaaaaaaaaaaaaaaaaaaaaaaa"
+  "message": "Task with ID 'caaaaaaaaaaaaaaaaaaaaaaaaa' not found",
+  "error": "Not Found",
+  "errorCode": "TASK_NOT_FOUND",
+  "timestamp": "2025-12-13T10:30:00.000Z",
+  "path": "/api/v1/tasks/caaaaaaaaaaaaaaaaaaaaaaaaa",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -447,11 +579,13 @@ Test validation and error responses:
 
 ```json
 {
-  "success": false,
   "statusCode": 400,
   "message": ["title should not be empty", "title must be a string"],
-  "timestamp": "2025-12-09T10:42:00.000Z",
-  "path": "/api/v1/tasks"
+  "error": "Bad Request",
+  "errorCode": "VALIDATION_FAILED",
+  "timestamp": "2025-12-13T10:30:00.000Z",
+  "path": "/api/v1/tasks",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -578,6 +712,60 @@ Run all requests in sequence:
 2. Select **"Run collection"**
 3. Choose which requests to run
 4. Click **"Run NestJS Task API"**
+
+---
+
+## Error Codes Reference
+
+All error responses now include an `errorCode` field for consistent error handling and frontend translation:
+
+### Common Error Codes
+
+| Error Code                   | HTTP Status | Description                  |
+| ---------------------------- | ----------- | ---------------------------- |
+| `VALIDATION_FAILED`          | 400         | Request validation failed    |
+| `VALIDATION_INVALID_CUID`    | 400         | Invalid CUID format          |
+| `TASK_NOT_FOUND`             | 404         | Task does not exist          |
+| `TASK_FORBIDDEN`             | 403         | No permission to access task |
+| `AUTH_INVALID_CREDENTIALS`   | 401         | Invalid login credentials    |
+| `AUTH_TOKEN_EXPIRED`         | 401         | Authentication token expired |
+| `AUTH_TOKEN_INVALID`         | 401         | Invalid authentication token |
+| `AUTH_EMAIL_EXISTS`          | 409         | Email already registered     |
+| `SYSTEM_RATE_LIMIT_EXCEEDED` | 429         | Too many requests            |
+
+### Error Response Structure
+
+All errors follow this structure:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Error description",
+  "error": "HTTP status text",
+  "errorCode": "ERROR_CODE_CONSTANT",
+  "timestamp": "2025-12-13T10:30:00.000Z",
+  "path": "/api/v1/endpoint",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Using Error Codes in Tests
+
+You can test for specific error codes in Postman:
+
+```javascript
+pm.test("Returns correct error code", function () {
+  const jsonData = pm.response.json();
+  pm.expect(jsonData.errorCode).to.eql("TASK_NOT_FOUND");
+});
+
+pm.test("Has correlation ID", function () {
+  const jsonData = pm.response.json();
+  pm.expect(jsonData.correlationId).to.exist;
+});
+```
+
+For a complete list of error codes, see [ERROR_CODES.md](./ERROR_CODES.md)
 
 ---
 

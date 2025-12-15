@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { CorrelationService } from "@app/common/correlation";
@@ -62,32 +62,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
       // Log queries in development with correlation ID for performance debugging
       if (process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.$on("query" as never, (e: any) => {
+        (this as PrismaClient).$on("query" as never, (e: Prisma.QueryEvent) => {
           const queryContext = this.correlationService.getLogContext();
 
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           this.logger.debug(`${queryContext} Query: ${e.query}`);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           this.logger.debug(`${queryContext} Duration: ${e.duration}ms`);
         });
       }
 
       // Log errors with correlation ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.$on("error" as never, (e: any) => {
+      (this as PrismaClient).$on("error" as never, (e: Prisma.LogEvent) => {
         const errorContext = this.correlationService.getLogContext();
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         this.logger.error(`${errorContext} Database error: ${e.message}`);
       });
 
       // Log warnings with correlation ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.$on("warn" as never, (e: any) => {
+      (this as PrismaClient).$on("warn" as never, (e: Prisma.LogEvent) => {
         const warnContext = this.correlationService.getLogContext();
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         this.logger.warn(`${warnContext} Database warning: ${e.message}`);
       });
     } catch (error) {

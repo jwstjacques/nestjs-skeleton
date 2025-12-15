@@ -6,7 +6,7 @@ import {
   TaskInvalidPriorityException,
   TaskAlreadyCompletedException,
 } from "../../../../src/modules/tasks/exceptions";
-import { ErrorCode } from "../../../../src/common/constants/error-codes.constants";
+import { TaskErrorCode, TASK_MESSAGES } from "../../../../src/modules/tasks/constants";
 
 describe("Task Exceptions", () => {
   describe("TaskForbiddenException", () => {
@@ -14,12 +14,12 @@ describe("Task Exceptions", () => {
       const exception = new TaskForbiddenException() as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.FORBIDDEN);
-      expect(exception.getErrorCode()).toBe(ErrorCode.TASK_FORBIDDEN);
+      expect(exception.getErrorCode()).toBe(TaskErrorCode.TASK_FORBIDDEN);
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe("You do not have permission to access this task");
-      expect(response.errorCode).toBe(ErrorCode.TASK_FORBIDDEN);
+      expect(response.message).toBe(TASK_MESSAGES.FORBIDDEN());
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_FORBIDDEN);
     });
 
     it("should create exception with task ID in message", () => {
@@ -28,8 +28,8 @@ describe("Task Exceptions", () => {
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`You do not have permission to access task: ${taskId}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_FORBIDDEN);
+      expect(response.message).toBe(TASK_MESSAGES.FORBIDDEN(taskId));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_FORBIDDEN);
     });
   });
 
@@ -39,12 +39,12 @@ describe("Task Exceptions", () => {
       const exception = new TaskInvalidStatusException(status) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.BAD_REQUEST);
-      expect(exception.getErrorCode()).toBe(ErrorCode.TASK_INVALID_STATUS);
+      expect(exception.getErrorCode()).toBe(TaskErrorCode.TASK_INVALID_STATUS);
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Invalid task status: ${status}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_INVALID_STATUS);
+      expect(response.message).toBe(TASK_MESSAGES.INVALID_STATUS(status));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_INVALID_STATUS);
     });
 
     it("should create exception with different status value", () => {
@@ -53,8 +53,8 @@ describe("Task Exceptions", () => {
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Invalid task status: ${status}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_INVALID_STATUS);
+      expect(response.message).toBe(TASK_MESSAGES.INVALID_STATUS(status));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_INVALID_STATUS);
     });
   });
 
@@ -64,12 +64,12 @@ describe("Task Exceptions", () => {
       const exception = new TaskInvalidPriorityException(priority) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.BAD_REQUEST);
-      expect(exception.getErrorCode()).toBe(ErrorCode.TASK_INVALID_PRIORITY);
+      expect(exception.getErrorCode()).toBe(TaskErrorCode.TASK_INVALID_PRIORITY);
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Invalid task priority: ${priority}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_INVALID_PRIORITY);
+      expect(response.message).toBe(TASK_MESSAGES.INVALID_PRIORITY(priority));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_INVALID_PRIORITY);
     });
 
     it("should create exception with different priority value", () => {
@@ -78,8 +78,8 @@ describe("Task Exceptions", () => {
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Invalid task priority: ${priority}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_INVALID_PRIORITY);
+      expect(response.message).toBe(TASK_MESSAGES.INVALID_PRIORITY(priority));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_INVALID_PRIORITY);
     });
   });
 
@@ -89,12 +89,12 @@ describe("Task Exceptions", () => {
       const exception = new TaskAlreadyCompletedException(taskId) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.CONFLICT);
-      expect(exception.getErrorCode()).toBe(ErrorCode.TASK_ALREADY_COMPLETED);
+      expect(exception.getErrorCode()).toBe(TaskErrorCode.TASK_ALREADY_COMPLETED);
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Task is already completed: ${taskId}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_ALREADY_COMPLETED);
+      expect(response.message).toBe(TASK_MESSAGES.ALREADY_COMPLETED(taskId));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_ALREADY_COMPLETED);
     });
 
     it("should create exception with different task ID", () => {
@@ -103,8 +103,8 @@ describe("Task Exceptions", () => {
 
       const response = exception.getResponse() as Record<string, unknown>;
 
-      expect(response.message).toBe(`Task is already completed: ${taskId}`);
-      expect(response.errorCode).toBe(ErrorCode.TASK_ALREADY_COMPLETED);
+      expect(response.message).toBe(TASK_MESSAGES.ALREADY_COMPLETED(taskId));
+      expect(response.errorCode).toBe(TaskErrorCode.TASK_ALREADY_COMPLETED);
     });
   });
 });

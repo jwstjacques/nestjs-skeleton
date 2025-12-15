@@ -10,29 +10,36 @@ import {
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsFutureDate } from "../../../common/validators";
+import { ValidationMessages } from "../../../common/constants";
+import { TASK_VALIDATION_MESSAGES, TASK_LIMITS, TASK_SWAGGER_EXAMPLES } from "../constants";
 
 export class CreateTaskDto {
   @ApiProperty({
     description: "Title of the task",
-    example: "Complete project documentation",
-    minLength: 3,
-    maxLength: 200,
+    example: TASK_SWAGGER_EXAMPLES.CREATE_REQUEST.title,
+    minLength: TASK_LIMITS.TITLE_MIN_LENGTH,
+    maxLength: TASK_LIMITS.TITLE_MAX_LENGTH,
   })
-  @IsString({ message: "Title must be a string" })
-  @IsNotEmpty({ message: "Title is required" })
-  @MinLength(3, { message: "Title must be at least 3 characters long" })
-  @MaxLength(200, { message: "Title must not exceed 200 characters" })
+  @IsString({ message: ValidationMessages.mustBeString("Title") })
+  @IsNotEmpty({ message: ValidationMessages.required("Title") })
+  @MinLength(TASK_LIMITS.TITLE_MIN_LENGTH, {
+    message: ValidationMessages.minLength("Title", TASK_LIMITS.TITLE_MIN_LENGTH),
+  })
+  @MaxLength(TASK_LIMITS.TITLE_MAX_LENGTH, {
+    message: ValidationMessages.maxLength("Title", TASK_LIMITS.TITLE_MAX_LENGTH),
+  })
   title!: string;
 
   @ApiPropertyOptional({
     description: "Detailed description of the task",
-    example:
-      "Write comprehensive documentation for all API endpoints including examples and error codes",
-    maxLength: 2000,
+    example: TASK_SWAGGER_EXAMPLES.CREATE_REQUEST.description,
+    maxLength: TASK_LIMITS.DESCRIPTION_MAX_LENGTH,
   })
-  @IsString({ message: "Description must be a string" })
+  @IsString({ message: ValidationMessages.mustBeString("Description") })
   @IsOptional()
-  @MaxLength(2000, { message: "Description must not exceed 2000 characters" })
+  @MaxLength(TASK_LIMITS.DESCRIPTION_MAX_LENGTH, {
+    message: ValidationMessages.maxLength("Description", TASK_LIMITS.DESCRIPTION_MAX_LENGTH),
+  })
   description?: string;
 
   @ApiPropertyOptional({
@@ -42,7 +49,7 @@ export class CreateTaskDto {
     default: TaskStatus.TODO,
   })
   @IsEnum(TaskStatus, {
-    message: "Status must be one of: TODO, IN_PROGRESS, COMPLETED, CANCELLED",
+    message: TASK_VALIDATION_MESSAGES.STATUS_INVALID,
   })
   @IsOptional()
   status?: TaskStatus;
@@ -54,7 +61,7 @@ export class CreateTaskDto {
     default: TaskPriority.MEDIUM,
   })
   @IsEnum(TaskPriority, {
-    message: "Priority must be one of: LOW, MEDIUM, HIGH, URGENT",
+    message: TASK_VALIDATION_MESSAGES.PRIORITY_INVALID,
   })
   @IsOptional()
   priority?: TaskPriority;
@@ -65,7 +72,7 @@ export class CreateTaskDto {
     type: String,
     format: "date-time",
   })
-  @IsDateString({}, { message: "Due date must be a valid ISO 8601 date string" })
+  @IsDateString({}, { message: ValidationMessages.invalidFormat("Due date") })
   @IsFutureDate({ message: "Due date must be today or in the future" })
   @IsOptional()
   dueDate?: string;

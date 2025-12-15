@@ -2,6 +2,8 @@ import { ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { CreateTaskDto } from "./create-task.dto";
 import { IsEnum, IsOptional, IsDateString } from "class-validator";
 import { TaskStatus } from "@prisma/client";
+import { TASK_VALIDATION_MESSAGES } from "../constants";
+import { ValidationMessages } from "../../../common/constants";
 
 export class UpdateTaskDto extends PartialType(CreateTaskDto) {
   @ApiPropertyOptional({
@@ -10,7 +12,7 @@ export class UpdateTaskDto extends PartialType(CreateTaskDto) {
     example: TaskStatus.IN_PROGRESS,
   })
   @IsEnum(TaskStatus, {
-    message: "Status must be one of: TODO, IN_PROGRESS, COMPLETED, CANCELLED",
+    message: TASK_VALIDATION_MESSAGES.STATUS_INVALID,
   })
   @IsOptional()
   status?: TaskStatus;
@@ -21,7 +23,7 @@ export class UpdateTaskDto extends PartialType(CreateTaskDto) {
     type: String,
     format: "date-time",
   })
-  @IsDateString({}, { message: "Completed at must be a valid ISO 8601 date string" })
+  @IsDateString({}, { message: ValidationMessages.invalidFormat("Completed at") })
   @IsOptional()
   completedAt?: string;
 }

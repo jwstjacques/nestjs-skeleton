@@ -19,17 +19,6 @@ export enum ErrorCode {
   AUTH_UNAUTHORIZED = "AUTH_UNAUTHORIZED",
   AUTH_FORBIDDEN = "AUTH_FORBIDDEN",
 
-  // Task Errors (2000-2999)
-  TASK_NOT_FOUND = "TASK_NOT_FOUND",
-  TASK_FORBIDDEN = "TASK_FORBIDDEN",
-  TASK_INVALID_STATUS = "TASK_INVALID_STATUS",
-  TASK_INVALID_PRIORITY = "TASK_INVALID_PRIORITY",
-  TASK_INVALID_DUE_DATE = "TASK_INVALID_DUE_DATE",
-  TASK_ALREADY_COMPLETED = "TASK_ALREADY_COMPLETED",
-  TASK_CREATION_FAILED = "TASK_CREATION_FAILED",
-  TASK_UPDATE_FAILED = "TASK_UPDATE_FAILED",
-  TASK_DELETE_FAILED = "TASK_DELETE_FAILED",
-
   // User Errors (3000-3999)
   USER_NOT_FOUND = "USER_NOT_FOUND",
   USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS",
@@ -78,17 +67,6 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.AUTH_WEAK_PASSWORD]: "Password does not meet security requirements",
   [ErrorCode.AUTH_UNAUTHORIZED]: "You are not authorized to perform this action",
   [ErrorCode.AUTH_FORBIDDEN]: "Access to this resource is forbidden",
-
-  // Tasks
-  [ErrorCode.TASK_NOT_FOUND]: "Task not found",
-  [ErrorCode.TASK_FORBIDDEN]: "You do not have permission to access this task",
-  [ErrorCode.TASK_INVALID_STATUS]: "Invalid task status",
-  [ErrorCode.TASK_INVALID_PRIORITY]: "Invalid task priority",
-  [ErrorCode.TASK_INVALID_DUE_DATE]: "Invalid due date",
-  [ErrorCode.TASK_ALREADY_COMPLETED]: "Task is already completed",
-  [ErrorCode.TASK_CREATION_FAILED]: "Failed to create task",
-  [ErrorCode.TASK_UPDATE_FAILED]: "Failed to update task",
-  [ErrorCode.TASK_DELETE_FAILED]: "Failed to delete task",
 
   // Users
   [ErrorCode.USER_NOT_FOUND]: "User not found",

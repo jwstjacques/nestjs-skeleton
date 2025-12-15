@@ -2,6 +2,9 @@ import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from "class-validator";
 import { Type } from "class-transformer";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { ValidationMessages } from "../../../common/constants";
+import { TASK_VALIDATION_MESSAGES } from "../constants";
+import { PAGINATION_DEFAULTS } from "../../../config/pagination.config";
 
 export enum SortOrder {
   ASC = "asc",
@@ -17,15 +20,10 @@ export enum TaskSortBy {
   STATUS = "status",
 }
 
-const MAX_LIMIT = parseInt(process.env.PAGINATION_MAX_LIMIT || "100", 10);
-const DEFAULT_LIMIT = parseInt(process.env.PAGINATION_DEFAULT_LIMIT || "10", 10);
-
 /**
  * Query DTO for task filtering and pagination
  *
- * Uses environment variables for configuration:
- * - PAGINATION_MAX_LIMIT: Maximum items per page (default: 100)
- * - PAGINATION_DEFAULT_LIMIT: Default items per page (default: 10)
+ * Uses PaginationConfig for limits
  */
 export class QueryTaskDto {
   @ApiPropertyOptional({
@@ -36,23 +34,23 @@ export class QueryTaskDto {
   })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: ValidationMessages.mustBeNumber("Page") })
+  @Min(1, { message: TASK_VALIDATION_MESSAGES.PAGE_MIN })
   page?: number = 1;
 
   @ApiPropertyOptional({
     description: "Number of items per page",
-    example: 10,
+    example: PAGINATION_DEFAULTS.DEFAULT_LIMIT,
     minimum: 1,
-    maximum: MAX_LIMIT,
-    default: DEFAULT_LIMIT,
+    maximum: PAGINATION_DEFAULTS.MAX_LIMIT,
+    default: PAGINATION_DEFAULTS.DEFAULT_LIMIT,
   })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(MAX_LIMIT)
-  limit?: number = MAX_LIMIT;
+  @IsInt({ message: ValidationMessages.mustBeNumber("Limit") })
+  @Min(1, { message: TASK_VALIDATION_MESSAGES.LIMIT_MIN })
+  @Max(PAGINATION_DEFAULTS.MAX_LIMIT, { message: TASK_VALIDATION_MESSAGES.LIMIT_MAX })
+  limit?: number = PAGINATION_DEFAULTS.DEFAULT_LIMIT;
 
   @ApiPropertyOptional({
     description: "Filter tasks by status",
@@ -60,7 +58,7 @@ export class QueryTaskDto {
     example: TaskStatus.TODO,
   })
   @IsOptional()
-  @IsEnum(TaskStatus)
+  @IsEnum(TaskStatus, { message: TASK_VALIDATION_MESSAGES.STATUS_INVALID })
   status?: TaskStatus;
 
   @ApiPropertyOptional({
@@ -69,7 +67,7 @@ export class QueryTaskDto {
     example: TaskPriority.HIGH,
   })
   @IsOptional()
-  @IsEnum(TaskPriority)
+  @IsEnum(TaskPriority, { message: TASK_VALIDATION_MESSAGES.PRIORITY_INVALID })
   priority?: TaskPriority;
 
   @ApiPropertyOptional({
@@ -77,7 +75,7 @@ export class QueryTaskDto {
     example: "documentation",
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: ValidationMessages.mustBeString("Search") })
   search?: string;
 
   @ApiPropertyOptional({
@@ -86,7 +84,7 @@ export class QueryTaskDto {
     enum: ["createdAt", "updatedAt", "title", "priority", "status", "dueDate"],
   })
   @IsOptional()
-  @IsEnum(TaskSortBy)
+  @IsEnum(TaskSortBy, { message: TASK_VALIDATION_MESSAGES.SORT_BY_INVALID })
   sortBy?: TaskSortBy = TaskSortBy.CREATED_AT;
 
   @ApiPropertyOptional({
@@ -95,10 +93,10 @@ export class QueryTaskDto {
     enum: ["asc", "desc"],
   })
   @IsOptional()
-  @IsEnum(SortOrder)
+  @IsEnum(SortOrder, { message: TASK_VALIDATION_MESSAGES.SORT_ORDER_INVALID })
   sortOrder?: SortOrder = SortOrder.DESC;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: ValidationMessages.mustBeString("User ID") })
   userId?: string;
 }

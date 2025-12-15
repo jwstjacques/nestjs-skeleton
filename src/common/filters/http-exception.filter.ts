@@ -18,7 +18,7 @@ interface ErrorResponse {
   statusCode: number;
   message: string | string[];
   error: string;
-  errorCode?: ErrorCode;
+  errorCode?: string;
   timestamp: string;
   path: string;
   correlationId: string;
@@ -42,7 +42,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = DEFAULT_ERROR_MESSAGE;
     let error = DEFAULT_ERROR_NAME;
-    let errorCode: ErrorCode | undefined;
+    let errorCode: string | undefined;
     let details: unknown;
 
     // Handle ApplicationException (our custom exceptions with error codes)

@@ -44,9 +44,10 @@ import {
   THROTTLE_MEDIUM_LIMIT,
   THROTTLE_MEDIUM_TTL,
 } from "../../config/throttler.constants";
-import { CACHE_TTL_LIST, CACHE_TTL_SINGLE } from "../../config/cache.constants";
+import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constants";
+import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES } from "./constants";
 
-@ApiTags("tasks")
+@ApiTags(TASK_API_TAG)
 @ApiBearerAuth("JWT-auth")
 @Controller({ path: "tasks", version: "1" })
 export class TasksController {
@@ -91,7 +92,7 @@ export class TasksController {
 
   @Get()
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(CACHE_TTL_LIST)
+  @CacheTTL(CacheTTLEnum.SHORT)
   @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
   @ApiOperation({
     summary: "Get all tasks",
@@ -181,7 +182,7 @@ export class TasksController {
 
   @Get(":id")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(CACHE_TTL_SINGLE)
+  @CacheTTL(CacheTTLEnum.MEDIUM)
   @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
   @ApiOperation({
     summary: "Get a task by ID",
@@ -190,7 +191,7 @@ export class TasksController {
   @ApiParam({
     name: "id",
     description: "Task CUID",
-    example: "cmixpvpir0001p9yp5xq8r7ks",
+    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiOkResponse({
     description: "Successfully retrieved task",
@@ -256,7 +257,7 @@ export class TasksController {
   @ApiParam({
     name: "id",
     description: "Task CUID",
-    example: "cmixpvpir0001p9yp5xq8r7ks",
+    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiOkResponse({
     description: "Successfully updated task",
@@ -328,7 +329,7 @@ export class TasksController {
   @ApiParam({
     name: "id",
     description: "Task CUID",
-    example: "cmixpvpir0001p9yp5xq8r7ks",
+    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -383,7 +384,7 @@ export class TasksController {
   @ApiParam({
     name: "id",
     description: "Task CUID",
-    example: "cmixpvpir0001p9yp5xq8r7ks",
+    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,

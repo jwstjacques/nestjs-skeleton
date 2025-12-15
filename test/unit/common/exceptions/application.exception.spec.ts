@@ -25,7 +25,7 @@ describe("ApplicationException", () => {
     it("should create exception with custom message", () => {
       const customMessage = "Custom error message";
       const exception = new ApplicationException(
-        ErrorCode.TASK_NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
         customMessage,
         HttpStatus.NOT_FOUND,
       );
@@ -33,7 +33,7 @@ describe("ApplicationException", () => {
       const response = exception.getResponse() as Record<string, unknown>;
 
       expect(response.message).toBe(customMessage);
-      expect(response.errorCode).toBe(ErrorCode.TASK_NOT_FOUND);
+      expect(response.errorCode).toBe(ErrorCode.USER_NOT_FOUND);
     });
 
     it("should create exception with custom HTTP status", () => {
@@ -74,12 +74,12 @@ describe("ApplicationException", () => {
   describe("getErrorCode", () => {
     it("should return the error code", () => {
       const exception = new ApplicationException(
-        ErrorCode.TASK_FORBIDDEN,
+        ErrorCode.AUTH_FORBIDDEN,
         undefined,
         HttpStatus.FORBIDDEN,
       );
 
-      expect(exception.getErrorCode()).toBe(ErrorCode.TASK_FORBIDDEN);
+      expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_FORBIDDEN);
     });
 
     it("should return correct error code for different exceptions", () => {
@@ -117,7 +117,7 @@ describe("ApplicationException", () => {
 
     it("should not include details when not provided", () => {
       const exception = new ApplicationException(
-        ErrorCode.TASK_NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
         undefined,
         HttpStatus.NOT_FOUND,
       );
@@ -169,7 +169,7 @@ describe("ApplicationException", () => {
 
     it("should allow custom status override", () => {
       const exception = new ApplicationException(
-        ErrorCode.TASK_NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
         "Custom message",
         HttpStatus.GONE,
       );

@@ -1,4 +1,5 @@
 import { HttpStatus } from "@nestjs/common";
+import type { ApplicationException } from "../../../../src/common/exceptions/application.exception";
 import {
   TaskForbiddenException,
   TaskInvalidStatusException,
@@ -10,7 +11,7 @@ import { ErrorCode } from "../../../../src/common/constants/error-codes.constant
 describe("Task Exceptions", () => {
   describe("TaskForbiddenException", () => {
     it("should create exception with default message when no task ID provided", () => {
-      const exception = new TaskForbiddenException();
+      const exception = new TaskForbiddenException() as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.FORBIDDEN);
       expect(exception.getErrorCode()).toBe(ErrorCode.TASK_FORBIDDEN);
@@ -23,7 +24,7 @@ describe("Task Exceptions", () => {
 
     it("should create exception with task ID in message", () => {
       const taskId = "clh9k7x2a0000qmxbzv0q0001";
-      const exception = new TaskForbiddenException(taskId);
+      const exception = new TaskForbiddenException(taskId) as ApplicationException;
 
       const response = exception.getResponse() as Record<string, unknown>;
 
@@ -35,7 +36,7 @@ describe("Task Exceptions", () => {
   describe("TaskInvalidStatusException", () => {
     it("should create exception with status in message", () => {
       const status = "INVALID_STATUS";
-      const exception = new TaskInvalidStatusException(status);
+      const exception = new TaskInvalidStatusException(status) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.BAD_REQUEST);
       expect(exception.getErrorCode()).toBe(ErrorCode.TASK_INVALID_STATUS);
@@ -48,7 +49,7 @@ describe("Task Exceptions", () => {
 
     it("should create exception with different status value", () => {
       const status = "UNKNOWN";
-      const exception = new TaskInvalidStatusException(status);
+      const exception = new TaskInvalidStatusException(status) as ApplicationException;
 
       const response = exception.getResponse() as Record<string, unknown>;
 
@@ -60,7 +61,7 @@ describe("Task Exceptions", () => {
   describe("TaskInvalidPriorityException", () => {
     it("should create exception with priority in message", () => {
       const priority = "URGENT";
-      const exception = new TaskInvalidPriorityException(priority);
+      const exception = new TaskInvalidPriorityException(priority) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.BAD_REQUEST);
       expect(exception.getErrorCode()).toBe(ErrorCode.TASK_INVALID_PRIORITY);
@@ -73,7 +74,7 @@ describe("Task Exceptions", () => {
 
     it("should create exception with different priority value", () => {
       const priority = "INVALID";
-      const exception = new TaskInvalidPriorityException(priority);
+      const exception = new TaskInvalidPriorityException(priority) as ApplicationException;
 
       const response = exception.getResponse() as Record<string, unknown>;
 
@@ -85,7 +86,7 @@ describe("Task Exceptions", () => {
   describe("TaskAlreadyCompletedException", () => {
     it("should create exception with task ID in message", () => {
       const taskId = "clh9k7x2a0000qmxbzv0q0001";
-      const exception = new TaskAlreadyCompletedException(taskId);
+      const exception = new TaskAlreadyCompletedException(taskId) as ApplicationException;
 
       expect(exception.getStatus()).toBe(HttpStatus.CONFLICT);
       expect(exception.getErrorCode()).toBe(ErrorCode.TASK_ALREADY_COMPLETED);
@@ -98,7 +99,7 @@ describe("Task Exceptions", () => {
 
     it("should create exception with different task ID", () => {
       const taskId = "clh9k7x2a0000qmxbzv0q0002";
-      const exception = new TaskAlreadyCompletedException(taskId);
+      const exception = new TaskAlreadyCompletedException(taskId) as ApplicationException;
 
       const response = exception.getResponse() as Record<string, unknown>;
 

@@ -34,29 +34,4 @@ export class AppController {
   async getStatus() {
     return this.appService.getHealth();
   }
-
-  @Get("stats")
-  @Public() // Public endpoint for statistics
-  @SkipThrottle() // Statistics are read-only and can be called frequently
-  @ApiOperation({
-    summary: "Get application statistics",
-    description: "Returns statistics about users and tasks",
-  })
-  @ApiOkResponse({
-    description: "Statistics retrieved successfully",
-    schema: {
-      example: {
-        users: 10,
-        tasks: 42,
-        tasksByStatus: {
-          TODO: 15,
-          IN_PROGRESS: 12,
-          COMPLETED: 15,
-        },
-      },
-    },
-  })
-  async getStats() {
-    return this.appService.getStats();
-  }
 }

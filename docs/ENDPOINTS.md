@@ -39,32 +39,6 @@ curl http://localhost:3000/api/v1/health
 
 ---
 
-### Stats Endpoint
-
-**URL**: http://localhost:3000/api/v1/stats  
-**Method**: GET  
-**Description**: Returns database statistics (users, tasks, tasks by status)
-
-```bash
-curl http://localhost:3000/api/v1/stats
-```
-
-**Expected Response**:
-
-```json
-{
-  "users": 3,
-  "tasks": 11,
-  "tasksByStatus": {
-    "TODO": 5,
-    "IN_PROGRESS": 4,
-    "COMPLETED": 2
-  }
-}
-```
-
----
-
 ### Tasks Endpoints
 
 #### List All Tasks
@@ -170,13 +144,10 @@ curl http://localhost:3000/api/v1/tasks/statistics
 To get actual task IDs from your database:
 
 ```bash
-# Option 1: Use the stats endpoint
-curl http://localhost:3000/api/v1/stats
-
-# Option 2: Use the tasks list endpoint
+# Option 1: Use the tasks list endpoint
 curl http://localhost:3000/api/v1/tasks
 
-# Option 3: Open Prisma Studio
+# Option 2: Open Prisma Studio
 npm run prisma:studio
 # Then visit http://localhost:51212 (or whatever port it shows)
 ```
@@ -188,7 +159,6 @@ npm run prisma:studio
 You can also access these endpoints directly in your browser:
 
 - **Health Check**: <http://localhost:3000/api/v1/health>
-- **Stats**: <http://localhost:3000/api/v1/stats>
 - **Tasks List**: <http://localhost:3000/api/v1/tasks>
 - **Prisma Studio**: Run `npm run prisma:studio` and open the URL it provides
 
@@ -223,7 +193,6 @@ You can also access these endpoints directly in your browser:
 # Test all main endpoints
 curl http://localhost:3000/api/v1/
 curl http://localhost:3000/api/v1/health
-curl http://localhost:3000/api/v1/stats
 curl http://localhost:3000/api/v1/tasks
 ```
 
@@ -236,4 +205,3 @@ curl http://localhost:3000/api/v1/tasks
 - ✅ CUID implementation complete
 - ✅ All CRUD endpoints available
 - ✅ Health check working
-- ✅ Stats endpoint working

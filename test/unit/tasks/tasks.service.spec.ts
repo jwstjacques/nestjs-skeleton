@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TasksService } from "../../../src/modules/tasks/tasks.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
-import { TaskNotFoundException } from "../../../src/common/exceptions";
+import { TaskNotFoundException } from "../../../src/modules/tasks/exceptions";
 import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { TaskSortBy, SortOrder } from "../../../src/modules/tasks/dto/query-task.dto";
 import { mockTasksDal, mockTask } from "../../utils/mocks";

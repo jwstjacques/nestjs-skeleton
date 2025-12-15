@@ -4,7 +4,7 @@ import {
   TaskInvalidStatusException,
   TaskInvalidPriorityException,
   TaskAlreadyCompletedException,
-} from "../../../../src/common/exceptions/task.exceptions";
+} from "../../../../src/modules/tasks/exceptions";
 import { ErrorCode } from "../../../../src/common/constants/error-codes.constants";
 
 describe("Task Exceptions", () => {

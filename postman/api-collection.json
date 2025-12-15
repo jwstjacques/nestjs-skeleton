@@ -658,20 +658,6 @@
             "description": "Check application and database health status"
           },
           "response": []
-        },
-        {
-          "name": "Database Stats",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/stats",
-              "host": ["{{baseUrl}}"],
-              "path": ["stats"]
-            },
-            "description": "Get database statistics (user count, task count, tasks by status)"
-          },
-          "response": []
         }
       ],
       "description": "Application health and information endpoints"

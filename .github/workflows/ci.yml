@@ -26,6 +26,8 @@ jobs:
 
       - name: Run Prisma generate
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/dbname
 
       - name: Run ESLint
         run: npm run lint:check
@@ -80,6 +82,8 @@ jobs:
 
       - name: Run Prisma generate
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
 
       - name: Run database migrations
         run: npx prisma migrate deploy
@@ -125,6 +129,8 @@ jobs:
 
       - name: Run Prisma generate
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/dbname
 
       - name: Build application
         run: npm run build

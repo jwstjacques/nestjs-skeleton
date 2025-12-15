@@ -6,8 +6,8 @@ import { HttpExceptionFilter } from "./common/filters";
 import { CorrelationService } from "./common/correlation";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { SwaggerModule } from "@nestjs/swagger";
-import { createSwaggerConfig } from "./config/swagger.config";
-import { createHelmetConfig } from "./config/helmet.config";
+import { createSwaggerConfig, createHelmetConfig } from "./config";
+import { API_PATH, SWAGGER_PATH, DEFAULT_PORT } from "./config";
 import compression from "compression";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import helmet from "helmet";
@@ -35,9 +35,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  const apiPrefix = configService.get<string>("API_PREFIX") || "api/v1";
-
-  app.setGlobalPrefix(apiPrefix);
+  app.setGlobalPrefix(API_PATH);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -63,7 +61,7 @@ async function bootstrap() {
   const config = createSwaggerConfig();
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
+  SwaggerModule.setup(`${API_PATH}/${SWAGGER_PATH}`, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: "alpha",
@@ -78,15 +76,18 @@ async function bootstrap() {
   });
 
   // Port configuration
-  const port = configService.get<number>("PORT") || 3000;
+  const port = configService.get<number>("PORT") || DEFAULT_PORT;
 
   await app.listen(port);
 
   const logger = app.get<LoggerService>(WINSTON_MODULE_NEST_PROVIDER);
 
   logger.log(`🚀 Application is running on: http://localhost:${port}`, "Bootstrap");
-  logger.log(`📚 API Documentation: http://localhost:${port}/${apiPrefix}/docs`, "Bootstrap");
-  logger.log(`❤️  Health check: http://localhost:${port}/${apiPrefix}/health`, "Bootstrap");
+  logger.log(
+    `📚 API Documentation: http://localhost:${port}/${API_PATH}/${SWAGGER_PATH}`,
+    "Bootstrap",
+  );
+  logger.log(`❤️  Health check: http://localhost:${port}/${API_PATH}/health`, "Bootstrap");
 
   // Enable graceful shutdown
   app.enableShutdownHooks();

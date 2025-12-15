@@ -14,7 +14,8 @@ import { redisStore } from "cache-manager-redis-yet";
             host: configService.get<string>("REDIS_HOST", "localhost"),
             port: configService.get<number>("REDIS_PORT", 6379),
           },
-          ttl: configService.get<number>("REDIS_TTL", 3600), // Default TTL in seconds
+          // Default TTL removed - use CacheTTL enum values per operation instead
+          // Each cache operation specifies its own TTL based on data volatility
         }),
       }),
       inject: [ConfigService],

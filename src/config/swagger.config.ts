@@ -1,4 +1,12 @@
 import { DocumentBuilder } from "@nestjs/swagger";
+import {
+  SWAGGER_TITLE,
+  SWAGGER_DESCRIPTION,
+  SWAGGER_VERSION,
+  SWAGGER_CONTACT_NAME,
+  SWAGGER_CONTACT_EMAIL,
+  DEFAULT_PORT,
+} from "./api.constants";
 
 /**
  * Swagger/OpenAPI configuration
@@ -6,14 +14,12 @@ import { DocumentBuilder } from "@nestjs/swagger";
  */
 export function createSwaggerConfig() {
   return new DocumentBuilder()
-    .setTitle("NestJS Task Management API")
-    .setDescription(
-      "A production-ready REST API for managing tasks with user authentication, built with NestJS, Prisma, and PostgreSQL.",
-    )
-    .setVersion("1.0")
-    .setContact("Jason St. Jacques", "https://github.com/jwstjacques", "jw.stjacques@gmail.com")
+    .setTitle(SWAGGER_TITLE)
+    .setDescription(SWAGGER_DESCRIPTION)
+    .setVersion(SWAGGER_VERSION)
+    .setContact(SWAGGER_CONTACT_NAME, "https://github.com/jwstjacques", SWAGGER_CONTACT_EMAIL)
     .setLicense("MIT", "https://opensource.org/licenses/MIT")
-    .addServer("http://localhost:3000", "Development server")
+    .addServer(`http://localhost:${DEFAULT_PORT}`, "Development server")
     .addTag("tasks", "Task management endpoints")
     .addTag("auth", "Authentication endpoints (TBD)")
     .addBearerAuth(

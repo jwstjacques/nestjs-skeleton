@@ -11,9 +11,11 @@ import { redisStore } from "cache-manager-redis-yet";
       useFactory: async (configService: ConfigService) => ({
         store: await redisStore({
           socket: {
-            host: configService.get<string>("REDIS_HOST", "localhost"),
-            port: configService.get<number>("REDIS_PORT", 6379),
+            host: configService.get<string>("cache.redis.host", "localhost"),
+            port: configService.get<number>("cache.redis.port", 6379),
           },
+          password: configService.get<string>("cache.redis.password"),
+          database: configService.get<number>("cache.redis.db", 0),
           // Default TTL removed - use CacheTTL enum values per operation instead
           // Each cache operation specifies its own TTL based on data volatility
         }),

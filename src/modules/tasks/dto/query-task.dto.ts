@@ -4,7 +4,16 @@ import { TaskStatus, TaskPriority } from "@prisma/client";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { ValidationMessages } from "../../../common/constants";
 import { TASK_VALIDATION_MESSAGES } from "../constants";
-import { PAGINATION_DEFAULTS } from "../../../config/pagination.config";
+
+/**
+ * Pagination defaults for DTOs
+ * Note: These are static values used in decorators at build time.
+ * Runtime pagination config is in paginationConfig provider.
+ */
+const PAGINATION_DEFAULTS = {
+  DEFAULT_LIMIT: 10,
+  MAX_LIMIT: 100,
+} as const;
 
 export enum SortOrder {
   ASC = "asc",

@@ -84,29 +84,11 @@ export class CacheKeys {
 
 /**
  * Cache TTL (Time To Live) configurations in milliseconds
+ * @deprecated Import from '../../config/constants' instead
+ * This re-export will be removed in a future version
  */
-export enum CacheTTL {
-  /** 30 seconds - For frequently changing data */
-  VERY_SHORT = 30_000,
-
-  /** 1 minute - For dynamic lists */
-  SHORT = 60_000,
-
-  /** 5 minutes - For semi-static data */
-  MEDIUM = 300_000,
-
-  /** 15 minutes - For relatively stable data */
-  LONG = 900_000,
-
-  /** 30 minutes - For stats and aggregations */
-  VERY_LONG = 1_800_000,
-
-  /** 1 hour - For rarely changing data */
-  HOUR = 3_600_000,
-
-  /** 1 day - For static data */
-  DAY = 86_400_000,
-}
+import { CacheTTL } from "../../config/constants/cache-ttl.constants";
+export { CacheTTL };
 
 /**
  * Cache operation constants

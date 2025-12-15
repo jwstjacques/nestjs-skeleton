@@ -1,75 +1,43 @@
 import helmet from "helmet";
+import { ConfigService } from "@nestjs/config";
 
 /**
  * Helmet configuration for security headers
+ *
+ * @param configService - NestJS ConfigService for accessing configuration
+ * @returns Helmet configuration object
  * @see https://helmetjs.github.io/
  */
-export function createHelmetConfig(): Parameters<typeof helmet>[0] {
+export function createHelmetConfig(configService: ConfigService): Parameters<typeof helmet>[0] {
+  // Get CSP configuration from config service
+  const cspEnabled = configService.get<boolean>("security.helmet.contentSecurityPolicy", true);
+
   return {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: parseCSPDirective(process.env.HELMET_CSP_DEFAULT_SRC, ["'self'"]),
-        styleSrc: parseCSPDirective(process.env.HELMET_CSP_STYLE_SRC, [
-          "'self'",
-          "'unsafe-inline'",
-        ]),
-        scriptSrc: parseCSPDirective(process.env.HELMET_CSP_SCRIPT_SRC, [
-          "'self'",
-          "'unsafe-inline'",
-        ]),
-        imgSrc: parseCSPDirective(process.env.HELMET_CSP_IMG_SRC, ["'self'", "data:", "https:"]),
-      },
-    },
-    crossOriginEmbedderPolicy: parseBooleanEnv(
-      process.env.HELMET_CROSS_ORIGIN_EMBEDDER_POLICY,
+    contentSecurityPolicy: cspEnabled
+      ? {
+          directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+          },
+        }
+      : false,
+    crossOriginEmbedderPolicy: configService.get<boolean>(
+      "security.helmet.crossOriginEmbedderPolicy",
       false,
     ),
+    crossOriginOpenerPolicy: configService.get<boolean>(
+      "security.helmet.crossOriginOpenerPolicy",
+      false,
+    )
+      ? { policy: "same-origin" }
+      : false,
+    crossOriginResourcePolicy: configService.get<boolean>(
+      "security.helmet.crossOriginResourcePolicy",
+      false,
+    )
+      ? { policy: "same-origin" }
+      : false,
   };
-}
-
-/**
- * Parse a comma-separated CSP directive from environment variable
- * @param envValue - Environment variable value
- * @param defaultValue - Default directive array
- * @returns Array of CSP directive values
- */
-function parseCSPDirective(envValue: string | undefined, defaultValue: string[]): string[] {
-  if (!envValue) {
-    return defaultValue;
-  }
-
-  return envValue.split(",").map((val) => {
-    const trimmed = val.trim();
-
-    // CSP keywords that need single quotes
-    const keywords = [
-      "self",
-      "unsafe-inline",
-      "unsafe-eval",
-      "none",
-      "strict-dynamic",
-      "report-sample",
-    ];
-
-    // If the value is a keyword and doesn't have quotes, add them
-    if (keywords.includes(trimmed) && !trimmed.startsWith("'")) {
-      return `'${trimmed}'`;
-    }
-
-    return trimmed;
-  });
-}
-
-/**
- * Parse a boolean environment variable
- * @param envValue - Environment variable value
- * @param defaultValue - Default boolean value
- * @returns Boolean value
- */
-function parseBooleanEnv(envValue: string | undefined, defaultValue: boolean): boolean {
-  if (envValue === undefined || envValue === "") {
-    return defaultValue;
-  }
-
-  return envValue.toLowerCase() === "true" || envValue === "1";
 }

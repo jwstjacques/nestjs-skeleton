@@ -1,8 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../../src/database/prisma.service";
 import { AppDal } from "../../../src/app.dal";
 import { TestCleanup } from "../../utils/test-cleanup";
 import { CorrelationService } from "../../../src/common/correlation";
+import { createMockConfigService } from "../../utils/config.mock";
 
 /**
  * AppDal Integration Tests
@@ -16,7 +18,15 @@ describe("AppDal", () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AppDal, PrismaService, CorrelationService],
+      providers: [
+        AppDal,
+        PrismaService,
+        CorrelationService,
+        {
+          provide: ConfigService,
+          useValue: createMockConfigService(),
+        },
+      ],
     }).compile();
 
     appDal = module.get<AppDal>(AppDal);

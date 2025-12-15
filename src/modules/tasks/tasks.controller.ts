@@ -38,14 +38,18 @@ import {
 } from "./dto";
 import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser, Roles } from "../../auth/decorators";
-import {
-  THROTTLE_SHORT_LIMIT,
-  THROTTLE_SHORT_TTL,
-  THROTTLE_MEDIUM_LIMIT,
-  THROTTLE_MEDIUM_TTL,
-} from "../../config/throttler.constants";
 import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constants";
 import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES } from "./constants";
+
+/**
+ * Throttle limits for task operations
+ * Note: Decorators require static values at load time, before ConfigService is available.
+ * These match the defaults in throttleConfig provider.
+ */
+const THROTTLE_LIMITS = {
+  SHORT: { ttl: 1000, limit: 10 },
+  MEDIUM: { ttl: 10000, limit: 50 },
+} as const;
 
 @ApiTags(TASK_API_TAG)
 @ApiBearerAuth("JWT-auth")
@@ -55,7 +59,7 @@ export class TasksController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
+  @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
     summary: "Create a new task",
     description: "Creates a new task for the authenticated user",
@@ -93,7 +97,7 @@ export class TasksController {
   @Get()
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(CacheTTLEnum.SHORT)
-  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
+  @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
     summary: "Get all tasks",
     description:
@@ -153,7 +157,7 @@ export class TasksController {
   }
 
   @Get("statistics")
-  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
+  @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
     summary: "Get task statistics",
     description: "Returns statistics about tasks including counts by status and priority",
@@ -183,7 +187,7 @@ export class TasksController {
   @Get(":id")
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(CacheTTLEnum.MEDIUM)
-  @Throttle({ medium: { limit: THROTTLE_MEDIUM_LIMIT, ttl: THROTTLE_MEDIUM_TTL } })
+  @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
     summary: "Get a task by ID",
     description: "Retrieves a single task by its UUID",
@@ -249,7 +253,7 @@ export class TasksController {
   }
 
   @Patch(":id")
-  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
+  @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
     summary: "Update a task",
     description: "Updates an existing task. Only the task owner can update their tasks.",
@@ -320,7 +324,7 @@ export class TasksController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
+  @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
     summary: "Delete a task",
     description:
@@ -376,7 +380,7 @@ export class TasksController {
   @Delete("admin/purge/:id")
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ short: { limit: THROTTLE_SHORT_LIMIT, ttl: THROTTLE_SHORT_TTL } })
+  @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
     summary: "Permanently delete a task (admin only)",
     description: "Hard deletes a task from the database. Requires ADMIN role.",

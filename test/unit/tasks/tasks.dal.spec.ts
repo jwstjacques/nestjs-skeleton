@@ -1,9 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../../src/database/prisma.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { TestCleanup } from "../../utils/test-cleanup";
 import { CorrelationService } from "../../../src/common/correlation";
+import { createMockConfigService } from "../../utils/config.mock";
 
 /**
  * TasksDal Integration Tests
@@ -19,8 +21,9 @@ describe("TasksDal", () => {
   beforeAll(async () => {
     // Create actual instances instead of mocks to test real database interaction
     const correlationService = new CorrelationService();
+    const configService = createMockConfigService() as unknown as ConfigService;
 
-    prisma = new PrismaService(correlationService);
+    prisma = new PrismaService(correlationService, configService);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

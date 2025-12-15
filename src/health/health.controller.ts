@@ -1,4 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { ApiTags, ApiOperation, ApiOkResponse } from "@nestjs/swagger";
 import {
   HealthCheckService,
@@ -9,12 +10,6 @@ import {
   DiskHealthIndicator,
 } from "@nestjs/terminus";
 import { PrismaService } from "../database/prisma.service";
-import {
-  HEALTH_CHECK_MEMORY_HEAP_THRESHOLD,
-  HEALTH_CHECK_MEMORY_RSS_THRESHOLD,
-  HEALTH_CHECK_DISK_THRESHOLD,
-  HEALTH_CHECK_DISK_PATH,
-} from "../config/health.constants";
 import { Public } from "@app/auth/decorators";
 
 @ApiTags("health")
@@ -27,6 +22,7 @@ export class HealthController {
     private memory: MemoryHealthIndicator,
     private disk: DiskHealthIndicator,
     private prisma: PrismaService,
+    private configService: ConfigService,
   ) {}
 
   @Public()
@@ -58,15 +54,24 @@ export class HealthController {
     return this.health.check([
       // Database health
       () => this.prismaHealth.pingCheck("database", this.prisma),
-      // Memory heap check
-      () => this.memory.checkHeap("memory_heap", HEALTH_CHECK_MEMORY_HEAP_THRESHOLD),
-      // Memory RSS check
-      () => this.memory.checkRSS("memory_rss", HEALTH_CHECK_MEMORY_RSS_THRESHOLD),
-      // Disk storage check
+      // Memory heap check - get threshold from config
+      () =>
+        this.memory.checkHeap(
+          "memory_heap",
+          this.configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024,
+        ),
+      // Memory RSS check - get threshold from config
+      () =>
+        this.memory.checkRSS(
+          "memory_rss",
+          this.configService.get<number>("observability.health.memoryRssMB", 300) * 1024 * 1024,
+        ),
+      // Disk storage check - get threshold and path from config
       () =>
         this.disk.checkStorage("storage", {
-          thresholdPercent: HEALTH_CHECK_DISK_THRESHOLD,
-          path: HEALTH_CHECK_DISK_PATH,
+          thresholdPercent:
+            this.configService.get<number>("observability.health.diskThreshold", 0.9) * 100,
+          path: this.configService.get<string>("observability.health.diskPath", "/"),
         }),
     ]);
   }
@@ -92,8 +97,12 @@ export class HealthController {
     return this.health.check([
       // Database must be available
       () => this.prismaHealth.pingCheck("database", this.prisma),
-      // Memory within limits
-      () => this.memory.checkHeap("memory_heap", HEALTH_CHECK_MEMORY_HEAP_THRESHOLD),
+      // Memory within limits - get thresholds from config
+      () =>
+        this.memory.checkHeap(
+          "memory_heap",
+          this.configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024,
+        ),
     ]);
   }
 }

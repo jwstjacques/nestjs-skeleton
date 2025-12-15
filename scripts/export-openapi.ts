@@ -1,5 +1,6 @@
 import "tsconfig-paths/register";
 import { NestFactory } from "@nestjs/core";
+import { ConfigService } from "@nestjs/config";
 import { SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "../src/app.module";
 import { createSwaggerConfig } from "../src/config/swagger.config";
@@ -9,8 +10,11 @@ import * as path from "path";
 async function exportOpenAPI() {
   const app = await NestFactory.create(AppModule, { logger: false });
 
+  // Get ConfigService from the app
+  const configService = app.get(ConfigService);
+
   // Use the shared Swagger configuration
-  const config = createSwaggerConfig();
+  const config = createSwaggerConfig(configService);
   const document = SwaggerModule.createDocument(app, config);
 
   // Ensure docs directory exists

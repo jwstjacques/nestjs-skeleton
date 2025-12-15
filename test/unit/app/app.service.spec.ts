@@ -1,9 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
 import { AppService } from "../../../src/app.service";
 import { AppDal } from "../../../src/app.dal";
+import { createMockConfigService, DEFAULT_TEST_CONFIG } from "../../utils/config.mock";
 
 describe("AppService", () => {
   let service: AppService;
+  let configService: ReturnType<typeof createMockConfigService>;
 
   const mockAppDal = {
     checkDatabaseConnection: jest.fn(),
@@ -11,12 +14,18 @@ describe("AppService", () => {
   };
 
   beforeEach(async () => {
+    configService = createMockConfigService();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppService,
         {
           provide: AppDal,
           useValue: mockAppDal,
+        },
+        {
+          provide: ConfigService,
+          useValue: configService,
         },
       ],
     }).compile();
@@ -79,28 +88,29 @@ describe("AppService", () => {
       expect(result.uptime).toBeGreaterThan(0);
     });
 
-    it("should include environment from NODE_ENV", async () => {
+    it("should use environment from config service", async () => {
       mockAppDal.checkDatabaseConnection.mockResolvedValue(undefined);
-      const originalEnv = process.env.NODE_ENV;
 
-      process.env.NODE_ENV = "production";
+      // ConfigService will return the configured environment
       const result = await service.getHealth();
 
-      expect(result.environment).toBe("production");
-
-      process.env.NODE_ENV = originalEnv;
+      expect(result.environment).toBe("test");
+      expect(configService.get).toHaveBeenCalledWith("app.nodeEnv", "development");
     });
 
-    it("should default to development environment when NODE_ENV is not set", async () => {
+    it("should default to development environment when not configured", async () => {
       mockAppDal.checkDatabaseConnection.mockResolvedValue(undefined);
-      const originalEnv = process.env.NODE_ENV;
 
-      delete process.env.NODE_ENV;
+      // Override the mock to return undefined, triggering the default
+      configService.get.mockImplementation((key: string, defaultValue?: unknown) => {
+        if (key === "app.nodeEnv") return defaultValue;
+
+        return (DEFAULT_TEST_CONFIG as Record<string, unknown>)[key] ?? defaultValue;
+      });
+
       const result = await service.getHealth();
 
       expect(result.environment).toBe("development");
-
-      process.env.NODE_ENV = originalEnv;
     });
 
     it("should measure database latency accurately", async () => {

@@ -1,21 +1,30 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
 import { AppController } from "../../../src/app.controller";
 import { AppService } from "../../../src/app.service";
+import { createMockConfigService } from "../../utils/config.mock";
 
 describe("AppController", () => {
   let controller: AppController;
+  let configService: ReturnType<typeof createMockConfigService>;
 
   const mockAppService = {
     getHealth: jest.fn(),
   };
 
   beforeEach(async () => {
+    configService = createMockConfigService();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       providers: [
         {
           provide: AppService,
           useValue: mockAppService,
+        },
+        {
+          provide: ConfigService,
+          useValue: configService,
         },
       ],
     }).compile();

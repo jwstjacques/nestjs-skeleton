@@ -7,7 +7,6 @@ import { CorrelationService } from "./common/correlation";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { SwaggerModule } from "@nestjs/swagger";
 import { createSwaggerConfig, createHelmetConfig } from "./config";
-import { API_PATH, SWAGGER_PATH, DEFAULT_PORT } from "./config";
 import compression from "compression";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import helmet from "helmet";
@@ -15,27 +14,36 @@ import helmet from "helmet";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Get ConfigService for all configuration needs
+  const configService = app.get(ConfigService);
+
   // Logging
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
-  // Security headers
-  app.use(helmet(createHelmetConfig()));
+  // Security headers - pass configService
+  app.use(helmet(createHelmetConfig(configService)));
 
   // Compression
   app.use(compression());
 
-  const configService = app.get(ConfigService);
-
-  // CORS configuration
-  const corsOrigin = configService.get<string>("CORS_ORIGIN");
+  // CORS configuration - get from config
+  const corsOrigin = configService.get<string | string[]>("security.cors.origin", "*");
+  const corsCredentials = configService.get<boolean>("security.cors.credentials", true);
 
   app.enableCors({
-    origin: corsOrigin?.split(",") || "*",
-    credentials: true,
+    origin:
+      typeof corsOrigin === "string" && corsOrigin.includes(",")
+        ? corsOrigin.split(",").map((s) => s.trim())
+        : corsOrigin,
+    credentials: corsCredentials,
   });
 
-  // Global prefix
-  app.setGlobalPrefix(API_PATH);
+  // Global prefix - use from config
+  const apiPrefix = configService.get<string>("app.apiPrefix", "api");
+  const apiVersion = configService.get<string>("app.apiVersion", "1");
+  const apiPath = `${apiPrefix}/v${apiVersion}`;
+
+  app.setGlobalPrefix(apiPath);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -57,11 +65,12 @@ async function bootstrap() {
   // Global response interceptor
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // Swagger configuration
-  const config = createSwaggerConfig();
+  // Swagger configuration - pass configService
+  const swaggerPath = configService.get<string>("swagger.path", "docs");
+  const config = createSwaggerConfig(configService);
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup(`${API_PATH}/${SWAGGER_PATH}`, app, document, {
+  SwaggerModule.setup(`${apiPath}/${swaggerPath}`, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: "alpha",
@@ -75,19 +84,17 @@ async function bootstrap() {
     `,
   });
 
-  // Port configuration
-  const port = configService.get<number>("PORT") || DEFAULT_PORT;
+  // Port configuration - get from config
+  const port = configService.get<number>("app.port", 3000);
+  const host = configService.get<string>("app.host", "localhost");
 
   await app.listen(port);
 
   const logger = app.get<LoggerService>(WINSTON_MODULE_NEST_PROVIDER);
 
-  logger.log(`🚀 Application is running on: http://localhost:${port}`, "Bootstrap");
-  logger.log(
-    `📚 API Documentation: http://localhost:${port}/${API_PATH}/${SWAGGER_PATH}`,
-    "Bootstrap",
-  );
-  logger.log(`❤️  Health check: http://localhost:${port}/${API_PATH}/health`, "Bootstrap");
+  logger.log(`🚀 Application is running on: http://${host}:${port}`, "Bootstrap");
+  logger.log(`📚 API Documentation: http://${host}:${port}/${apiPath}/${swaggerPath}`, "Bootstrap");
+  logger.log(`❤️  Health check: http://${host}:${port}/${apiPath}/health`, "Bootstrap");
 
   // Enable graceful shutdown
   app.enableShutdownHooks();

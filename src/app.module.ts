@@ -1,10 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AppDal } from "./app.dal";
+import { AppConfigModule } from "./config";
 import { DatabaseModule } from "./database/database.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
 import { AuthModule } from "./auth/auth.module";
@@ -16,34 +17,33 @@ import { CorrelationIdMiddleware, RequestLoggerMiddleware } from "./common/middl
 import { HttpCacheInterceptor, PerformanceInterceptor } from "./common/interceptors";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
-import paginationConfig from "./config/pagination.config";
-import throttlerConfig from "./config/throttler.config";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ".env",
-      load: [paginationConfig, throttlerConfig],
-    }),
+    // Use new centralized config module
+    AppConfigModule,
     ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => [
         {
           name: "short",
-          ttl: config.get<number>("throttler.short.ttl", 1000),
-          limit: config.get<number>("throttler.short.limit", 10),
+          ttl: config.get<number>("throttle.short.ttl", 1000),
+          limit: config.get<number>("throttle.short.limit", 10),
         },
         {
           name: "medium",
-          ttl: config.get<number>("throttler.medium.ttl", 10000),
-          limit: config.get<number>("throttler.medium.limit", 50),
+          ttl: config.get<number>("throttle.medium.ttl", 10000),
+          limit: config.get<number>("throttle.medium.limit", 50),
         },
         {
           name: "long",
-          ttl: config.get<number>("throttler.long.ttl", 60000),
-          limit: config.get<number>("throttler.long.limit", 200),
+          ttl: config.get<number>("throttle.long.ttl", 60000),
+          limit: config.get<number>("throttle.long.limit", 200),
+        },
+        {
+          name: "strict",
+          ttl: config.get<number>("throttle.strict.ttl", 900000),
+          limit: config.get<number>("throttle.strict.limit", 5),
         },
       ],
     }),

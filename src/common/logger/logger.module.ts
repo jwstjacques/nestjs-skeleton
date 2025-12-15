@@ -1,14 +1,9 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { WinstonModule } from "nest-winston";
 import * as winston from "winston";
 import * as path from "path";
 import { AsyncLocalStorage } from "async_hooks";
-import {
-  LOG_DIR,
-  LOG_FILE_MAX_SIZE,
-  LOG_FILE_MAX_FILES,
-  LOG_TIMESTAMP_FORMAT,
-} from "../../config/logger.constants";
 import { LogLevel } from "../enums";
 
 /**
@@ -52,54 +47,82 @@ const correlationFormat = winston.format((info) => {
 
 @Module({
   imports: [
-    WinstonModule.forRoot({
-      transports: [
-        // Console transport
-        new winston.transports.Console({
-          format: winston.format.combine(
-            correlationFormat(),
-            winston.format.timestamp({ format: LOG_TIMESTAMP_FORMAT }),
-            winston.format.colorize(),
-            winston.format.printf((info: winston.Logform.TransformableInfo) => {
-              const correlationIdValue = info.correlationId as string | undefined;
-              const userIdValue = info.userId as number | undefined;
-              const contextValue = info.context as string | undefined;
-              const traceValue = info.trace as string | undefined;
+    WinstonModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const logDir = configService.get<string>(
+          "observability.logging.dir",
+          path.join(process.cwd(), "logs"),
+        );
+        const timestampFormat = configService.get<string>(
+          "observability.logging.timestampFormat",
+          "YYYY-MM-DD HH:mm:ss",
+        );
+        const fileMaxSize = configService.get<number>(
+          "observability.logging.fileMaxSize",
+          10485760,
+        );
+        const fileMaxFiles = configService.get<number>("observability.logging.fileMaxFiles", 5);
+        const appLogFilename = configService.get<string>(
+          "observability.logging.appLogFilename",
+          "application.log",
+        );
+        const errorLogFilename = configService.get<string>(
+          "observability.logging.errorLogFilename",
+          "error.log",
+        );
 
-              const correlationPart = correlationIdValue ? `[${correlationIdValue}]` : "";
-              const userPart = userIdValue ? `[user-${userIdValue}]` : "";
-              const contextPart = contextValue ? `[${contextValue}]` : "[Application]";
+        return {
+          transports: [
+            // Console transport
+            new winston.transports.Console({
+              format: winston.format.combine(
+                correlationFormat(),
+                winston.format.timestamp({ format: timestampFormat }),
+                winston.format.colorize(),
+                winston.format.printf((info: winston.Logform.TransformableInfo) => {
+                  const correlationIdValue = info.correlationId as string | undefined;
+                  const userIdValue = info.userId as number | undefined;
+                  const contextValue = info.context as string | undefined;
+                  const traceValue = info.trace as string | undefined;
 
-              return `${String(info.timestamp)} ${correlationPart} ${userPart} ${contextPart} ${String(info.level)}: ${String(info.message)}${
-                traceValue ? `\n${traceValue}` : ""
-              }`;
+                  const correlationPart = correlationIdValue ? `[${correlationIdValue}]` : "";
+                  const userPart = userIdValue ? `[user-${userIdValue}]` : "";
+                  const contextPart = contextValue ? `[${contextValue}]` : "[Application]";
+
+                  return `${String(info.timestamp)} ${correlationPart} ${userPart} ${contextPart} ${String(info.level)}: ${String(info.message)}${
+                    traceValue ? `\n${traceValue}` : ""
+                  }`;
+                }),
+              ),
             }),
-          ),
-        }),
-        // File transport - All logs
-        new winston.transports.File({
-          filename: path.join(LOG_DIR, "application.log"),
-          format: winston.format.combine(
-            correlationFormat(),
-            winston.format.timestamp({ format: LOG_TIMESTAMP_FORMAT }),
-            winston.format.json(),
-          ),
-          maxsize: LOG_FILE_MAX_SIZE,
-          maxFiles: LOG_FILE_MAX_FILES,
-        }),
-        // File transport - Error logs only
-        new winston.transports.File({
-          filename: path.join(LOG_DIR, "error.log"),
-          level: LogLevel.ERROR,
-          format: winston.format.combine(
-            correlationFormat(),
-            winston.format.timestamp({ format: LOG_TIMESTAMP_FORMAT }),
-            winston.format.json(),
-          ),
-          maxsize: LOG_FILE_MAX_SIZE,
-          maxFiles: LOG_FILE_MAX_FILES,
-        }),
-      ],
+            // File transport - All logs
+            new winston.transports.File({
+              filename: path.join(logDir, appLogFilename),
+              format: winston.format.combine(
+                correlationFormat(),
+                winston.format.timestamp({ format: timestampFormat }),
+                winston.format.json(),
+              ),
+              maxsize: fileMaxSize,
+              maxFiles: fileMaxFiles,
+            }),
+            // File transport - Error logs only
+            new winston.transports.File({
+              filename: path.join(logDir, errorLogFilename),
+              level: LogLevel.ERROR,
+              format: winston.format.combine(
+                correlationFormat(),
+                winston.format.timestamp({ format: timestampFormat }),
+                winston.format.json(),
+              ),
+              maxsize: fileMaxSize,
+              maxFiles: fileMaxFiles,
+            }),
+          ],
+        };
+      },
+      inject: [ConfigService],
     }),
   ],
   exports: [WinstonModule],

@@ -1,9 +1,13 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { AppDal } from "./app.dal";
 
 @Injectable()
 export class AppService {
-  constructor(private readonly appDal: AppDal) {}
+  constructor(
+    private readonly appDal: AppDal,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * Get status of the API including database connectivity
@@ -27,7 +31,7 @@ export class AppService {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV || "development",
+      environment: this.configService.get<string>("app.nodeEnv", "development"),
       database: {
         status: dbStatus,
         latency: `${dbLatency}ms`,

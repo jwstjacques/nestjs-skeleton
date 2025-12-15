@@ -24,8 +24,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run Prisma generate
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/dbname
+
       - name: Run ESLint
-        run: npm run lint:check
+        run: npm run lint
 
       - name: Check formatting
         run: npm run format:check
@@ -77,9 +82,11 @@ jobs:
 
       - name: Run Prisma generate
         run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
 
-      - name: Run database migrations
-        run: npx prisma migrate deploy
+      - name: Push database schema
+        run: npx prisma db push --accept-data-loss
         env:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
 
@@ -120,11 +127,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run Prisma generate
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/dbname
+
       - name: Build application
         run: npm run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/

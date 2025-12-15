@@ -23,23 +23,4 @@ export class AppDal {
   async getUserCount(): Promise<number> {
     return this.prisma.user.count();
   }
-
-  /**
-   * Get total count of tasks
-   * @returns Promise with task count
-   */
-  async getTaskCount(): Promise<number> {
-    return this.prisma.task.count();
-  }
-
-  /**
-   * Get tasks grouped by status with counts
-   * @returns Promise with array of status groups
-   */
-  async getTasksByStatus() {
-    return this.prisma.task.groupBy({
-      by: ["status"],
-      _count: true,
-    });
-  }
 }

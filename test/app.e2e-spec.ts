@@ -38,21 +38,4 @@ describe("AppController (e2e)", () => {
         });
     });
   });
-
-  describe("GET /stats", () => {
-    it("should return application statistics", () => {
-      return request(app.getHttpServer())
-        .get("/stats")
-        .expect(HttpStatus.OK)
-        .expect((res: request.Response) => {
-          expect(res.body).toHaveProperty("users");
-          expect(res.body).toHaveProperty("tasks");
-          expect(res.body).toHaveProperty("tasksByStatus");
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          expect(typeof res.body.users).toBe("number");
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          expect(typeof res.body.tasks).toBe("number");
-        });
-    });
-  });
 });

@@ -36,30 +36,6 @@ curl http://localhost:3000/health
 }
 ```
 
-### GET /stats
-
-Get application-wide statistics.
-
-**Request:**
-
-```bash
-curl http://localhost:3000/stats
-```
-
-**Response:**
-
-```json
-{
-  "users": 10,
-  "tasks": 42,
-  "tasksByStatus": {
-    "TODO": 15,
-    "IN_PROGRESS": 12,
-    "COMPLETED": 15
-  }
-}
-```
-
 ## Tasks
 
 ### Create Task

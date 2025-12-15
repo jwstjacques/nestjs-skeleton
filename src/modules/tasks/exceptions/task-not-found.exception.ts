@@ -1,6 +1,6 @@
 import { HttpStatus } from "@nestjs/common";
-import { ApplicationException } from "./application.exception";
-import { ErrorCode } from "../constants/error-codes.constants";
+import { ApplicationException } from "../../../common/exceptions/application.exception";
+import { ErrorCode } from "../../../common/constants/error-codes.constants";
 
 export class TaskNotFoundException extends ApplicationException {
   constructor(id: string) {

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Task, Prisma, TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
-import { TaskNotFoundException, TaskForbiddenException } from "../../common/exceptions";
+import { TaskNotFoundException, TaskForbiddenException } from "./exceptions";
 import { TasksDal } from "./tasks.dal";
 
 interface UserContext {

@@ -34,26 +34,4 @@ export class AppService {
       },
     };
   }
-
-  /**
-   * Get application statistics including user and task counts
-   */
-  async getStats() {
-    const userCount = await this.appDal.getUserCount();
-    const taskCount = await this.appDal.getTaskCount();
-    const tasksByStatus = await this.appDal.getTasksByStatus();
-
-    return {
-      users: userCount,
-      tasks: taskCount,
-      tasksByStatus: tasksByStatus.reduce(
-        (acc, curr) => {
-          acc[curr.status] = curr._count;
-
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-    };
-  }
 }

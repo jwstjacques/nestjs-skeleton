@@ -30,7 +30,7 @@ jobs:
           DATABASE_URL: postgresql://user:password@localhost:5432/dbname
 
       - name: Run ESLint
-        run: npm run lint:check
+        run: npm run lint
 
       - name: Check formatting
         run: npm run format:check

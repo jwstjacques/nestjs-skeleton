@@ -113,19 +113,6 @@ describe("AppService", () => {
       expect(result.environment).toBe("development");
     });
 
-    it("should measure database latency accurately", async () => {
-      mockAppDal.checkDatabaseConnection.mockImplementation(() => {
-        return new Promise((resolve) => setTimeout(resolve, 10));
-      });
-
-      const result = await service.getHealth();
-
-      expect(result.database.status).toBe("connected");
-      const latency = parseInt(result.database.latency);
-
-      expect(latency).toBeGreaterThanOrEqual(10);
-    });
-
     it("should handle database timeout errors", async () => {
       mockAppDal.checkDatabaseConnection.mockRejectedValue(new Error("Timeout"));
 

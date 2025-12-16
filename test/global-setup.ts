@@ -56,6 +56,14 @@ process.env.PAGINATION_MAX_LIMIT = "100";
 export default () => {
   console.log("\n🔧 Setting up E2E test environment...");
 
+  // Skip database setup if SKIP_DB_SETUP is set (e.g., in CI where schema is already pushed)
+  if (process.env.SKIP_DB_SETUP === "true") {
+    console.log("   ⏭️  Skipping database setup (SKIP_DB_SETUP=true)");
+    console.log("   ✓ E2E test setup complete\n");
+
+    return;
+  }
+
   try {
     // Push Prisma schema to test database (creates/updates tables)
     console.log("   ⏳ Synchronizing database schema...");

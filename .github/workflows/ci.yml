@@ -99,9 +99,15 @@ jobs:
       - name: Run e2e tests
         run: npm run test:e2e
         env:
+          NODE_ENV: test
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
+          REDIS_HOST: localhost
+          REDIS_PORT: "6379"
+          JWT_SECRET: test-jwt-secret-key-minimum-32-characters-required-for-testing-purposes
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-minimum-32-characters-required-for-testing-purposes
+          JWT_EXPIRES_IN: 7d
+          JWT_REFRESH_EXPIRES_IN: 30d
+          SKIP_DB_SETUP: "true"
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3

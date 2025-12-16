@@ -6,6 +6,8 @@
  * For generic/shared constants, see src/config/ and src/common/constants/
  */
 
+import { TaskStatus, TaskPriority } from "@prisma/client";
+
 // ============================================================================
 // API Configuration
 // ============================================================================
@@ -19,6 +21,30 @@ export const TASK_API_TAG = "tasks";
  * Controller path for task routes
  */
 export const TASK_CONTROLLER_PATH = "tasks";
+
+// ============================================================================
+// Task Enums (Export for convenience)
+// ============================================================================
+
+/**
+ * Task status values for validation
+ */
+export const TASK_STATUS_VALUES = Object.values(TaskStatus);
+
+/**
+ * Task priority values for validation
+ */
+export const TASK_PRIORITY_VALUES = Object.values(TaskPriority);
+
+/**
+ * Valid sort fields for task queries
+ */
+export const TASK_SORT_FIELDS = ["createdAt", "updatedAt", "title", "status", "priority"] as const;
+
+/**
+ * Valid sort orders
+ */
+export const TASK_SORT_ORDERS = ["ASC", "DESC"];
 
 // ============================================================================
 // Task Validation Messages
@@ -43,11 +69,11 @@ export const TASK_VALIDATION_MESSAGES = {
   DESCRIPTION_MUST_BE_STRING: "Description must be a string",
 
   // Status validation
-  STATUS_INVALID: "Status must be one of: TODO, IN_PROGRESS, COMPLETED, CANCELLED",
+  STATUS_INVALID: `Status must be one of: ${Object.values(TaskStatus).join(", ")}`,
   STATUS_MUST_BE_ENUM: "Status must be a valid TaskStatus enum value",
 
   // Priority validation
-  PRIORITY_INVALID: "Priority must be one of: LOW, MEDIUM, HIGH",
+  PRIORITY_INVALID: `Priority must be one of: ${Object.values(TaskPriority).join(", ")}`,
   PRIORITY_MUST_BE_ENUM: "Priority must be a valid TaskPriority enum value",
 
   // ID validation
@@ -58,13 +84,13 @@ export const TASK_VALIDATION_MESSAGES = {
   PAGE_MIN: "Page must be at least 1",
   LIMIT_MIN: "Limit must be at least 1",
   LIMIT_MAX: "Limit cannot exceed 100",
-  SORT_ORDER_INVALID: "Sort order must be ASC or DESC",
+  SORT_ORDER_INVALID: `Sort order must be ${TASK_SORT_ORDERS.join(" or ")}`,
   SORT_BY_INVALID: "Invalid sort field",
 
   // Filter validation
   FILTER_INVALID_DATE: "Invalid date format for filter",
   FILTER_INVALID_BOOLEAN: "Filter value must be a boolean",
-} as const;
+};
 
 // ============================================================================
 // Task Response Messages
@@ -223,27 +249,3 @@ export const TASK_LIMITS = {
   DEFAULT_PAGE_SIZE: 10,
   MAX_PAGE_SIZE: 100,
 } as const;
-
-// ============================================================================
-// Task Enums (Export for convenience)
-// ============================================================================
-
-/**
- * Task status values for validation
- */
-export const TASK_STATUS_VALUES = ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const;
-
-/**
- * Task priority values for validation
- */
-export const TASK_PRIORITY_VALUES = ["LOW", "MEDIUM", "HIGH"] as const;
-
-/**
- * Valid sort fields for task queries
- */
-export const TASK_SORT_FIELDS = ["createdAt", "updatedAt", "title", "status", "priority"] as const;
-
-/**
- * Valid sort orders
- */
-export const TASK_SORT_ORDERS = ["ASC", "DESC"] as const;

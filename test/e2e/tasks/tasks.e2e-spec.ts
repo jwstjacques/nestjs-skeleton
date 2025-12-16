@@ -149,7 +149,7 @@ describe("TasksController (e2e)", () => {
         })
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
-          expect(res.body.message).toContain("Due date must be a valid ISO 8601 date string");
+          expect(res.body.message).toContain("Due date has an invalid format");
         });
     });
 
@@ -428,7 +428,7 @@ describe("TasksController (e2e)", () => {
         })
         .expect(HttpStatus.BAD_REQUEST)
         .then((res) => {
-          expect(res.body.message).toContain("Completed at must be a valid ISO 8601 date string");
+          expect(res.body.message).toContain("Completed at has an invalid format");
         });
     });
 

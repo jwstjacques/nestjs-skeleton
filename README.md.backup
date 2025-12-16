@@ -41,7 +41,6 @@ The skeleton includes a complete **Tasks** module as a reference implementation 
 ### For New Projects
 
 1. **Clone this repository**
-
    ```bash
    git clone https://github.com/jwstjacques/nestjs-skeleton.git my-api
    cd my-api
@@ -53,20 +52,17 @@ The skeleton includes a complete **Tasks** module as a reference implementation 
    - Build your own domain modules following the Tasks example
 
 3. **Set up your environment**
-
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Start Docker services**
-
    ```bash
    docker-compose up -d  # Start PostgreSQL and Redis
    ```
 
 5. **Install and setup**
-
    ```bash
    npm install
    npm run prisma:migrate:dev
@@ -74,7 +70,6 @@ The skeleton includes a complete **Tasks** module as a reference implementation 
    ```
 
 6. **Start development**
-
    ```bash
    npm run start:dev
    ```
@@ -86,49 +81,42 @@ Visit http://localhost:3000/api/docs to see the Swagger documentation.
 ## 📚 What You Get
 
 ### Architecture
-
 - Clean, modular architecture following NestJS best practices
 - Separation of concerns (Controllers → Services → DAL → Database)
 - Dependency injection throughout
 - Configuration management with runtime validation
 
 ### Authentication & Authorization
-
 - JWT-based authentication with refresh tokens
 - Role-based access control (RBAC)
 - Protected routes with guards
 - Secure password hashing with bcrypt
 
 ### Database
-
 - Prisma ORM for type-safe database access
 - PostgreSQL integration with connection pooling
 - Migration system for schema management
 - Database health checks
 
 ### Caching
-
 - Redis integration for performance
 - Configurable cache TTL
 - Cache invalidation patterns
 
 ### Testing
-
-- > 99% code coverage
+- >99% code coverage
 - Unit tests for all components
 - E2E tests for API endpoints
 - Test utilities and helpers
 - Mock services and data
 
 ### Documentation
-
 - Swagger/OpenAPI specification
 - Interactive API documentation
 - Comprehensive guides in `/docs` folder
 - Example implementations
 
 ### DevOps
-
 - Docker development environment
 - Docker production builds
 - Health check endpoints
@@ -262,52 +250,39 @@ This generates `docs/openapi.json` which can be imported into:
 - Insomnia
 - API client generators
 
-### Postman Collection
+### API Examples
 
-Import `postman/api-collection.json` into Postman for:
+See [docs/API_EXAMPLES.md](./docs/API_EXAMPLES.md) for curl examples and sample responses.
 
-- Pre-configured requests
-- Environment variables
-- Test workflows
-- Example responses
+## Deployment
 
-See [Postman Testing Guide](docs/POSTMAN-TESTING-GUIDE.md) for details.
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-## 📖 Documentation
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-- [API Examples](docs/API_EXAMPLES.md) - Request/response examples
-- [Endpoints](docs/ENDPOINTS.md) - All available endpoints
-- [Development Guide](docs/DEVELOPMENT.md) - Development workflow
-- [Testing Guide](docs/TESTING.md) - Testing strategies
-- [Customization Guide](docs/CUSTOMIZATION.md) - Adapting the skeleton
-- [Database Guide](docs/DATABASE.md) - Database setup and migrations
-- [Docker Guide](docs/DOCKER.md) - Docker usage
-- [Production Guide](docs/PRODUCTION.md) - Deployment best practices
+```bash
+npm install -g @nestjs/mau
+mau deploy
+```
 
-## 📦 Deployment
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-See the [Production Guide](docs/PRODUCTION.md) for detailed deployment instructions.
+## Resources
 
-### Quick Deploy Options
+Check out a few resources that may come in handy when working with NestJS:
 
-- **Docker**: Use the included Dockerfile for containerized deployment
-- **Traditional**: Deploy to any Node.js hosting platform
-- **Cloud Platforms**: AWS, Azure, Google Cloud, Heroku, etc.
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## 🤝 Contributing
+## Support
 
-Contributions are welcome! This skeleton is meant to evolve with best practices.
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## 📄 License
+## License
 
-This project is [MIT licensed](LICENSE).
-
-## 🙏 Acknowledgments
-
-Built with [NestJS](https://nestjs.com/) - A progressive Node.js framework.
-
-## 📚 Resources
-
-- [NestJS Documentation](https://docs.nestjs.com) - Official NestJS docs
-- [Prisma Documentation](https://www.prisma.io/docs) - Prisma ORM docs
-- [Jest Documentation](https://jestjs.io/) - Testing framework docs
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

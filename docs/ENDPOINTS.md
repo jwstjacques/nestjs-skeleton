@@ -1,28 +1,30 @@
-# 🚀 NestJS Application - Endpoint Guide
+# 🚀 NestJS API Skeleton - Core Endpoints
+
+This document lists the core endpoints available in the NestJS API Skeleton. The Tasks module endpoints are documented separately as an example implementation.
 
 ## Server Status
 
-✅ **Application Running**: http://localhost:3000  
-✅ **API Base URL**: http://localhost:3000/api/v1  
-✅ **Swagger Documentation**: http://localhost:3000/api/v1/docs
+- **Application**: `http://localhost:3000`
+- **API Base URL**: `http://localhost:3000/api/v1`
+- **Swagger Documentation**: `http://localhost:3000/api/v1/docs`
 
 > **💡 Tip**: For interactive API testing, visit the [Swagger UI](http://localhost:3000/api/v1/docs) where you can try all endpoints directly in your browser.
 
 ---
 
-## 📍 Available Endpoints
+## 📍 Core Endpoints
 
-### Health Check Endpoint
+### Health Check
 
-**URL**: http://localhost:3000/api/v1/health  
-**Method**: GET  
-**Description**: Returns application health status including database connectivity
+**GET** `/api/v1/health`
+
+Returns application health status including database connectivity.
 
 ```bash
 curl http://localhost:3000/api/v1/health
 ```
 
-**Expected Response**:
+**Response:**
 
 ```json
 {
@@ -39,169 +41,171 @@ curl http://localhost:3000/api/v1/health
 
 ---
 
-### Tasks Endpoints
+### Authentication Endpoints
 
-#### List All Tasks
+#### Register
 
-**URL**: http://localhost:3000/api/v1/tasks  
-**Method**: GET  
-**Description**: Get all tasks with pagination
+**POST** `/api/v1/auth/register`
 
-```bash
-curl http://localhost:3000/api/v1/tasks
+Create a new user account.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!",
+  "name": "John Doe"
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "cm4nk4kx30000v6jb0gx9zs8x",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "USER"
+  }
+}
 ```
 
 ---
 
-#### Get Task by ID
+#### Login
 
-**URL**: http://localhost:3000/api/v1/tasks/:id  
-**Method**: GET  
-**Description**: Get a single task by CUID
+**POST** `/api/v1/auth/login`
 
-```bash
-# Replace {cuid} with an actual CUID from your database
-curl http://localhost:3000/api/v1/tasks/{cuid}
+Authenticate and receive access tokens.
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "cm4nk4kx30000v6jb0gx9zs8x",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "USER"
+  }
+}
 ```
 
 ---
 
-#### Create Task
+#### Refresh Token
 
-**URL**: http://localhost:3000/api/v1/tasks  
-**Method**: POST  
-**Description**: Create a new task
+**POST** `/api/v1/auth/refresh`
 
-```bash
-curl -X POST http://localhost:3000/api/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Test Task",
-    "description": "This is a test task",
-    "status": "TODO",
-    "priority": "MEDIUM"
-  }'
+Get a new access token using refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
 ```
 
 ---
 
-#### Update Task
+#### Get Current User
 
-**URL**: http://localhost:3000/api/v1/tasks/:id  
-**Method**: PATCH  
-**Description**: Update an existing task
+**GET** `/api/v1/auth/me`
 
-```bash
-curl -X PATCH http://localhost:3000/api/v1/tasks/{cuid} \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "IN_PROGRESS"
-  }'
+Get the currently authenticated user's information.
+
+**Headers:**
+
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:**
+
+```json
+{
+  "id": "cm4nk4kx30000v6jb0gx9zs8x",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "USER",
+  "createdAt": "2025-12-09T08:22:07.000Z",
+  "updatedAt": "2025-12-09T08:22:07.000Z"
+}
 ```
 
 ---
 
-#### Delete Task
+### API Documentation
 
-**URL**: http://localhost:3000/api/v1/tasks/:id  
-**Method**: DELETE  
-**Description**: Soft delete a task
+**GET** `/api/v1/docs`
 
-```bash
-curl -X DELETE http://localhost:3000/api/v1/tasks/{cuid}
-```
+Interactive Swagger/OpenAPI documentation with:
 
----
-
-#### Get Task Statistics
-
-**URL**: http://localhost:3000/api/v1/tasks/statistics  
-**Method**: GET  
-**Description**: Get task statistics
-
-```bash
-curl http://localhost:3000/api/v1/tasks/statistics
-```
+- Try-it-out functionality for all endpoints
+- Request/response schemas
+- Authentication testing
+- Full API specification
 
 ---
 
-## 🔑 Important Notes
+## 📦 Example Module: Tasks
 
-### API Prefix
+The skeleton includes a **Tasks module** as a reference implementation showing best practices for:
 
-- **All endpoints** are prefixed with `/api/v1`
-- This is configured in `.env` as `API_PREFIX=api/v1`
-- The root endpoint is therefore at `/api/v1/` (not just `/`)
+- CRUD operations with pagination
+- Custom endpoints (statistics)
+- DTO validation
+- Swagger documentation
+- Error handling
+- Unit and E2E tests
 
-### CUID Format
-
-- All IDs now use CUID format (25 characters, starts with 'c')
-- Example: `clh9k7x2a0000qmxbzv0q0001`
-- You need actual CUIDs from your database to test GET/PATCH/DELETE endpoints
-
-### Getting Actual CUIDs
-
-To get actual task IDs from your database:
-
-```bash
-# Option 1: Use the tasks list endpoint
-curl http://localhost:3000/api/v1/tasks
-
-# Option 2: Open Prisma Studio
-npm run prisma:studio
-# Then visit http://localhost:51212 (or whatever port it shows)
-```
+**See**: [docs/examples/TASKS_ENDPOINTS.md](./examples/TASKS_ENDPOINTS.md) for the complete Tasks endpoint documentation.
 
 ---
 
-## 🌐 Browser Access
+## 🔧 Adding Your Own Endpoints
 
-You can also access these endpoints directly in your browser:
+When you create custom modules, follow these patterns:
 
-- **Health Check**: <http://localhost:3000/api/v1/health>
-- **Tasks List**: <http://localhost:3000/api/v1/tasks>
-- **Prisma Studio**: Run `npm run prisma:studio` and open the URL it provides
+1. **Use versioned routing**: All endpoints under `/api/v1`
+2. **Document with Swagger**: Add `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()` decorators
+3. **Validate input**: Use DTOs with `class-validator` decorators
+4. **Handle errors**: Use custom exceptions that extend `ApplicationException`
+5. **Add tests**: Both unit and E2E tests for each endpoint
+6. **Update this doc**: Keep endpoint documentation up to date
 
----
-
-## 🐛 Troubleshooting
-
-### "Cannot GET /"
-
-**Problem**: Accessing <http://localhost:3000/> returns 404  
-**Solution**: Use <http://localhost:3000/api/v1/health> or <http://localhost:3000/api/v1/tasks> instead
-
-### "Connection Refused"
-
-**Problem**: Server is not running  
-**Solution**: Run `npm run start:dev` in a terminal
-
-### Database Connection Issues
-
-**Problem**: Health check shows database disconnected  
-**Solution**:
-
-1. Ensure Docker containers are running: `npm run docker:start`
-2. Check database connection: `docker ps`
-3. Verify .env DATABASE_URL is correct
+See the [CUSTOMIZATION.md](./CUSTOMIZATION.md) guide for detailed instructions on creating your own modules.
 
 ---
 
-## 🎯 Quick Test Commands
+## 📚 Related Documentation
 
-```bash
-# Test all main endpoints
-curl http://localhost:3000/api/v1/
-curl http://localhost:3000/api/v1/health
-curl http://localhost:3000/api/v1/tasks
-```
-
----
-
-## ✅ Current Status
-
-- ✅ Server running on port 3000
-- ✅ Database connected (PostgreSQL)
-- ✅ CUID implementation complete
-- ✅ All CRUD endpoints available
-- ✅ Health check working
+- [API Examples](./API_EXAMPLES.md) - Request/response examples
+- [Development Guide](./DEVELOPMENT.md) - Development workflow
+- [Testing Guide](./TESTING.md) - Testing strategies
+- [Customization Guide](./CUSTOMIZATION.md) - Creating your own modules

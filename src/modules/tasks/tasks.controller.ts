@@ -42,6 +42,29 @@ import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constant
 import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES } from "./constants";
 
 /**
+ * Tasks Controller - Example Module
+ *
+ * ⚠️  NOTE: This Tasks module serves as an example implementation demonstrating
+ * best practices for building NestJS modules. It showcases:
+ * - CRUD operations with pagination
+ * - DTO validation and transformation
+ * - Swagger/OpenAPI documentation
+ * - Authentication & role-based access control
+ * - Redis caching patterns
+ * - Rate limiting (throttling)
+ * - Comprehensive error handling
+ * - Unit and E2E testing patterns
+ *
+ * When building your own API:
+ * - Use this as a reference for module structure and patterns
+ * - See docs/CUSTOMIZATION.md for instructions to remove this module
+ * - Follow the same patterns when creating your own modules
+ *
+ * @see docs/CUSTOMIZATION.md - Removal and customization guide
+ * @see docs/examples/TASKS_ENDPOINTS.md - Complete API documentation
+ */
+
+/**
  * Throttle limits for task operations
  * Note: Decorators require static values at load time, before ConfigService is available.
  * These match the defaults in throttleConfig provider.

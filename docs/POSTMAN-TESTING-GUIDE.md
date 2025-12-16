@@ -1,6 +1,8 @@
 # Postman Testing Guide
 
-This guide walks you through testing the NestJS Task API using Postman.
+> **Note**: This guide includes examples from the **Tasks module**, which serves as a reference implementation in the NestJS API Skeleton. The authentication and health check endpoints are core features, while the Tasks endpoints demonstrate best practices you can follow when building your own modules.
+
+This guide walks you through testing the NestJS API using Postman.
 
 ## Table of Contents
 

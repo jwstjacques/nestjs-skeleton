@@ -228,6 +228,136 @@ describe("Tasks API", () => {
 
 ---
 
+## Testing Your Custom Modules
+
+When you create your own modules, follow the same testing patterns demonstrated in the **Tasks module**.
+
+### Module Test Structure
+
+For each custom module, create:
+
+```
+test/
+├── unit/
+│   └── your-module/
+│       ├── your-module.dal.spec.ts      # DAL tests
+│       ├── your-module.service.spec.ts  # Service tests
+│       └── your-module.controller.spec.ts # Controller tests
+└── e2e/
+    └── your-module/
+        └── your-module.e2e-spec.ts      # E2E tests
+```
+
+### Required Test Coverage
+
+Each module should have:
+
+1. **DAL Tests** (Integration tests with real database)
+   - Test all database operations
+   - Test error handling (unique constraints, not found, etc.)
+   - Test pagination and filtering
+
+2. **Service Tests** (Unit tests with mocks)
+   - Test business logic in isolation
+   - Mock the DAL layer
+   - Test all service methods
+   - Test error scenarios
+
+3. **Controller Tests** (Unit tests with mocks)
+   - Test request handling
+   - Test DTO validation
+   - Mock the service layer
+   - Test response formatting
+
+4. **E2E Tests** (Full integration tests)
+   - Test all API endpoints
+   - Test authentication/authorization
+   - Test request/response formats
+   - Test error responses
+   - Use `TestCleanup` utility
+
+### Example Test Template
+
+Use the Tasks module as a template:
+
+```typescript
+// test/unit/your-module/your-module.service.spec.ts
+import { Test, TestingModule } from "@nestjs/testing";
+import { createMock } from "@golevelup/ts-jest";
+import { YourModuleService } from "../../../src/modules/your-module/your-module.service";
+import { YourModuleDal } from "../../../src/modules/your-module/your-module.dal";
+
+describe("YourModuleService", () => {
+  let service: YourModuleService;
+  let dal: jest.Mocked<YourModuleDal>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        YourModuleService,
+        {
+          provide: YourModuleDal,
+          useValue: createMock<YourModuleDal>(),
+        },
+      ],
+    }).compile();
+
+    service = module.get<YourModuleService>(YourModuleService);
+    dal = module.get(YourModuleDal);
+  });
+
+  describe("create", () => {
+    it("should create an item", async () => {
+      const createDto = {
+        /* your DTO */
+      };
+      const expectedResult = {
+        /* expected result */
+      };
+
+      dal.create.mockResolvedValue(expectedResult);
+
+      const result = await service.create(createDto);
+
+      expect(result).toEqual(expectedResult);
+      expect(dal.create).toHaveBeenCalledWith(createDto);
+    });
+  });
+});
+```
+
+### Coverage Thresholds
+
+When you remove the Tasks module or add your own modules, you may need to adjust coverage thresholds in `jest.config.js`:
+
+```javascript
+coverageThreshold: {
+  global: {
+    branches: 90,    // Adjust if needed
+    functions: 90,   // Adjust if needed
+    lines: 95,       // Adjust if needed
+    statements: 95,  // Adjust if needed
+  },
+},
+```
+
+**Recommendation**: Keep thresholds high (90%+) to maintain code quality.
+
+### Testing Best Practices for Custom Modules
+
+1. **Follow the Tasks module patterns**: Use it as a reference
+2. **Test error scenarios**: Not just happy paths
+3. **Use TestCleanup**: Track and cleanup all test data
+4. **Mock external dependencies**: Keep tests fast and isolated
+5. **Test validation**: Ensure DTOs validate correctly
+6. **Test pagination**: If your module supports it
+7. **Test authentication**: Ensure endpoints are properly protected
+8. **Update coverage thresholds**: After removing Tasks module
+
+See the [CUSTOMIZATION.md](./CUSTOMIZATION.md) guide for more details on testing custom modules.
+
+---
+
 ## Best Practices
 
 1. **Test naming**: Use descriptive test names

@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "NestJS API Skeleton",
-    "description": "Complete API skeleton with JWT Authentication, CUID implementation, comprehensive error handling, and example Tasks module for reference",
+    "name": "NestJS Task Management API",
+    "description": "Complete API for Task Management with JWT Authentication, CUID implementation, and comprehensive error handling",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "nestjs-skeleton"
   },
@@ -308,7 +308,7 @@
       }
     },
     {
-      "name": "Tasks (Example Module)",
+      "name": "Tasks",
       "item": [
         {
           "name": "Create Task",

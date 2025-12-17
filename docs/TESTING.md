@@ -4,6 +4,47 @@
 
 This project uses Jest for unit testing, integration testing, and end-to-end (E2E) testing.
 
+## Test Environment Configuration
+
+### Quick Setup
+
+```bash
+# Use pre-configured test settings
+cp .env.test.example .env.test
+```
+
+This provides test-optimized defaults:
+
+- **Test Database**: `taskdb_test` (isolated from development)
+- **High Rate Limits**: 1000/5000/10000 (no throttling during tests)
+- **Minimal Logging**: `LOG_LEVEL=error` (cleaner test output)
+- **Test Port**: 3001 (avoids conflicts with dev server)
+- **Permissive CORS**: `*` (allows all origins for testing)
+
+### CI/CD Environment
+
+For continuous integration, set these environment variables:
+
+```bash
+export NODE_ENV=test
+export DATABASE_URL="${CI_DATABASE_URL}"
+export SKIP_DB_SETUP=true  # If CI provides pre-configured DB
+export LOG_LEVEL=error      # Minimal logging in CI
+```
+
+### Database Isolation
+
+Tests should use a separate database to avoid conflicts:
+
+```env
+# .env.test
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taskdb_test?schema=public
+```
+
+**Important**: E2E tests will reset this database between test suites.
+
+For complete variable reference, see [Environment Variables Guide](./ENVIRONMENT_VARIABLES.md).
+
 ## Test Structure
 
 ```

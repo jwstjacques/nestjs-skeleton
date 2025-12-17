@@ -9,6 +9,47 @@
 
 ## Development Workflow
 
+### Environment Setup
+
+**Quick Start**:
+
+```bash
+# Use pre-configured development settings
+cp .env.development.example .env
+```
+
+This provides developer-friendly defaults:
+
+- Relaxed rate limiting (100/500/2000 requests)
+- Verbose logging (`LOG_LEVEL=debug`)
+- Long JWT expiration (24h access, 30d refresh)
+- Multiple CORS origins allowed
+- Development database (`taskdb`)
+
+**Customized Setup**:
+
+```bash
+# Start from detailed template
+cp .env.template .env
+# Edit variables following inline documentation
+```
+
+**Generate Secure Secrets** (for JWT authentication):
+
+```bash
+# Generate JWT access token secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate JWT refresh token secret (use different value)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Verify Configuration**:
+
+All environment variables are validated at startup using Zod schemas. If validation fails, you'll see detailed error messages indicating which variables are invalid or missing.
+
+For complete variable reference, see [Environment Variables Guide](./ENVIRONMENT_VARIABLES.md).
+
 ### Starting Development
 
 ```bash

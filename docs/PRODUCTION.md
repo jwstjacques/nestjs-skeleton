@@ -6,6 +6,78 @@ This guide covers production deployment, monitoring, logging, security, and main
 
 ---
 
+## Environment Configuration
+
+### Production Requirements
+
+⚠️ **CRITICAL**: Never use `.env` files in production. Always use a secrets manager or environment variables.
+
+#### Secrets Manager (Recommended)
+
+Use cloud provider secrets managers:
+
+- **AWS**: AWS Secrets Manager or Parameter Store
+- **Azure**: Azure Key Vault
+- **Google Cloud**: Secret Manager
+- **HashiCorp**: Vault
+- **Kubernetes**: Secrets
+
+#### Environment Variables Setup
+
+```bash
+# Set via environment variables (not .env files)
+export NODE_ENV=production
+export PORT=3000
+export HOST=0.0.0.0
+
+# Database (from secrets manager)
+export DATABASE_URL="${SECRET_DATABASE_URL}"
+
+# JWT (from secrets manager)
+export JWT_SECRET="${SECRET_JWT_ACCESS}"
+export JWT_REFRESH_SECRET="${SECRET_JWT_REFRESH}"
+export JWT_EXPIRES_IN=15m
+export JWT_REFRESH_EXPIRES_IN=7d
+
+# Redis (from secrets manager)
+export REDIS_HOST="${SECRET_REDIS_HOST}"
+export REDIS_PORT=6379
+export REDIS_PASSWORD="${SECRET_REDIS_PASSWORD}"
+
+# Security
+export CORS_ORIGIN="https://yourdomain.com,https://app.yourdomain.com"
+export LOG_LEVEL=warn
+
+# Rate limiting (production values)
+export THROTTLE_SHORT_TTL=1000
+export THROTTLE_SHORT_LIMIT=10
+export THROTTLE_MEDIUM_TTL=10000
+export THROTTLE_MEDIUM_LIMIT=50
+export THROTTLE_LONG_TTL=60000
+export THROTTLE_LONG_LIMIT=200
+```
+
+#### Production Checklist
+
+Before deploying, verify:
+
+- [ ] `NODE_ENV=production`
+- [ ] Strong random JWT secrets (min 32 chars)
+- [ ] Database connection uses SSL (`?sslmode=require`)
+- [ ] Specific `CORS_ORIGIN` domains (no wildcards)
+- [ ] `LOG_LEVEL=warn` or `error`
+- [ ] Redis password configured
+- [ ] `HOST=0.0.0.0` (if containerized)
+- [ ] All secrets from secrets manager
+- [ ] SSL/TLS enabled for all connections
+- [ ] Database backups configured
+- [ ] Monitoring and alerting setup
+- [ ] Health checks configured
+
+For complete variable reference, see [Environment Variables Guide](./ENVIRONMENT_VARIABLES.md).
+
+---
+
 ## Logging
 
 ### Winston Logger

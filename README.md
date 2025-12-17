@@ -187,6 +187,42 @@ npm run prisma:seed
 npm run start:dev
 ```
 
+### Environment Configuration
+
+This skeleton provides multiple environment configuration options:
+
+**Quick Start (Development)**:
+
+```bash
+# Use pre-configured development settings
+cp .env.development.example .env
+```
+
+**From Template (Customized)**:
+
+```bash
+# Start from comprehensive template
+cp .env.template .env
+# Edit variables based on inline documentation
+```
+
+**For Production**:
+
+```bash
+# Production environments should use secrets manager
+# See docs/ENVIRONMENT_VARIABLES.md for details
+```
+
+**Environment Files**:
+
+- `.env.example` - Main example with all variables documented
+- `.env.template` - Detailed template with explanations
+- `.env.development.example` - Development preset (relaxed security, verbose logging)
+- `.env.production.example` - Production preset (security-focused, secrets placeholders)
+- `.env.test.example` - Test preset (high limits, minimal logging)
+
+For complete variable reference, see [Environment Variables Guide](docs/ENVIRONMENT_VARIABLES.md).
+
 ### Verify Installation
 
 ```bash

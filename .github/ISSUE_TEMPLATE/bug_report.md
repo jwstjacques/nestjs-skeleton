@@ -1,10 +1,9 @@
-```markdown
 ---
 name: Bug Report
 about: Create a report to help us improve
 title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## 🐛 Bug Description
@@ -13,10 +12,10 @@ assignees: ''
 
 ## 📋 Steps to Reproduce
 
-1. 
-2. 
-3. 
-4. 
+1.
+2.
+3.
+4.
 
 ## ✅ Expected Behavior
 
@@ -44,4 +43,3 @@ assignees: ''
 ## 🔍 Possible Solution
 
 <!-- If you have suggestions on how to fix the bug -->
-```

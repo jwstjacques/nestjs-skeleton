@@ -76,7 +76,7 @@ const THROTTLE_LIMITS = {
 
 @ApiTags(TASK_API_TAG)
 @ApiBearerAuth("JWT-auth")
-@Controller({ path: "tasks", version: "1" })
+@Controller("tasks")
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 

@@ -25,7 +25,6 @@ export async function createApp(
 
   await app.init();
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const agent = request.agent(app.getHttpServer());
 
   return [app, agent];

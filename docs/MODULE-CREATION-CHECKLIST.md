@@ -29,7 +29,7 @@ Use this checklist when creating a new module to ensure all best practices are f
 - [ ] Update Prisma schema in `prisma/schema.prisma`
 - [ ] Add appropriate indexes for query performance
 - [ ] Add relations to other models (if needed)
-- [ ] Run migration: `npm run prisma:migrate:dev --name add_<module-name>`
+- [ ] Run migration: `npm run migrate:dev -- --name add_<module-name>`
 - [ ] Verify migration in database
 
 ### NestJS Resource

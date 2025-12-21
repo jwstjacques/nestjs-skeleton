@@ -13,7 +13,7 @@ import { JwtRefreshGuard } from "./guards";
 import { CurrentUser, Public } from "./decorators";
 
 @ApiTags("auth")
-@Controller({ path: "auth", version: "1" })
+@Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -149,10 +149,10 @@ model User {
 
 ```bash
 # Create migration to remove Task table
-npm run prisma:migrate:dev -- --name remove-tasks-module
+npm run migrate:dev -- --name remove-tasks-module
 
-# OR reset database entirely (development only!)
-npm run prisma:reset
+# OR reset database entirely (development only! requires confirmation)
+npx prisma migrate reset
 ```
 
 ### Step 5: Update Postman Collection
@@ -263,7 +263,7 @@ When creating a new module, follow these steps:
 
 - [ ] Create Prisma model in `schema.prisma`
 - [ ] Generate Prisma client: `npm run prisma:generate`
-- [ ] Create migration: `npm run prisma:migrate:dev`
+- [ ] Create migration: `npm run migrate:dev`
 - [ ] Create DTOs with validation decorators
 - [ ] Implement DAL layer for database operations
 - [ ] Implement service with business logic
@@ -688,7 +688,7 @@ model User {
 3. **Create Migration**:
 
 ```bash
-npm run prisma:migrate:dev -- --name add-your-entity
+npm run migrate:dev -- --name add-your-entity
 ```
 
 4. **Generate Client**:
@@ -702,7 +702,7 @@ npm run prisma:generate
 ```bash
 # 1. Edit schema.prisma
 # 2. Create migration
-npm run prisma:migrate:dev -- --name update-your-entity
+npm run migrate:dev -- --name update-your-entity
 
 # 3. Update affected services and tests
 ```

@@ -165,7 +165,7 @@ cp .env.development.example .env
 npm run docker:start
 
 # Run migrations
-npm run prisma:migrate:dev
+npm run migrate:dev
 
 # Start application
 npm run start:dev
@@ -313,11 +313,11 @@ PORT=3001
 **Solution**:
 
 ```bash
-# Reset database (development only!)
-npm run prisma:reset
+# Reset database (development only! requires confirmation)
+npx prisma migrate reset
 
 # Or create new migration
-npm run prisma:migrate:dev
+npm run migrate:dev
 
 # Check connection
 npm run docker:logs postgres

@@ -63,43 +63,33 @@ This application uses PostgreSQL as the primary database with Prisma ORM for typ
 ### Migrations
 
 ```bash
-
 # Create new migration
-
-npm run prisma:migrate:dev
+npm run migrate:dev
 
 # Apply migrations (production)
+npm run migrate:deploy
 
-npm run prisma:migrate:deploy
-
-# Reset database
-
-npm run prisma:reset
+# Reset database (⚠️ destructive - requires confirmation)
+npx prisma migrate reset
 ```
 
 ### Seeding
 
 ```bash
-
 # Seed database
-
-npm run prisma:seed
+npm run db:seed
 ```
 
 ### Utilities
 
 ```bash
-
 # Open Prisma Studio
-
 npm run prisma:studio
 
 # Check migration status
-
-npm run prisma:status
+npm run migrate:status
 
 # Generate Prisma Client
-
 npm run prisma:generate
 ```
 
@@ -107,9 +97,9 @@ npm run prisma:generate
 
 Default users:
 
-- **Admin**: admin@example.com (Password123!)
-- **User 1**: john.doe@example.com (Password123!)
-- **User 2**: jane.smith@example.com (Password123!)
+- **Admin**: `admin@example.com` (Password123!)
+- **User 1**: `john.doe@example.com` (Password123!)
+- **User 2**: `jane.smith@example.com` (Password123!)
 
 Each user has sample tasks with various statuses and priorities.
 

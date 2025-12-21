@@ -418,7 +418,6 @@ describe("TasksDal", () => {
 
       cleanup.trackTasks([task1.id, task2.id, task3.id]);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const grouped = await tasksDal.groupBy({
         by: ["status"],
         where: { userId: testUserId, deletedAt: null },
@@ -426,17 +425,14 @@ describe("TasksDal", () => {
       });
 
       type GroupedByStatus = { status: TaskStatus; _count: number };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
       const todoGroup = grouped.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (g: any) => (g as GroupedByStatus).status === TaskStatus.TODO,
       ) as GroupedByStatus | undefined;
 
       expect(todoGroup?._count).toBe(2);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const inProgressGroup = grouped.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (g: any) => (g as GroupedByStatus).status === TaskStatus.IN_PROGRESS,
       ) as GroupedByStatus | undefined;
 
@@ -460,14 +456,12 @@ describe("TasksDal", () => {
 
       cleanup.trackTasks([highTask.id, mediumTask.id]);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const grouped = await tasksDal.groupBy({
         by: ["priority"],
         where: { userId: testUserId, deletedAt: null },
         _count: true,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(grouped.length).toBeGreaterThanOrEqual(2);
     });
   });

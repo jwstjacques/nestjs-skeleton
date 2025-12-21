@@ -1,6 +1,7 @@
 // @ts-check
 import eslint from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import jestPlugin from "eslint-plugin-jest";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -67,6 +68,75 @@ export default [
           endOfLine: "auto",
         },
       ],
+    },
+  },
+  // Jest-specific rules for test files
+  {
+    files: ["**/*.spec.ts", "**/*.e2e-spec.ts", "test/**/*.ts"],
+    plugins: {
+      jest: jestPlugin,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+    rules: {
+      // Prevent focused tests from being committed
+      "jest/no-focused-tests": "error", // Prevents .only, fdescribe, fit
+
+      // Warn about disabled tests (can be useful to track)
+      "jest/no-disabled-tests": "warn", // Warns about .skip, xdescribe, xit
+
+      // Warn about commented out tests
+      "jest/no-commented-out-tests": "warn",
+
+      // Prevent console statements in test files (but allow in setup/utilities)
+      "no-console": "error",
+
+      // Best practices for tests
+      "jest/expect-expect": [
+        "warn",
+        {
+          // Recognize custom assertion helpers
+          assertFunctionNames: [
+            "expect",
+            // TestAssertions helpers
+            "TestAssertions.assert*",
+            "Assertions.assert*",
+            // Imported assertion aliases
+            "assert*",
+            // Template helpers that contain assertions
+            "*.testCreate",
+            "*.testRead",
+            "*.testUpdate",
+            "*.testDelete",
+            "*.testList",
+            "*.testPagination",
+            "*.testValidation*",
+            "*.testAuth*",
+          ],
+        },
+      ],
+      "jest/no-identical-title": "error", // Prevent duplicate test names
+      "jest/valid-expect": "error", // Ensure expect is used correctly
+
+      // Allow any types in tests (less strict than production code)
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-enum-comparison": "off",
+    },
+  },
+  // Allow console.log in test utilities and setup files
+  {
+    files: ["test/global-setup.ts", "test/setup.ts", "test/**/e2e-app.helper.ts"],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ];

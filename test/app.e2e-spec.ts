@@ -31,9 +31,9 @@ describe("AppController (e2e)", () => {
           expect(res.body).toHaveProperty("uptime");
           expect(res.body).toHaveProperty("environment");
           expect(res.body).toHaveProperty("database");
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           expect(res.body.database).toHaveProperty("status");
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           expect(res.body.database).toHaveProperty("latency");
         });
     });

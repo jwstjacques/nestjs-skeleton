@@ -369,20 +369,162 @@ describe("YourModuleService", () => {
 
 ### Coverage Thresholds
 
-When you remove the Tasks module or add your own modules, you may need to adjust coverage thresholds in `jest.config.js`:
+Coverage thresholds are configured in `jest.config.js`. Adjust these as needed when adding or removing modules:
 
 ```javascript
 coverageThreshold: {
   global: {
-    branches: 90,    // Adjust if needed
-    functions: 90,   // Adjust if needed
-    lines: 95,       // Adjust if needed
-    statements: 95,  // Adjust if needed
+    branches: 90,
+    functions: 90,
+    lines: 95,
+    statements: 95,
   },
 },
 ```
 
 **Recommendation**: Keep thresholds high (90%+) to maintain code quality.
+
+---
+
+## Test Utilities
+
+### Overview
+
+The project provides comprehensive test utilities in `test/utils/` to make writing tests easier and more consistent:
+
+- **test-helpers.ts** - Generic helpers and assertions
+- **test-constants.ts** - Common test constants
+- **test-templates.ts** - Reusable test templates
+
+### Quick Reference
+
+#### Import Test Utilities
+
+```typescript
+import {
+  Setup,
+  AuthHelper,
+  DataFactory,
+  Assertions,
+  HttpHelper,
+  Mocks,
+  CrudTemplate,
+  ValidationTemplate,
+} from "../utils";
+import { HTTP_STATUS } from "../utils/test-constants";
+```
+
+#### Setting Up Tests
+
+```typescript
+let app: INestApplication;
+let authToken: string;
+
+beforeAll(async () => {
+  // Create test app with validation
+  app = await Setup.createTestApp([AppModule]);
+
+  // Register and login test user
+  const { accessToken } = await AuthHelper.registerUser(app);
+  authToken = accessToken;
+});
+
+afterAll(async () => {
+  // Clean up
+  await Setup.closeTestApp(app);
+});
+```
+
+#### Creating Test Data
+
+```typescript
+// Generate user data
+const userData = DataFactory.createUserData({
+  email: "custom@example.com",
+});
+
+// Generate CUID
+const testId = DataFactory.generateCuid();
+
+// Create pagination query
+const query = DataFactory.createPaginationQuery({ limit: 20 });
+
+// Random enum value
+const status = DataFactory.randomEnumValue(TaskStatus);
+```
+
+#### Making Authenticated Requests
+
+```typescript
+// Using HttpHelper (recommended)
+const response = await HttpHelper.post(app, "/api/v1/resource", token, data);
+const response = await HttpHelper.get(app, "/api/v1/resource", token);
+const response = await HttpHelper.patch(app, "/api/v1/resource/123", token, data);
+const response = await HttpHelper.delete(app, "/api/v1/resource/123", token);
+```
+
+#### Using Assertions
+
+```typescript
+// Success response
+Assertions.assertSuccessResponse(response, HTTP_STATUS.CREATED);
+
+// Paginated response
+Assertions.assertPaginatedResponse(response.body);
+
+// Error responses
+Assertions.assertNotFound(response, "RESOURCE_NOT_FOUND");
+Assertions.assertForbidden(response, "ACCESS_DENIED");
+Assertions.assertUnauthorized(response);
+Assertions.assertValidationError(response, ["Field is required"]);
+
+// Resource validation
+Assertions.assertResourceFields(resource, ["id", "title", "status"]);
+Assertions.assertSoftDeleteFields(resource, false);
+Assertions.assertRecentTimestamp(resource.createdAt);
+```
+
+#### Using Test Templates
+
+```typescript
+// Test unauthorized access to multiple endpoints
+CrudTemplate.testUnauthorizedAccess(app, [
+  { method: "get", path: "/api/v1/resources" },
+  { method: "post", path: "/api/v1/resources" },
+]);
+
+// Comprehensive pagination testing
+CrudTemplate.testPagination(app, "/api/v1/resources", authToken);
+
+// Test sorting
+CrudTemplate.testSorting(app, "/api/v1/resources", authToken, ["title", "createdAt"]);
+
+// Validation templates
+ValidationTemplate.testRequiredFields(app, "/api/v1/resources", token, ["title", "description"]);
+ValidationTemplate.testStringLength(app, "/api/v1/resources", token, "title", 3, 200);
+ValidationTemplate.testEnumValidation(app, "/api/v1/resources", token, "status", ["TODO", "DONE"]);
+```
+
+#### Creating Mocks
+
+```typescript
+// Mock services for unit tests
+const mockPrisma = Mocks.createMockPrismaService();
+const mockCache = Mocks.createMockCacheManager();
+const mockConfig = Mocks.createMockConfigService({
+  JWT_SECRET: "test-secret",
+  PORT: 3000,
+});
+const mockLogger = Mocks.createMockLogger();
+```
+
+### Example Refactored Test
+
+See `test/e2e/example-refactored.e2e-spec.ts` for a complete example showing how to use all the test utilities.
+
+For detailed information, see the [Testing Guide](./TESTING-GUIDE.md).
+
+---
 
 ### Testing Best Practices for Custom Modules
 

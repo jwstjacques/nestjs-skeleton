@@ -13,12 +13,10 @@ describe("IsFutureDateConstraint", () => {
     });
 
     it("should return true for null (let @IsOptional handle it)", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       expect(validator.validate(null as any)).toBe(true);
     });
 
     it("should return true for undefined (let @IsOptional handle it)", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       expect(validator.validate(undefined as any)).toBe(true);
     });
 

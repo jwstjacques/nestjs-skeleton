@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import { ExecutionContext } from "@nestjs/common";
 import { ROUTE_ARGS_METADATA } from "@nestjs/common/constants";
 import { CurrentUser } from "../../../../src/auth/decorators/current-user.decorator";
@@ -18,7 +13,7 @@ describe("CurrentUser Decorator", () => {
   };
 
   // Helper function to execute the decorator factory
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   function getParamDecoratorFactory(decorator: ParameterDecorator): any {
     class TestDecorator {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

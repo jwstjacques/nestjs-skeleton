@@ -4,7 +4,6 @@ import { WinstonModule } from "nest-winston";
 import * as winston from "winston";
 import * as path from "path";
 import { AsyncLocalStorage } from "async_hooks";
-import { LogLevel } from "../enums";
 
 /**
  * Custom Winston format to include correlation ID and user ID in log entries
@@ -110,7 +109,7 @@ const correlationFormat = winston.format((info) => {
             // File transport - Error logs only
             new winston.transports.File({
               filename: path.join(logDir, errorLogFilename),
-              level: LogLevel.ERROR,
+              level: "error",
               format: winston.format.combine(
                 correlationFormat(),
                 winston.format.timestamp({ format: timestampFormat }),

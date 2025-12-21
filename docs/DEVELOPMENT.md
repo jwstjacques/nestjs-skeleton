@@ -181,7 +181,7 @@ When you modify the Prisma schema:
 npm run prisma:push
 
 # OR create a migration for production
-npm run prisma:migrate:dev
+npm run migrate:dev
 
 # Regenerate Prisma Client
 npm run prisma:generate

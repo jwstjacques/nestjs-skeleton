@@ -39,6 +39,7 @@ import {
 import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser, Roles } from "../../auth/decorators";
 import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constants";
+import { PAGINATION_SWAGGER_QUERIES } from "../../common/constants";
 import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES, TASK_SWAGGER_DOCS } from "./constants";
 
 /**
@@ -129,20 +130,8 @@ export class TasksController {
     description: TASK_SWAGGER_DOCS.GET_ALL_SUCCESS,
     type: PaginatedTasksResponseDto,
   })
-  @ApiQuery({
-    name: "page",
-    required: false,
-    type: Number,
-    description: "Page number (default: 1)",
-    example: 1,
-  })
-  @ApiQuery({
-    name: "limit",
-    required: false,
-    type: Number,
-    description: "Items per page (default: 10, max: 100)",
-    example: 10,
-  })
+  @ApiQuery(PAGINATION_SWAGGER_QUERIES.page())
+  @ApiQuery(PAGINATION_SWAGGER_QUERIES.limit())
   @ApiQuery({
     name: "status",
     required: false,
@@ -155,25 +144,19 @@ export class TasksController {
     enum: ["LOW", "MEDIUM", "HIGH"],
     description: TASK_SWAGGER_DOCS.QUERY_PRIORITY,
   })
-  @ApiQuery({
-    name: "search",
-    required: false,
-    type: String,
-    description: TASK_SWAGGER_DOCS.QUERY_SEARCH,
-    example: "meeting",
-  })
-  @ApiQuery({
-    name: "sortBy",
-    required: false,
-    enum: ["CREATED_AT", "UPDATED_AT", "DUE_DATE", "TITLE", "PRIORITY", "STATUS"],
-    description: "Field to sort by (default: CREATED_AT)",
-  })
-  @ApiQuery({
-    name: "sortOrder",
-    required: false,
-    enum: ["ASC", "DESC"],
-    description: TASK_SWAGGER_DOCS.QUERY_SORT_ORDER,
-  })
+  @ApiQuery(
+    PAGINATION_SWAGGER_QUERIES.search({
+      example: "meeting",
+      fields: "title, description",
+    }),
+  )
+  @ApiQuery(
+    PAGINATION_SWAGGER_QUERIES.sortBy({
+      enum: ["CREATED_AT", "UPDATED_AT", "DUE_DATE", "TITLE", "PRIORITY", "STATUS"],
+      default: "CREATED_AT",
+    }),
+  )
+  @ApiQuery(PAGINATION_SWAGGER_QUERIES.sortOrder({ default: "DESC" }))
   async findAll(@Query() query: QueryTaskDto, @CurrentUser() user: { id: string; role: UserRole }) {
     return this.tasksService.findAll(query, user);
   }

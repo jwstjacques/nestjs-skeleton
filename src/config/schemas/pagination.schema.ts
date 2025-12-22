@@ -19,7 +19,7 @@ export const PaginationConfigSchema = z.object({
   maxLimit: z.coerce.number().int().min(1).default(100),
 
   /**
-   * Default page number (1-based)
+   * Default page number
    * @default 1
    */
   defaultPage: z.coerce.number().int().min(1).default(1),

@@ -16,6 +16,7 @@ export default [
       "dist",
       "node_modules",
       "coverage",
+      "docs/**/*.ts", // Documentation examples (not compiled)
     ],
   },
   eslint.configs.recommended,

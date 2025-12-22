@@ -283,7 +283,7 @@
         "tags": ["tasks"]
       },
       "get": {
-        "description": "Retrieves a paginated list of tasks with optional filtering and sorting. Supports filtering by status, priority, and search term.",
+        "description": "Retrieve tasks with optional filtering, sorting, and pagination. Results are cached for improved performance.",
         "operationId": "TasksController_findAll",
         "parameters": [
           {
@@ -312,6 +312,26 @@
             }
           },
           {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search term to filter results (searches: title, description)",
+            "schema": {
+              "example": "meeting",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order: ascending (ASC) or descending (DESC) (default: DESC)",
+            "schema": {
+              "enum": ["ASC", "DESC"],
+              "type": "string"
+            }
+          },
+          {
             "name": "status",
             "required": false,
             "in": "query",
@@ -332,32 +352,12 @@
             }
           },
           {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search in task title and description",
-            "schema": {
-              "example": "meeting",
-              "type": "string"
-            }
-          },
-          {
             "name": "sortBy",
             "required": false,
             "in": "query",
             "description": "Field to sort by (default: CREATED_AT)",
             "schema": {
               "enum": ["CREATED_AT", "UPDATED_AT", "DUE_DATE", "TITLE", "PRIORITY", "STATUS"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "description": "Sort order (default: DESC)",
-            "schema": {
-              "enum": ["ASC", "DESC"],
               "type": "string"
             }
           }
@@ -423,14 +423,14 @@
     },
     "/tasks/{id}": {
       "get": {
-        "description": "Returns task only if user is the owner or an admin",
+        "description": "Retrieves a single task by its UUID",
         "operationId": "TasksV2Controller_findOne",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task ID (CUID format)",
+            "description": "Task CUID",
             "schema": {
               "example": "cm4abc123xyz456def789ghi",
               "type": "string"
@@ -439,7 +439,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Task found and user has permission to access it",
+            "description": "Successfully retrieved task",
             "content": {
               "application/json": {
                 "schema": {
@@ -449,10 +449,10 @@
             }
           },
           "401": {
-            "description": "Unauthorized - JWT token missing or invalid"
+            "description": "Authentication required"
           },
           "403": {
-            "description": "Access denied - user is not the task owner or admin",
+            "description": "Access denied - you can only access your own tasks",
             "content": {
               "application/json": {
                 "schema": {
@@ -472,8 +472,12 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task with ID cm4abc123xyz456def789ghi not found",
-                    "error": "Not Found"
+                    "message": "Task not found: cmiympu7x00002tsaknh5dqql",
+                    "error": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-22T03:22:11.586Z",
+                    "path": "/api/v1/tasks/cmiympu7x00002tsaknh5dqql",
+                    "correlationId": "8ceb6b29-7027-4844-b63f-0e443bedc890",
+                    "errorCode": "TASK_NOT_FOUND"
                   }
                 }
               }
@@ -485,7 +489,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Get task by ID (v2 - with permission checks)",
+        "summary": "Get a task by ID",
         "tags": ["tasks-v2"]
       },
       "patch": {
@@ -515,7 +519,7 @@
         },
         "responses": {
           "200": {
-            "description": "Successfully updated task",
+            "description": "Task successfully updated",
             "content": {
               "application/json": {
                 "schema": {
@@ -543,7 +547,7 @@
             }
           },
           "403": {
-            "description": "Cannot update other user's task",
+            "description": "Access denied - you can only access your own tasks",
             "content": {
               "application/json": {
                 "schema": {
@@ -591,7 +595,7 @@
         "tags": ["tasks"]
       },
       "delete": {
-        "description": "Soft deletes a task. The task will be marked as deleted but retained in the database.",
+        "description": "Soft deletes a task (moves to trash). The task can be restored later. Only the task owner can delete their tasks.",
         "operationId": "TasksController_remove",
         "parameters": [
           {
@@ -610,7 +614,7 @@
             "description": "Task successfully deleted"
           },
           "403": {
-            "description": "Cannot delete other user's task",
+            "description": "Access denied - you can only access your own tasks",
             "content": {
               "application/json": {
                 "schema": {
@@ -654,13 +658,13 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Delete a task",
+        "summary": "Delete a task (soft delete)",
         "tags": ["tasks"]
       }
     },
     "/tasks/admin/purge/{id}": {
       "delete": {
-        "description": "Hard deletes a task from the database. Requires ADMIN role.",
+        "description": "Permanently deletes a task from the database. This action cannot be undone. Admin only.",
         "operationId": "TasksController_purge",
         "parameters": [
           {
@@ -723,18 +727,18 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Permanently delete a task (admin only)",
+        "summary": "Permanently delete a task",
         "tags": ["tasks"]
       }
     },
     "/tasks/next-due-date": {
       "get": {
-        "description": "Returns the task with the soonest due date that has not passed yet. Only includes tasks with status TODO or IN_PROGRESS (excludes COMPLETED and CANCELLED). Returns null if no upcoming active tasks exist.",
+        "description": "Returns the next task that is due based on due date. Only returns tasks that are not completed.",
         "operationId": "TasksV2Controller_getNextDueTask",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Next due task found (or null if none)",
+            "description": "Successfully retrieved next due task",
             "content": {
               "application/json": {
                 "schema": {
@@ -744,7 +748,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - JWT token missing or invalid"
+            "description": "Authentication required"
           }
         },
         "security": [
@@ -752,7 +756,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Get task with nearest upcoming due date",
+        "summary": "Get next task by due date",
         "tags": ["tasks-v2"]
       }
     },

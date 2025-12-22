@@ -467,7 +467,6 @@ Default pagination settings for list endpoints.
 ```bash
 PAGINATION_DEFAULT_LIMIT=10      # Default items per page
 PAGINATION_MAX_LIMIT=100         # Maximum items per page
-PAGINATION_DEFAULT_PAGE=1        # Default page number
 ```
 
 **Access in Code**:

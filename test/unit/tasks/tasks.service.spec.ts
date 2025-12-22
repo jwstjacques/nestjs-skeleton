@@ -3,7 +3,8 @@ import { TasksService } from "../../../src/modules/tasks/tasks.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
 import { TaskNotFoundException } from "../../../src/modules/tasks/exceptions";
 import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
-import { TaskSortBy, SortOrder } from "../../../src/modules/tasks/dto/query-task.dto";
+import { TaskSortBy } from "../../../src/modules/tasks/dto/query-task.dto";
+import { SortOrder } from "../../../src/common/constants";
 import { mockTasksDal, mockTask } from "../../utils/mocks";
 
 describe("TasksService", () => {

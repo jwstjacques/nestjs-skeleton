@@ -89,6 +89,49 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = String(exceptionResponse);
         error = exception.name;
       }
+
+      // Add default error codes for standard HTTP exceptions if not already set
+      if (!errorCode) {
+        switch (status) {
+          case HttpStatus.BAD_REQUEST:
+            errorCode = ErrorCode.VALIDATION_FAILED;
+            break;
+
+          case HttpStatus.UNAUTHORIZED:
+            errorCode = ErrorCode.AUTH_UNAUTHORIZED;
+            break;
+
+          case HttpStatus.FORBIDDEN:
+            errorCode = ErrorCode.AUTH_FORBIDDEN;
+            break;
+
+          case HttpStatus.NOT_FOUND:
+            errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+            break;
+
+          case HttpStatus.CONFLICT:
+            errorCode = ErrorCode.RESOURCE_CONFLICT;
+            break;
+
+          case HttpStatus.GONE:
+            errorCode = ErrorCode.RESOURCE_GONE;
+            break;
+
+          case HttpStatus.TOO_MANY_REQUESTS:
+            errorCode = ErrorCode.SYSTEM_RATE_LIMIT_EXCEEDED;
+            break;
+
+          case HttpStatus.SERVICE_UNAVAILABLE:
+            errorCode = ErrorCode.SYSTEM_SERVICE_UNAVAILABLE;
+            break;
+
+          case HttpStatus.GATEWAY_TIMEOUT:
+            errorCode = ErrorCode.SYSTEM_TIMEOUT;
+            break;
+
+          // No default for other status codes
+        }
+      }
     }
     // Handle standard Error
     else if (exception instanceof Error) {

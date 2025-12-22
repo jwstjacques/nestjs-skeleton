@@ -13,6 +13,7 @@ import { TasksService } from "./tasks.service";
 import { TaskResponseDto } from "./dto";
 import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser } from "../../auth/decorators";
+import { TASK_SWAGGER_DOCS } from "./constants";
 
 interface UserPayload {
   id: string;
@@ -43,18 +44,15 @@ export class TasksV2Controller {
    */
   @Get("next-due-date")
   @ApiOperation({
-    summary: "Get task with nearest upcoming due date",
-    description:
-      "Returns the task with the soonest due date that has not passed yet. " +
-      "Only includes tasks with status TODO or IN_PROGRESS (excludes COMPLETED and CANCELLED). " +
-      "Returns null if no upcoming active tasks exist.",
+    summary: TASK_SWAGGER_DOCS.GET_NEXT_DUE_SUMMARY,
+    description: TASK_SWAGGER_DOCS.GET_NEXT_DUE_DESCRIPTION,
   })
   @ApiOkResponse({
-    description: "Next due task found (or null if none)",
+    description: TASK_SWAGGER_DOCS.GET_NEXT_DUE_SUCCESS,
     type: TaskResponseDto,
   })
   @ApiUnauthorizedResponse({
-    description: "Unauthorized - JWT token missing or invalid",
+    description: TASK_SWAGGER_DOCS.UNAUTHORIZED,
   })
   async getNextDueTask(@CurrentUser() user: UserPayload): Promise<TaskResponseDto | null> {
     return this.tasksService.findNextDueTask(user.id);
@@ -66,30 +64,34 @@ export class TasksV2Controller {
    */
   @Get(":id")
   @ApiOperation({
-    summary: "Get task by ID (v2 - with permission checks)",
-    description: "Returns task only if user is the owner or an admin",
+    summary: TASK_SWAGGER_DOCS.GET_BY_ID_SUMMARY,
+    description: TASK_SWAGGER_DOCS.GET_BY_ID_DESCRIPTION,
   })
   @ApiParam({
     name: "id",
-    description: "Task ID (CUID format)",
+    description: TASK_SWAGGER_DOCS.PARAM_ID,
     example: "cm4abc123xyz456def789ghi",
   })
   @ApiOkResponse({
-    description: "Task found and user has permission to access it",
+    description: TASK_SWAGGER_DOCS.GET_BY_ID_SUCCESS,
     type: TaskResponseDto,
   })
   @ApiNotFoundResponse({
-    description: "Task not found",
+    description: TASK_SWAGGER_DOCS.NOT_FOUND,
     schema: {
       example: {
         statusCode: HttpStatus.NOT_FOUND,
-        message: "Task with ID cm4abc123xyz456def789ghi not found",
-        error: "Not Found",
+        message: "Task not found: cmiympu7x00002tsaknh5dqql",
+        error: "TASK_NOT_FOUND",
+        timestamp: "2025-12-22T03:22:11.586Z",
+        path: "/api/v1/tasks/cmiympu7x00002tsaknh5dqql",
+        correlationId: "8ceb6b29-7027-4844-b63f-0e443bedc890",
+        errorCode: "TASK_NOT_FOUND",
       },
     },
   })
   @ApiForbiddenResponse({
-    description: "Access denied - user is not the task owner or admin",
+    description: TASK_SWAGGER_DOCS.FORBIDDEN,
     schema: {
       example: {
         statusCode: HttpStatus.FORBIDDEN,
@@ -99,7 +101,7 @@ export class TasksV2Controller {
     },
   })
   @ApiUnauthorizedResponse({
-    description: "Unauthorized - JWT token missing or invalid",
+    description: TASK_SWAGGER_DOCS.UNAUTHORIZED,
   })
   async findOne(
     @Param("id", ParseCuidPipe) id: string,

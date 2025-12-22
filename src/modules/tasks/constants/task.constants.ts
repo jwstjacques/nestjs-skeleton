@@ -122,6 +122,68 @@ export const TASK_MESSAGES = {
 } as const;
 
 // ============================================================================
+// Swagger Documentation Strings
+// ============================================================================
+
+/**
+ * Swagger/OpenAPI documentation strings
+ * Centralized strings for API documentation to ensure consistency
+ */
+export const TASK_SWAGGER_DOCS = {
+  // Operation summaries
+  CREATE_SUMMARY: "Create a new task",
+  GET_ALL_SUMMARY: "Get all tasks",
+  GET_BY_ID_SUMMARY: "Get a task by ID",
+  UPDATE_SUMMARY: "Update a task",
+  DELETE_SUMMARY: "Delete a task (soft delete)",
+  PURGE_SUMMARY: "Permanently delete a task",
+  GET_STATS_SUMMARY: "Get task statistics",
+  GET_NEXT_DUE_SUMMARY: "Get next task by due date",
+
+  // Operation descriptions
+  CREATE_DESCRIPTION: "Creates a new task for the authenticated user",
+  GET_ALL_DESCRIPTION:
+    "Retrieve tasks with optional filtering, sorting, and pagination. Results are cached for improved performance.",
+  GET_BY_ID_DESCRIPTION: "Retrieves a single task by its UUID",
+  UPDATE_DESCRIPTION: "Updates an existing task. Only the task owner can update their tasks.",
+  DELETE_DESCRIPTION:
+    "Soft deletes a task (moves to trash). The task can be restored later. Only the task owner can delete their tasks.",
+  PURGE_DESCRIPTION:
+    "Permanently deletes a task from the database. This action cannot be undone. Admin only.",
+  GET_STATS_DESCRIPTION: "Returns statistics about tasks including counts by status and priority",
+  GET_NEXT_DUE_DESCRIPTION:
+    "Returns the next task that is due based on due date. Only returns tasks that are not completed.",
+
+  // Success response descriptions
+  CREATE_SUCCESS: "Task successfully created",
+  GET_ALL_SUCCESS: "Successfully retrieved tasks",
+  GET_BY_ID_SUCCESS: "Successfully retrieved task",
+  UPDATE_SUCCESS: "Task successfully updated",
+  DELETE_SUCCESS: "Task successfully deleted",
+  PURGE_SUCCESS: "Task permanently deleted",
+  GET_STATS_SUCCESS: "Successfully retrieved statistics",
+  GET_NEXT_DUE_SUCCESS: "Successfully retrieved next due task",
+  GET_NEXT_DUE_NOT_FOUND: "No due tasks found",
+
+  // Error response descriptions
+  INVALID_INPUT: "Invalid input data",
+  NOT_FOUND: "Task not found",
+  FORBIDDEN: "Access denied - you can only access your own tasks",
+  TOO_MANY_REQUESTS: "Too many requests",
+  UNAUTHORIZED: "Authentication required",
+
+  // Parameter descriptions
+  PARAM_ID: "Task CUID",
+  QUERY_PAGE: "Page number (default: 1)",
+  QUERY_LIMIT: "Items per page (default: 10, max: 100)",
+  QUERY_STATUS: "Filter by task status",
+  QUERY_PRIORITY: "Filter by task priority",
+  QUERY_SEARCH: "Search in task title and description",
+  QUERY_SORT_BY: "Field to sort by (default: CREATED_AT)",
+  QUERY_SORT_ORDER: "Sort order (default: DESC)",
+} as const;
+
+// ============================================================================
 // Swagger Documentation Examples
 // ============================================================================
 

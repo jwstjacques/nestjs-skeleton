@@ -39,7 +39,7 @@ import {
 import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser, Roles } from "../../auth/decorators";
 import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constants";
-import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES } from "./constants";
+import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES, TASK_SWAGGER_DOCS } from "./constants";
 
 /**
  * Tasks Controller - Example Module
@@ -84,15 +84,15 @@ export class TasksController {
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
-    summary: "Create a new task",
-    description: "Creates a new task for the authenticated user",
+    summary: TASK_SWAGGER_DOCS.CREATE_SUMMARY,
+    description: TASK_SWAGGER_DOCS.CREATE_DESCRIPTION,
   })
   @ApiCreatedResponse({
-    description: "Task successfully created",
+    description: TASK_SWAGGER_DOCS.CREATE_SUCCESS,
     type: TaskResponseDto,
   })
   @ApiBadRequestResponse({
-    description: "Invalid input data",
+    description: TASK_SWAGGER_DOCS.INVALID_INPUT,
     schema: {
       example: {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -106,7 +106,7 @@ export class TasksController {
     },
   })
   @ApiTooManyRequestsResponse({
-    description: "Too many requests",
+    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
   })
   async create(
     @Body() createTaskDto: CreateTaskDto,
@@ -122,12 +122,11 @@ export class TasksController {
   @CacheTTL(CacheTTLEnum.SHORT)
   @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
-    summary: "Get all tasks",
-    description:
-      "Retrieves a paginated list of tasks with optional filtering and sorting. Supports filtering by status, priority, and search term.",
+    summary: TASK_SWAGGER_DOCS.GET_ALL_SUMMARY,
+    description: TASK_SWAGGER_DOCS.GET_ALL_DESCRIPTION,
   })
   @ApiOkResponse({
-    description: "Successfully retrieved tasks",
+    description: TASK_SWAGGER_DOCS.GET_ALL_SUCCESS,
     type: PaginatedTasksResponseDto,
   })
   @ApiQuery({
@@ -148,19 +147,19 @@ export class TasksController {
     name: "status",
     required: false,
     enum: ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
-    description: "Filter by task status",
+    description: TASK_SWAGGER_DOCS.QUERY_STATUS,
   })
   @ApiQuery({
     name: "priority",
     required: false,
     enum: ["LOW", "MEDIUM", "HIGH"],
-    description: "Filter by task priority",
+    description: TASK_SWAGGER_DOCS.QUERY_PRIORITY,
   })
   @ApiQuery({
     name: "search",
     required: false,
     type: String,
-    description: "Search in task title and description",
+    description: TASK_SWAGGER_DOCS.QUERY_SEARCH,
     example: "meeting",
   })
   @ApiQuery({
@@ -173,7 +172,7 @@ export class TasksController {
     name: "sortOrder",
     required: false,
     enum: ["ASC", "DESC"],
-    description: "Sort order (default: DESC)",
+    description: TASK_SWAGGER_DOCS.QUERY_SORT_ORDER,
   })
   async findAll(@Query() query: QueryTaskDto, @CurrentUser() user: { id: string; role: UserRole }) {
     return this.tasksService.findAll(query, user);
@@ -182,11 +181,11 @@ export class TasksController {
   @Get("statistics")
   @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
-    summary: "Get task statistics",
-    description: "Returns statistics about tasks including counts by status and priority",
+    summary: TASK_SWAGGER_DOCS.GET_STATS_SUMMARY,
+    description: TASK_SWAGGER_DOCS.GET_STATS_DESCRIPTION,
   })
   @ApiOkResponse({
-    description: "Successfully retrieved statistics",
+    description: TASK_SWAGGER_DOCS.GET_STATS_SUCCESS,
     schema: {
       example: {
         totalTasks: 42,
@@ -212,20 +211,20 @@ export class TasksController {
   @CacheTTL(CacheTTLEnum.MEDIUM)
   @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
   @ApiOperation({
-    summary: "Get a task by ID",
-    description: "Retrieves a single task by its UUID",
+    summary: TASK_SWAGGER_DOCS.GET_BY_ID_SUMMARY,
+    description: TASK_SWAGGER_DOCS.GET_BY_ID_DESCRIPTION,
   })
   @ApiParam({
     name: "id",
-    description: "Task CUID",
+    description: TASK_SWAGGER_DOCS.PARAM_ID,
     example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiOkResponse({
-    description: "Successfully retrieved task",
+    description: TASK_SWAGGER_DOCS.GET_BY_ID_SUCCESS,
     type: TaskResponseDto,
   })
   @ApiNotFoundResponse({
-    description: "Task not found",
+    description: TASK_SWAGGER_DOCS.NOT_FOUND,
     schema: {
       example: {
         statusCode: HttpStatus.NOT_FOUND,
@@ -257,12 +256,12 @@ export class TasksController {
     schema: {
       example: {
         statusCode: HttpStatus.FORBIDDEN,
-        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
-        error: "Forbidden",
-        errorCode: "TASK_FORBIDDEN",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
+        message: "Unauthorized",
+        error: "UnauthorizedException",
+        timestamp: "2025-12-22T03:13:50.701Z",
+        path: "/api/v1/tasks",
+        correlationId: "5c460f20-32c7-425d-a45a-62bb5002d5d1",
+        errorCode: "AUTH_UNAUTHORIZED",
       },
     },
   })
@@ -278,20 +277,20 @@ export class TasksController {
   @Patch(":id")
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
-    summary: "Update a task",
-    description: "Updates an existing task. Only the task owner can update their tasks.",
+    summary: TASK_SWAGGER_DOCS.UPDATE_SUMMARY,
+    description: TASK_SWAGGER_DOCS.UPDATE_DESCRIPTION,
   })
   @ApiParam({
     name: "id",
-    description: "Task CUID",
+    description: TASK_SWAGGER_DOCS.PARAM_ID,
     example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiOkResponse({
-    description: "Successfully updated task",
+    description: TASK_SWAGGER_DOCS.UPDATE_SUCCESS,
     type: TaskResponseDto,
   })
   @ApiNotFoundResponse({
-    description: "Task not found",
+    description: TASK_SWAGGER_DOCS.NOT_FOUND,
     schema: {
       example: {
         statusCode: HttpStatus.NOT_FOUND,
@@ -305,7 +304,7 @@ export class TasksController {
     },
   })
   @ApiBadRequestResponse({
-    description: "Invalid input data",
+    description: TASK_SWAGGER_DOCS.INVALID_INPUT,
     schema: {
       example: {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -319,7 +318,7 @@ export class TasksController {
     },
   })
   @ApiForbiddenResponse({
-    description: "Cannot update other user's task",
+    description: TASK_SWAGGER_DOCS.FORBIDDEN,
     schema: {
       example: {
         statusCode: HttpStatus.FORBIDDEN,
@@ -333,7 +332,7 @@ export class TasksController {
     },
   })
   @ApiTooManyRequestsResponse({
-    description: "Too many requests",
+    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
   })
   async update(
     @Param("id", ParseCuidPipe) id: string,
@@ -349,21 +348,20 @@ export class TasksController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
-    summary: "Delete a task",
-    description:
-      "Soft deletes a task. The task will be marked as deleted but retained in the database.",
+    summary: TASK_SWAGGER_DOCS.DELETE_SUMMARY,
+    description: TASK_SWAGGER_DOCS.DELETE_DESCRIPTION,
   })
   @ApiParam({
     name: "id",
-    description: "Task CUID",
+    description: TASK_SWAGGER_DOCS.PARAM_ID,
     example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
-    description: "Task successfully deleted",
+    description: TASK_SWAGGER_DOCS.DELETE_SUCCESS,
   })
   @ApiNotFoundResponse({
-    description: "Task not found",
+    description: TASK_SWAGGER_DOCS.NOT_FOUND,
     schema: {
       example: {
         statusCode: HttpStatus.NOT_FOUND,
@@ -377,7 +375,7 @@ export class TasksController {
     },
   })
   @ApiForbiddenResponse({
-    description: "Cannot delete other user's task",
+    description: TASK_SWAGGER_DOCS.FORBIDDEN,
     schema: {
       example: {
         statusCode: HttpStatus.FORBIDDEN,
@@ -391,7 +389,7 @@ export class TasksController {
     },
   })
   @ApiTooManyRequestsResponse({
-    description: "Too many requests",
+    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
   })
   async remove(
     @Param("id", ParseCuidPipe) id: string,
@@ -405,17 +403,17 @@ export class TasksController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
   @ApiOperation({
-    summary: "Permanently delete a task (admin only)",
-    description: "Hard deletes a task from the database. Requires ADMIN role.",
+    summary: TASK_SWAGGER_DOCS.PURGE_SUMMARY,
+    description: TASK_SWAGGER_DOCS.PURGE_DESCRIPTION,
   })
   @ApiParam({
     name: "id",
-    description: "Task CUID",
+    description: TASK_SWAGGER_DOCS.PARAM_ID,
     example: TASK_SWAGGER_EXAMPLES.TASK_ID,
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
-    description: "Task permanently deleted",
+    description: TASK_SWAGGER_DOCS.PURGE_SUCCESS,
   })
   @ApiForbiddenResponse({
     description: "Admin access required",

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
-import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AppDal } from "./app.dal";
@@ -17,6 +17,7 @@ import { CorrelationIdMiddleware, RequestLoggerMiddleware } from "./common/middl
 import { HttpCacheInterceptor, PerformanceInterceptor } from "./common/interceptors";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
+import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
 
 @Module({
   imports: [
@@ -69,7 +70,7 @@ import { RolesGuard } from "./auth/guards/roles.guard";
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,

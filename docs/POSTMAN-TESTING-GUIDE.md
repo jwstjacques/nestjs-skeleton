@@ -66,11 +66,14 @@ Verify the app is running at: [http://localhost:3000/api/v1/](http://localhost:3
 
 After importing, you should see:
 
-- Collection name: **"NestJS Task Management API"**
-- Three folders:
+- Collection name: **"NestJS API Skeleton"**
+- Four folders:
   - **Authentication** (3 endpoints: Register, Login, Refresh Token)
-  - **Tasks** (6 endpoints)
-  - **Health & Info** (2 endpoints)
+  - **Tasks (Example Module)** (6 endpoints - v1 API)
+  - **Tasks v2 (Enhanced)** (2 endpoints - v2 API with permission checks)
+  - **Health & Info** (1 endpoint)
+
+> **Note**: The collection now includes both v1 and v2 API endpoints. v1 provides full CRUD operations, while v2 offers enhanced read operations with ownership-based access control.
 
 ---
 
@@ -78,7 +81,10 @@ After importing, you should see:
 
 ### Option 1: Use Collection Variables (Quick Start)
 
-The collection already has a `baseUrl` variable configured. No additional setup needed!
+The collection already has `baseUrl` and `baseUrlV2` variables configured. No additional setup needed!
+
+- `baseUrl`: `http://localhost:3000/api/v1` (for v1 endpoints)
+- `baseUrlV2`: `http://localhost:3000/api/v2` (for v2 endpoints)
 
 ### Option 2: Create an Environment (Recommended for Multiple Environments)
 
@@ -87,11 +93,12 @@ The collection already has a `baseUrl` variable configured. No additional setup 
 3. Name it: `NestJS Local`
 4. Add variables:
 
-| Variable  | Initial Value                  | Current Value                  |
-| --------- | ------------------------------ | ------------------------------ |
-| `baseUrl` | `http://localhost:3000/api/v1` | `http://localhost:3000/api/v1` |
-| `userId`  | `cmixpvpir0000p9ypdk6za4qc`    | `cmixpvpir0000p9ypdk6za4qc`    |
-| `taskId`  | _(leave empty)_                | _(will be set during tests)_   |
+| Variable    | Initial Value                  | Current Value                  |
+| ----------- | ------------------------------ | ------------------------------ |
+| `baseUrl`   | `http://localhost:3000/api/v1` | `http://localhost:3000/api/v1` |
+| `baseUrlV2` | `http://localhost:3000/api/v2` | `http://localhost:3000/api/v2` |
+| `userId`    | `cmixpvpir0000p9ypdk6za4qc`    | `cmixpvpir0000p9ypdk6za4qc`    |
+| `taskId`    | _(leave empty)_                | _(will be set during tests)_   |
 
 5. Click **"Save"**
 6. Select the environment from the dropdown (top-right)
@@ -125,12 +132,46 @@ The API uses JWT-based authentication. All task endpoints require a valid access
 
 1. Select **"Login"** from the Authentication folder
 2. Use the credentials from registration:
+
    ```json
    {
-     "identifier": "john.doe@example.com",
+     "username": "john.doe@example.com",
      "password": "SecurePass123!"
    }
    ```
+
+   > **Note**: The field must be named `username` (not `identifier`), but you can provide either a username OR email address as the value. The backend accepts both.
+
+   **Alternative - Use Seeded Demo Users:**
+
+   If you've run the database seed script (`npm run db:seed`), you can use these pre-created accounts:
+
+   ```json
+   // Regular user - John Doe
+   {
+     "username": "johndoe",
+     "password": "Password123!"
+   }
+   ```
+
+   ```json
+   // Regular user - Jane Smith
+   {
+     "username": "janesmith",
+     "password": "Password123!"
+   }
+   ```
+
+   ```json
+   // Admin user
+   {
+     "username": "admin",
+     "password": "Password123!"
+   }
+   ```
+
+   You can also use their email addresses: `john.doe@example.com`, `jane.smith@example.com`, or `admin@example.com`
+
 3. Click **"Send"**
 4. On success (200), the response includes:
    - `accessToken` - Used for API requests (expires in 15 minutes)
@@ -427,6 +468,79 @@ Follow this sequence to test all CRUD operations. **Note:** You must authenticat
 - Status code: `204`
 
 **Verify:** Run "Get All Tasks" again - the deleted task should not appear in the list (soft delete sets `deletedAt`).
+
+---
+
+#### Step 9: Test v2 Enhanced Endpoints
+
+The v2 API provides enhanced endpoints with ownership-based access control. You must be authenticated to use these endpoints.
+
+**Request 1: Get Next Due Task**
+
+1. Select **"Tasks v2 (Enhanced)"** → **"Get Next Due Task"**
+2. This endpoint returns the task with the nearest upcoming due date (only active tasks: TODO or IN_PROGRESS)
+3. Click **"Send"**
+
+**Expected Response (200 OK):**
+
+```json
+{
+  "id": "cmixpvpir0001p9yp5xq8r7ks",
+  "title": "Complete project documentation",
+  "description": "Write comprehensive docs for all endpoints",
+  "status": "TODO",
+  "priority": "HIGH",
+  "dueDate": "2025-12-31T23:59:59.000Z",
+  "completedAt": null,
+  "userId": "cmixpvpir0000p9ypdk6za4qc",
+  "createdAt": "2025-12-11T10:30:00.000Z",
+  "updatedAt": "2025-12-11T10:30:00.000Z"
+}
+```
+
+> **Note**: Returns `null` if you have no upcoming active tasks with due dates.
+
+**Request 2: Get Task by ID (with Permission Check)**
+
+1. Select **"Tasks v2 (Enhanced)"** → **"Get Task by ID (with Permission Check)"**
+2. Replace `:id` in URL with your task CUID
+3. Click **"Send"**
+
+**Expected Response (200 OK) - If you own the task:**
+
+```json
+{
+  "id": "cmiympu7x00002tsaknh5dqql",
+  "title": "Test Task",
+  "description": "Testing v2 endpoint",
+  "status": "TODO",
+  "priority": "HIGH",
+  "userId": "cmixpvpir0000p9ypdk6za4qc",
+  "createdAt": "2025-12-09T13:41:39.260Z",
+  "updatedAt": "2025-12-09T13:41:39.260Z"
+}
+```
+
+**Expected Response (403 Forbidden) - If you don't own the task:**
+
+```json
+{
+  "statusCode": 403,
+  "message": "You do not have permission to access this task",
+  "error": "Forbidden"
+}
+```
+
+**v2 vs v1 Differences:**
+
+| Feature           | v1 (Tasks)          | v2 (Tasks v2)                         |
+| ----------------- | ------------------- | ------------------------------------- |
+| Get Task by ID    | ✅ Returns any task | ✅ Ownership check (403 if not owner) |
+| Next Due Date     | ❌ Not available    | ✅ New endpoint                       |
+| Permission Checks | ❌ No               | ✅ Owner or Admin only                |
+| CRUD Operations   | ✅ Full CRUD        | 📖 Read-only                          |
+
+> **Best Practice**: Use v1 for write operations (create, update, delete) and v2 for security-enhanced read operations.
 
 ---
 

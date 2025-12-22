@@ -32,12 +32,6 @@ export const AppConfigSchema = z.object({
    * @default 'api'
    */
   apiPrefix: z.string().default("api"),
-
-  /**
-   * API version
-   * @default '1'
-   */
-  apiVersion: z.string().default("1"),
 });
 
 /**

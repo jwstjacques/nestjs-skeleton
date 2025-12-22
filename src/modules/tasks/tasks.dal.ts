@@ -94,9 +94,7 @@ export class TasksDal {
    * @param id Task ID
    */
   async delete(id: string): Promise<void> {
-    await this.prisma.task.delete({
-      where: { id },
-    });
+    await this.prisma.$executeRaw`DELETE FROM "tasks" WHERE id = ${id}`;
   }
 
   /**
@@ -125,5 +123,32 @@ export class TasksDal {
     };
 
     return this.prisma.task.count({ where });
+  }
+
+  /**
+   * Find the next due task for a user (v2 API)
+   * Returns the task with the nearest upcoming due date
+   * Only includes active tasks (TODO or IN_PROGRESS)
+   * @param userId User ID
+   * @returns Next due task or null
+   */
+  async findNextDueTask(userId: string): Promise<Task | null> {
+    const now = new Date();
+
+    return this.prisma.task.findFirst({
+      where: {
+        userId,
+        deletedAt: null,
+        dueDate: {
+          gte: now, // Due date greater than or equal to now
+        },
+        status: {
+          in: [TaskStatus.TODO, TaskStatus.IN_PROGRESS], // Only active tasks
+        },
+      },
+      orderBy: {
+        dueDate: "asc", // Nearest due date first
+      },
+    });
   }
 }

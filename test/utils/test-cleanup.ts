@@ -45,15 +45,12 @@ export class TestCleanup {
 
   /**
    * Clean up all tracked tasks
-   * Deletes tasks one by one by ID
+   * Deletes tasks one by one by ID using raw SQL (idempotent)
    */
   async cleanupTasks(): Promise<void> {
     for (const id of this.taskIds) {
-      try {
-        await this.prisma.task.delete({ where: { id } });
-      } catch {
-        // Task may already be deleted, ignore error
-      }
+      // Use raw SQL DELETE which is idempotent - won't throw if task doesn't exist
+      await this.prisma.$executeRaw`DELETE FROM "tasks" WHERE id = ${id}`;
     }
     this.taskIds.clear();
   }

@@ -61,4 +61,5 @@ export const mockTasksDal = {
   delete: jest.fn(),
   groupBy: jest.fn(),
   countOverdue: jest.fn(),
+  findNextDueTask: jest.fn(),
 };

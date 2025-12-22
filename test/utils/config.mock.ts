@@ -27,7 +27,6 @@ export const DEFAULT_TEST_CONFIG = {
   "app.port": 3000,
   "app.host": "localhost",
   "app.apiPrefix": "api",
-  "app.apiVersion": "1",
 
   // Database Configuration - use real DATABASE_URL from env for integration tests
   "database.url": process.env.DATABASE_URL || "postgresql://test:test@localhost:5432/test",

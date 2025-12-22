@@ -22,7 +22,6 @@ export default registerAs("app", () => {
     port: process.env.PORT,
     host: process.env.HOST,
     apiPrefix: process.env.API_PREFIX,
-    apiVersion: process.env.API_VERSION,
   };
 
   // Validate and parse with Zod schema

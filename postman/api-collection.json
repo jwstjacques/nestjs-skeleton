@@ -11,6 +11,23 @@
       "item": [
         {
           "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save tokens to collection variables (works without environment)",
+                  "if (pm.response.code === 201) {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "  console.log('✅ Tokens saved to collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -106,12 +123,12 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "// Save tokens to environment",
+                  "// Save tokens to collection variables (works without environment)",
                   "if (pm.response.code === 200) {",
                   "  const jsonData = pm.response.json();",
-                  "  pm.environment.set('accessToken', jsonData.data.accessToken);",
-                  "  pm.environment.set('refreshToken', jsonData.data.refreshToken);",
-                  "  console.log('✅ Tokens saved to environment');",
+                  "  pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "  console.log('✅ Tokens saved to collection variables');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -128,7 +145,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"identifier\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"username\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -145,7 +162,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"identifier\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+                  "raw": "{\n  \"username\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/auth/login",
@@ -167,7 +184,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"identifier\": \"test@example.com\",\n  \"password\": \"WrongPassword\"\n}"
+                  "raw": "{\n  \"username\": \"test@example.com\",\n  \"password\": \"WrongPassword\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/auth/login",
@@ -191,11 +208,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "// Update tokens in environment",
+                  "// Update tokens in collection variables",
                   "if (pm.response.code === 200) {",
                   "  const jsonData = pm.response.json();",
-                  "  pm.environment.set('accessToken', jsonData.data.accessToken);",
-                  "  pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+                  "  pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
                   "  console.log('✅ Tokens refreshed');",
                   "}"
                 ],
@@ -643,6 +660,185 @@
       }
     },
     {
+      "name": "Tasks v2 (Enhanced)",
+      "item": [
+        {
+          "name": "Get Next Due Task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlV2}}/tasks/next-due-date",
+              "host": ["{{baseUrlV2}}"],
+              "path": ["tasks", "next-due-date"]
+            },
+            "description": "Get the task with the nearest upcoming due date. Returns only active tasks (TODO or IN_PROGRESS status). Returns null if no upcoming active tasks exist. User-specific (returns only authenticated user's tasks)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/next-due-date",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", "next-due-date"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmixpvpir0001p9yp5xq8r7ks\",\n  \"title\": \"Complete project documentation\",\n  \"description\": \"Write comprehensive docs for all endpoints\",\n  \"status\": \"TODO\",\n  \"priority\": \"HIGH\",\n  \"dueDate\": \"2025-12-31T23:59:59.000Z\",\n  \"completedAt\": null,\n  \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n  \"createdAt\": \"2025-12-11T10:30:00.000Z\",\n  \"updatedAt\": \"2025-12-11T10:30:00.000Z\"\n}"
+            },
+            {
+              "name": "No Tasks",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/next-due-date",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", "next-due-date"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "null"
+            },
+            {
+              "name": "Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/next-due-date",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", "next-due-date"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Unauthorized\",\n  \"error\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Task by ID (with Permission Check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlV2}}/tasks/:id",
+              "host": ["{{baseUrlV2}}"],
+              "path": ["tasks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "cmiympu7x00002tsaknh5dqql",
+                  "description": "Task CUID"
+                }
+              ]
+            },
+            "description": "Get a task by ID with ownership verification. User must be the task owner OR have admin role. Returns 403 if user doesn't have permission."
+          },
+          "response": [
+            {
+              "name": "Success - Owner Access",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/:id",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "cmiympu7x00002tsaknh5dqql"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"id\": \"cmiympu7x00002tsaknh5dqql\",\n  \"title\": \"Test Task\",\n  \"description\": \"Testing v2 endpoint\",\n  \"status\": \"TODO\",\n  \"priority\": \"HIGH\",\n  \"dueDate\": null,\n  \"completedAt\": null,\n  \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n  \"createdAt\": \"2025-12-09T13:41:39.260Z\",\n  \"updatedAt\": \"2025-12-09T13:41:39.260Z\"\n}"
+            },
+            {
+              "name": "Forbidden - Not Owner",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/:id",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "cmiympu7x00002tsaknh5dqql"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"statusCode\": 403,\n  \"message\": \"You do not have permission to access this task\",\n  \"error\": \"Forbidden\"\n}"
+            },
+            {
+              "name": "Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrlV2}}/tasks/:id",
+                  "host": ["{{baseUrlV2}}"],
+                  "path": ["tasks", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "cxxxxxxxxxxxxxxxxxxxx"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"Task with ID cxxxxxxxxxxxxxxxxxxxx not found\",\n  \"error\": \"Not Found\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "v2 API endpoints with enhanced permission checks. User must own the task or be an admin. Use v1 for create/update/delete operations.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{accessToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
       "name": "Health & Info",
       "item": [
         {
@@ -667,6 +863,11 @@
     {
       "key": "baseUrl",
       "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrlV2",
+      "value": "http://localhost:3000/api/v2",
       "type": "string"
     },
     {

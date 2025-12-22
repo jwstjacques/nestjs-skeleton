@@ -1,6 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { ValidationPipe, LoggerService } from "@nestjs/common";
+import { ValidationPipe, LoggerService, VersioningType } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { HttpExceptionFilter } from "./common/filters";
 import { CorrelationService } from "./common/correlation";
@@ -40,10 +40,15 @@ async function bootstrap() {
 
   // Global prefix - use from config
   const apiPrefix = configService.get<string>("app.apiPrefix", "api");
-  const apiVersion = configService.get<string>("app.apiVersion", "1");
-  const apiPath = `${apiPrefix}/v${apiVersion}`;
 
-  app.setGlobalPrefix(apiPath);
+  app.setGlobalPrefix(apiPrefix);
+
+  // Enable URI versioning for API v2 endpoints
+  app.enableVersioning({
+    type: VersioningType.URI,
+    prefix: "v", // Adds 'v' before version number (e.g., /api/v1/, /api/v2/)
+    defaultVersion: "1",
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -70,7 +75,7 @@ async function bootstrap() {
   const config = createSwaggerConfig(configService);
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup(`${apiPath}/${swaggerPath}`, app, document, {
+  SwaggerModule.setup(`${apiPrefix}/${swaggerPath}`, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: "alpha",
@@ -93,8 +98,13 @@ async function bootstrap() {
   const logger = app.get<LoggerService>(WINSTON_MODULE_NEST_PROVIDER);
 
   logger.log(`🚀 Application is running on: http://${host}:${port}`, "Bootstrap");
-  logger.log(`📚 API Documentation: http://${host}:${port}/${apiPath}/${swaggerPath}`, "Bootstrap");
-  logger.log(`❤️  Health check: http://${host}:${port}/${apiPath}/health`, "Bootstrap");
+  logger.log(
+    `📚 API Documentation: http://${host}:${port}/${apiPrefix}/${swaggerPath}`,
+    "Bootstrap",
+  );
+  logger.log(`❤️  Health check: http://${host}:${port}/${apiPrefix}/v1/health`, "Bootstrap");
+  logger.log(`🔄 API v1: http://${host}:${port}/${apiPrefix}/v1/*`, "Bootstrap");
+  logger.log(`🆕 API v2: http://${host}:${port}/${apiPrefix}/v2/*`, "Bootstrap");
 
   // Enable graceful shutdown
   app.enableShutdownHooks();

@@ -31,35 +31,6 @@
         "tags": ["App"]
       }
     },
-    "/stats": {
-      "get": {
-        "description": "Returns statistics about users and tasks",
-        "operationId": "AppController_getStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Statistics retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "users": 10,
-                    "tasks": 42,
-                    "tasksByStatus": {
-                      "TODO": 15,
-                      "IN_PROGRESS": 12,
-                      "COMPLETED": 15
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get application statistics",
-        "tags": ["App"]
-      }
-    },
     "/auth/register": {
       "post": {
         "operationId": "AuthController_register",
@@ -452,23 +423,23 @@
     },
     "/tasks/{id}": {
       "get": {
-        "description": "Retrieves a single task by its UUID",
-        "operationId": "TasksController_findOne",
+        "description": "Returns task only if user is the owner or an admin",
+        "operationId": "TasksV2Controller_findOne",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task CUID",
+            "description": "Task ID (CUID format)",
             "schema": {
-              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "example": "cm4abc123xyz456def789ghi",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved task",
+            "description": "Task found and user has permission to access it",
             "content": {
               "application/json": {
                 "schema": {
@@ -477,37 +448,18 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid CUID format",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": "Invalid CUID format: invalid-id",
-                    "error": "Bad Request",
-                    "errorCode": "VALIDATION_INVALID_CUID",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/invalid-id",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                  }
-                }
-              }
-            }
+          "401": {
+            "description": "Unauthorized - JWT token missing or invalid"
           },
           "403": {
-            "description": "Cannot access other user's task",
+            "description": "Access denied - user is not the task owner or admin",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 403,
-                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
-                    "error": "Forbidden",
-                    "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "message": "You do not have permission to access this task",
+                    "error": "Forbidden"
                   }
                 }
               }
@@ -520,12 +472,8 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-                    "error": "Not Found",
-                    "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "message": "Task with ID cm4abc123xyz456def789ghi not found",
+                    "error": "Not Found"
                   }
                 }
               }
@@ -537,8 +485,8 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Get a task by ID",
-        "tags": ["tasks"]
+        "summary": "Get task by ID (v2 - with permission checks)",
+        "tags": ["tasks-v2"]
       },
       "patch": {
         "description": "Updates an existing task. Only the task owner can update their tasks.",
@@ -777,6 +725,35 @@
         ],
         "summary": "Permanently delete a task (admin only)",
         "tags": ["tasks"]
+      }
+    },
+    "/tasks/next-due-date": {
+      "get": {
+        "description": "Returns the task with the soonest due date that has not passed yet. Only includes tasks with status TODO or IN_PROGRESS (excludes COMPLETED and CANCELLED). Returns null if no upcoming active tasks exist.",
+        "operationId": "TasksV2Controller_getNextDueTask",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Next due task found (or null if none)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get task with nearest upcoming due date",
+        "tags": ["tasks-v2"]
       }
     },
     "/health": {
@@ -1246,13 +1223,13 @@
     }
   },
   "info": {
-    "title": "NestJS Task Management API",
-    "description": "A production-ready REST API for managing tasks with user authentication, built with NestJS, Prisma, and PostgreSQL.",
+    "title": "NestJS API",
+    "description": "A production-ready REST API built with NestJS",
     "version": "1.0",
     "contact": {
-      "name": "Jason St. Jacques",
-      "url": "https://github.com/jwstjacques",
-      "email": "jw.stjacques@gmail.com"
+      "name": "API Support",
+      "url": "https://github.com/yourusername/nestjs-api-skeleton",
+      "email": "support@example.com"
     },
     "license": {
       "name": "MIT",
@@ -1261,12 +1238,20 @@
   },
   "tags": [
     {
-      "name": "tasks",
-      "description": "Task management endpoints"
+      "name": "health",
+      "description": "Health check endpoints"
     },
     {
       "name": "auth",
-      "description": "Authentication endpoints (TBD)"
+      "description": "Authentication & authorization endpoints"
+    },
+    {
+      "name": "tasks",
+      "description": "Tasks module v1 (Example implementation - can be removed)"
+    },
+    {
+      "name": "tasks-v2",
+      "description": "Tasks module v2 - Enhanced with permission checks"
     }
   ],
   "servers": [
@@ -1427,15 +1412,15 @@
           "title": {
             "type": "string",
             "description": "Title of the task",
-            "example": "Complete project documentation",
+            "example": "Implement authentication",
             "minLength": 3,
             "maxLength": 200
           },
           "description": {
             "type": "string",
             "description": "Detailed description of the task",
-            "example": "Write comprehensive documentation for all API endpoints including examples and error codes",
-            "maxLength": 2000
+            "example": "Add JWT authentication to the API",
+            "maxLength": 1000
           },
           "status": {
             "type": "string",
@@ -1585,15 +1570,15 @@
           "title": {
             "type": "string",
             "description": "Title of the task",
-            "example": "Complete project documentation",
+            "example": "Implement authentication",
             "minLength": 3,
             "maxLength": 200
           },
           "description": {
             "type": "string",
             "description": "Detailed description of the task",
-            "example": "Write comprehensive documentation for all API endpoints including examples and error codes",
-            "maxLength": 2000
+            "example": "Add JWT authentication to the API",
+            "maxLength": 1000
           },
           "status": {
             "type": "string",

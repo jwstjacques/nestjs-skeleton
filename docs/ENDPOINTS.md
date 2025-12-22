@@ -5,10 +5,59 @@ This document lists the core endpoints available in the NestJS API Skeleton. The
 ## Server Status
 
 - **Application**: `http://localhost:3000`
-- **API Base URL**: `http://localhost:3000/api/v1`
+- **API Base URL**:
+  - **v1 (default)**: `http://localhost:3000/api/v1`
+  - **v2**: `http://localhost:3000/api/v2`
 - **Swagger Documentation**: `http://localhost:3000/api/v1/docs`
 
 > **💡 Tip**: For interactive API testing, visit the [Swagger UI](http://localhost:3000/api/v1/docs) where you can try all endpoints directly in your browser.
+
+---
+
+## 🔄 API Versioning
+
+This API uses **URI versioning** to allow evolution while maintaining backward compatibility.
+
+### Available Versions
+
+#### Version 1 (v1) - Default
+
+- **Base Path**: `/api/v1/*`
+- **Status**: Stable
+- **Features**: All core functionality including authentication, health checks, and basic CRUD operations
+- **Use Cases**: Production applications, stable integrations
+
+#### Version 2 (v2) - Enhanced
+
+- **Base Path**: `/api/v2/*`
+- **Status**: Stable
+- **Features**: Enhanced endpoints with improved permission checks and additional functionality
+- **Key Differences**:
+  - More granular permission checks (ownership-based access control)
+  - Additional query parameters and filtering options
+  - Enhanced validation and error messages
+- **Use Cases**: Applications requiring fine-grained access control
+
+### How to Use Versioning
+
+Simply include the version number in your request path:
+
+```bash
+# Version 1 (default)
+curl http://localhost:3000/api/v1/tasks
+
+# Version 2 (enhanced)
+curl http://localhost:3000/api/v2/tasks/next-due-date
+```
+
+### Version Compatibility
+
+- **v1**: All endpoints remain stable and unchanged
+- **v2**: Adds new endpoints and enhances existing ones with additional security
+- **Migration**: Applications can gradually migrate from v1 to v2 as needed
+- **Deprecation**: v1 endpoints are not deprecated and will continue to be supported
+
+> **Note**: Not all v1 endpoints have v2 equivalents. v2 currently focuses on enhanced task management endpoints. Check the specific module documentation for v2 availability.
 
 ---
 

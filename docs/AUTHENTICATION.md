@@ -323,7 +323,7 @@ curl -v -X POST http://localhost:3000/api/v1/auth/login \\
 -H "Content-Type: application/json" \\
 -d '{"username": "user", "password": "pass"}'
 
-# Response headers:
+# Response headers
 
 # x-correlation-id: a1b2c3d4-e5f6-4789-90ab-cdef12345678
 

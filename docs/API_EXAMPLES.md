@@ -2,7 +2,7 @@
 
 This document provides request/response examples for the core endpoints in the NestJS API Skeleton.## Authentication
 
-## Base URL> **Note**: Authentication will be added in Phase 9. For now, all endpoints are accessible without authentication.
+## Base URL> **Note**: Authentication will be added in Phase 9. For now, all endpoints are accessible without authentication
 
 - **Development**: `http://localhost:3000/api/v1`## Base URL
 
@@ -430,7 +430,7 @@ curl http://localhost:3000/api/v1/health"description": "Documentation completed 
 
 **Response (204):**
 
-## Common Error ResponsesNo content returned.
+## Common Error ResponsesNo content returned
 
 ### 400 Bad Request### Get Statistics
 

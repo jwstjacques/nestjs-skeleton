@@ -374,4 +374,76 @@ describe("TasksService", () => {
       expect(mockTasksDal.countOverdue).toHaveBeenCalledWith(user.id);
     });
   });
+
+  describe("findNextDueTask", () => {
+    it("should return the next due task", async () => {
+      const futureDate = new Date();
+
+      futureDate.setDate(futureDate.getDate() + 5);
+
+      const mockTaskWithDueDate = {
+        ...mockTask,
+        dueDate: futureDate,
+        status: TaskStatus.TODO,
+      };
+
+      mockTasksDal.findNextDueTask.mockResolvedValue(mockTaskWithDueDate);
+
+      const result = await service.findNextDueTask("user-id");
+
+      expect(result).toEqual(mockTaskWithDueDate);
+      expect(mockTasksDal.findNextDueTask).toHaveBeenCalledWith("user-id");
+    });
+
+    it("should return null when no upcoming tasks", async () => {
+      mockTasksDal.findNextDueTask.mockResolvedValue(null);
+
+      const result = await service.findNextDueTask("user-id");
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findOneWithPermissions", () => {
+    it("should allow task owner to access their task", async () => {
+      const user = { id: "test-user-id", role: "USER" };
+
+      mockTasksDal.findUnique.mockResolvedValue(mockTask);
+
+      const result = await service.findOneWithPermissions("task-id", user);
+
+      expect(result).toEqual(mockTask);
+      expect(mockTasksDal.findUnique).toHaveBeenCalledWith("task-id");
+    });
+
+    it("should allow admin to access any task", async () => {
+      const adminUser = { id: "admin-id", role: "ADMIN" };
+
+      mockTasksDal.findUnique.mockResolvedValue(mockTask);
+
+      const result = await service.findOneWithPermissions("task-id", adminUser);
+
+      expect(result).toEqual(mockTask);
+    });
+
+    it("should throw ForbiddenException for non-owner/non-admin", async () => {
+      const otherUser = { id: "other-user-id", role: "USER" };
+
+      mockTasksDal.findUnique.mockResolvedValue(mockTask);
+
+      await expect(service.findOneWithPermissions("task-id", otherUser)).rejects.toThrow(
+        "You do not have permission to access this task",
+      );
+    });
+
+    it("should throw TaskNotFoundException if task does not exist", async () => {
+      const user = { id: "user-id", role: "USER" };
+
+      mockTasksDal.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOneWithPermissions("task-id", user)).rejects.toThrow(
+        TaskNotFoundException,
+      );
+    });
+  });
 });

@@ -3,7 +3,7 @@
  * Reusable helpers, assertions, and utilities for all test types
  */
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
+import { INestApplication, ValidationPipe, VersioningType } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
 import { TransformInterceptor } from "../../src/common/interceptors/transform.interceptor";
@@ -74,6 +74,30 @@ export class TestDataFactory {
     startDate.setDate(startDate.getDate() - daysBack);
 
     return { startDate, endDate };
+  }
+
+  /**
+   * Create a future date (X days from now)
+   * Useful for testing due dates, expiration dates, etc.
+   */
+  static getFutureDate(daysFromNow: number): Date {
+    const date = new Date();
+
+    date.setDate(date.getDate() + daysFromNow);
+
+    return date;
+  }
+
+  /**
+   * Create a past date (X days ago)
+   * Useful for testing expired items, historical data, etc.
+   */
+  static getPastDate(daysAgo: number): Date {
+    const date = new Date();
+
+    date.setDate(date.getDate() - daysAgo);
+
+    return date;
   }
 }
 
@@ -265,12 +289,19 @@ export class TestSetup {
 
     const app = moduleFixture.createNestApplication();
 
-    // Set global prefix (default to 'api/v1')
-    const prefix = options.globalPrefix !== undefined ? options.globalPrefix : "api/v1";
+    // Set global prefix (default to 'api' to match main.ts)
+    const prefix = options.globalPrefix !== undefined ? options.globalPrefix : "api";
 
     if (prefix) {
       app.setGlobalPrefix(prefix);
     }
+
+    // Enable URI versioning (matches main.ts)
+    app.enableVersioning({
+      type: VersioningType.URI,
+      prefix: "v", // Adds 'v' before version number (e.g., /api/v1/, /api/v2/)
+      defaultVersion: "1",
+    });
 
     // Apply global interceptors (matches main.ts)
     app.useGlobalInterceptors(new TransformInterceptor());

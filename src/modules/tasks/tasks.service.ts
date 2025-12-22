@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, ForbiddenException } from "@nestjs/common";
 import { Task, Prisma, TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
 import { TaskNotFoundException, TaskForbiddenException } from "./exceptions";
@@ -231,5 +231,55 @@ export class TasksService {
       ),
       overdue,
     };
+  }
+
+  /**
+   * Find the next due task for a user (v2 API)
+   * Returns the task with the nearest upcoming due date
+   * Only includes active tasks (TODO or IN_PROGRESS)
+   */
+  async findNextDueTask(userId: string): Promise<Task | null> {
+    this.logger.log(`Finding next due task for user ${userId}`);
+
+    const task = await this.tasksDal.findNextDueTask(userId);
+
+    if (!task) {
+      this.logger.debug(`No upcoming tasks found for user ${userId}`);
+
+      return null;
+    }
+
+    this.logger.log(`Found next due task ${task.id} for user ${userId}`);
+
+    return task;
+  }
+
+  /**
+   * Find one task by ID with permission checks (v2 API)
+   * User must be the task owner or an admin
+   */
+  async findOneWithPermissions(id: string, user: { id: string; role: string }): Promise<Task> {
+    this.logger.log(`Finding task ${id} for user ${user.id} (with permission check)`);
+
+    const task = await this.tasksDal.findUnique(id);
+
+    if (!task) {
+      throw new TaskNotFoundException(id);
+    }
+
+    // Permission check: user must be task owner or admin
+    const isOwner = task.userId === user.id;
+    const isAdmin = user.role === "ADMIN";
+
+    if (!isOwner && !isAdmin) {
+      this.logger.warn(
+        `Access denied: User ${user.id} attempted to access task ${id} owned by ${task.userId}`,
+      );
+      throw new ForbiddenException("You do not have permission to access this task");
+    }
+
+    this.logger.log(`Task ${id} retrieved successfully by user ${user.id}`);
+
+    return task;
   }
 }

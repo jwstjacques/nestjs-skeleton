@@ -50,6 +50,10 @@ describe("TasksController (e2e)", () => {
       expect(response.body.data).toHaveProperty("id");
       expect(response.body.data.title).toBe("E2E Test Task");
 
+      // Verify Location header is present
+      expect(response.headers.location).toBeDefined();
+      expect(response.headers.location).toContain(`/api/v1/tasks/${response.body.data.id}`);
+
       taskId = response.body.data.id;
       cleanup.trackTask(taskId);
     });
@@ -124,6 +128,9 @@ describe("TasksController (e2e)", () => {
         .then((res) => {
           expect(res.body.data).toHaveProperty("id");
           expect(res.body.data.dueDate).toBeDefined();
+          // Verify Location header
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${res.body.data.id}`);
           cleanup.trackTask(res.body.data.id);
         });
     });
@@ -144,6 +151,9 @@ describe("TasksController (e2e)", () => {
         .then((res) => {
           expect(res.body.data).toHaveProperty("id");
           expect(res.body.data.dueDate).toBeDefined();
+          // Verify Location header
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${res.body.data.id}`);
           cleanup.trackTask(res.body.data.id);
         });
     });
@@ -316,6 +326,9 @@ describe("TasksController (e2e)", () => {
         .expect((res: request.Response) => {
           expect(res.body.data.title).toBe("Updated E2E Task");
           expect(res.body.data.status).toBe(TaskStatus.IN_PROGRESS);
+          // Verify Location header for PATCH request
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${taskId}`);
         });
     });
 
@@ -330,6 +343,9 @@ describe("TasksController (e2e)", () => {
         .expect((res: request.Response) => {
           expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
           expect(res.body.data.completedAt).not.toBeNull();
+          // Verify Location header
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${taskId}`);
         });
     });
 
@@ -377,6 +393,9 @@ describe("TasksController (e2e)", () => {
         .then((res) => {
           expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
           expect(res.body.data.completedAt).toBeDefined();
+          // Verify Location header
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${taskId}`);
         });
     });
 
@@ -396,6 +415,9 @@ describe("TasksController (e2e)", () => {
         .then((res) => {
           expect(res.body.data.status).toBe(TaskStatus.COMPLETED);
           expect(res.body.data.completedAt).toBeDefined();
+          // Verify Location header
+          expect(res.headers.location).toBeDefined();
+          expect(res.headers.location).toContain(`/api/v1/tasks/${taskId}`);
         });
     });
   });
@@ -478,6 +500,10 @@ describe("TasksController (e2e)", () => {
         description: "This task will be permanently deleted",
         priority: TaskPriority.LOW,
       });
+
+      // Verify Location header on creation
+      expect(response.headers.location).toBeDefined();
+      expect(response.headers.location).toContain(`/api/v1/tasks/${response.body.data.id}`);
 
       taskToPurge = response.body.data.id;
       cleanup.trackTask(taskToPurge);

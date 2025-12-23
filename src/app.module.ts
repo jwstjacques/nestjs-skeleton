@@ -14,7 +14,11 @@ import { CacheModule } from "./common/cache/cache.module";
 import { LoggerModule } from "./common/logger/logger.module";
 import { CorrelationModule } from "./common/correlation";
 import { CorrelationIdMiddleware, RequestLoggerMiddleware } from "./common/middleware";
-import { HttpCacheInterceptor, PerformanceInterceptor } from "./common/interceptors";
+import {
+  HttpCacheInterceptor,
+  LocationHeaderInterceptor,
+  PerformanceInterceptor,
+} from "./common/interceptors";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
 import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
@@ -75,6 +79,10 @@ import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpCacheInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LocationHeaderInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

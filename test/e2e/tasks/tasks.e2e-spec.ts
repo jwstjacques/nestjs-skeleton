@@ -273,16 +273,21 @@ describe("TasksController (e2e)", () => {
       ]);
     });
 
-    it("should return 404 for non-existent task", async () => {
-      // Use DataFactory to generate invalid CUID
-      const fakeId = DataFactory.generateCuid();
+    it("should return 404 for non-existent task with valid CUID format", async () => {
+      // Use DataFactory to generate a VALID CUID format that doesn't exist in database
+      const validButNonExistentId = DataFactory.generateInvalidCuid();
 
-      const response = await HttpHelper.get(app, `/api/v1/tasks/${fakeId}`, accessToken);
+      const response = await HttpHelper.get(
+        app,
+        `/api/v1/tasks/${validButNonExistentId}`,
+        accessToken,
+      );
 
-      // Expecting BAD_REQUEST based on existing test behavior
-      expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-      expect(response.body.message).toContain("Invalid CUID format");
-      expect(response.body.errorCode).toBe("VALIDATION_INVALID_CUID");
+      // DataFactory.generateInvalidCuid() creates valid CUID format, so it passes validation
+      // But the task doesn't exist in database, so API returns 404 NOT_FOUND
+      expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
+      expect(response.body.message).toContain("Task not found");
+      expect(response.body.errorCode).toBe("TASK_NOT_FOUND");
     });
 
     it("should return 400 for invalid CUID format", () => {

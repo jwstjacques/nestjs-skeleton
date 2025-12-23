@@ -45,15 +45,12 @@ export class TestDataFactory {
   /**
    * Generate non-existent CUID for 404 testing
    * Uses a valid CUID format that doesn't exist in database
+   * Format: 'c' + 24 lowercase alphanumeric characters
    */
   static generateInvalidCuid(): string {
-    // Valid CUID format that won't exist: starts with 'c', followed by timestamp-like string
-    return "cm00000000000000000000000"; // Valid format, won't exist
+    return "cm" + "0".repeat(23);
   }
 
-  /**
-   * Create mock pagination query
-   */
   static createPaginationQuery(overrides: Partial<any> = {}) {
     return {
       page: 1,

@@ -60,40 +60,38 @@
             "description": "Invalid input data or user already exists",
             "content": {
               "application/json": {
-                "schema": {
-                  "examples": {
-                    "validationError": {
-                      "value": {
-                        "statusCode": 400,
-                        "message": ["email must be an email"],
-                        "error": "Bad Request",
-                        "errorCode": "VALIDATION_FAILED",
-                        "timestamp": "2025-12-13T10:30:00.000Z",
-                        "path": "/api/v1/auth/register",
-                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                      }
-                    },
-                    "emailExists": {
-                      "value": {
-                        "statusCode": 409,
-                        "message": "Email already registered: test@example.com",
-                        "error": "Conflict",
-                        "errorCode": "AUTH_EMAIL_EXISTS",
-                        "timestamp": "2025-12-13T10:30:00.000Z",
-                        "path": "/api/v1/auth/register",
-                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                      }
-                    },
-                    "usernameExists": {
-                      "value": {
-                        "statusCode": 409,
-                        "message": "Username already taken: johndoe",
-                        "error": "Conflict",
-                        "errorCode": "AUTH_USERNAME_EXISTS",
-                        "timestamp": "2025-12-13T10:30:00.000Z",
-                        "path": "/api/v1/auth/register",
-                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                      }
+                "examples": {
+                  "validationError": {
+                    "value": {
+                      "statusCode": 400,
+                      "message": ["email must be an email"],
+                      "error": "Bad Request",
+                      "errorCode": "VALIDATION_FAILED",
+                      "timestamp": "2025-12-22T18:34:25.071Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "emailExists": {
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Email already registered: test@example.com",
+                      "error": "Conflict",
+                      "errorCode": "AUTH_EMAIL_EXISTS",
+                      "timestamp": "2025-12-22T18:34:25.071Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "usernameExists": {
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Username already taken: johndoe",
+                      "error": "Conflict",
+                      "errorCode": "AUTH_USERNAME_EXISTS",
+                      "timestamp": "2025-12-22T18:34:25.071Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
                     }
                   }
                 }
@@ -140,9 +138,9 @@
                     "message": "Invalid email or password",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_INVALID_CREDENTIALS",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "timestamp": "2025-12-22T18:34:25.071Z",
                     "path": "/api/v1/auth/login",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -187,29 +185,27 @@
             "description": "Invalid refresh token",
             "content": {
               "application/json": {
-                "schema": {
-                  "examples": {
-                    "tokenExpired": {
-                      "value": {
-                        "statusCode": 401,
-                        "message": "Authentication token has expired",
-                        "error": "Unauthorized",
-                        "errorCode": "AUTH_TOKEN_EXPIRED",
-                        "timestamp": "2025-12-13T10:30:00.000Z",
-                        "path": "/api/v1/auth/refresh",
-                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                      }
-                    },
-                    "tokenInvalid": {
-                      "value": {
-                        "statusCode": 401,
-                        "message": "Invalid authentication token",
-                        "error": "Unauthorized",
-                        "errorCode": "AUTH_TOKEN_INVALID",
-                        "timestamp": "2025-12-13T10:30:00.000Z",
-                        "path": "/api/v1/auth/refresh",
-                        "correlationId": "550e8400-e29b-41d4-a716-446655440000"
-                      }
+                "examples": {
+                  "tokenExpired": {
+                    "value": {
+                      "statusCode": 401,
+                      "message": "Authentication token has expired",
+                      "error": "Unauthorized",
+                      "errorCode": "AUTH_TOKEN_EXPIRED",
+                      "timestamp": "2025-12-22T18:34:25.071Z",
+                      "path": "/api/v1/auth/refresh",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "tokenInvalid": {
+                    "value": {
+                      "statusCode": 401,
+                      "message": "Invalid authentication token",
+                      "error": "Unauthorized",
+                      "errorCode": "AUTH_TOKEN_INVALID",
+                      "timestamp": "2025-12-22T18:34:25.071Z",
+                      "path": "/api/v1/auth/refresh",
+                      "correlationId": "cm4abc123xyz456def789ghi"
                     }
                   }
                 }
@@ -243,7 +239,7 @@
         },
         "responses": {
           "201": {
-            "description": "Task successfully created",
+            "description": "Task created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -253,25 +249,58 @@
             }
           },
           "400": {
-            "description": "Invalid input data",
+            "description": "Validation failed or invalid input",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 400,
-                    "message": ["title must be longer than or equal to 3 characters"],
+                    "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
+                    "timestamp": "2025-12-22T18:34:24.974Z",
                     "path": "/api/v1/tasks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.974Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
             }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.974Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -364,11 +393,68 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved tasks",
+            "description": "Task list retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedTasksResponseDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaginatedTasksResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.974Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.974Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.980Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
                 }
               }
             }
@@ -412,11 +498,6 @@
             }
           }
         },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
         "summary": "Get task statistics",
         "tags": ["tasks"]
       }
@@ -430,7 +511,7 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task CUID",
+            "description": "Unique CUID identifier for the task",
             "schema": {
               "example": "cm4abc123xyz456def789ghi",
               "type": "string"
@@ -439,7 +520,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved task",
+            "description": "Task retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -448,18 +529,55 @@
               }
             }
           },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Authentication required"
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           },
           "403": {
-            "description": "Access denied - you can only access your own tasks",
+            "description": "Insufficient permissions to access this task",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 403,
                     "message": "You do not have permission to access this task",
-                    "error": "Forbidden"
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -472,12 +590,30 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task not found: cmiympu7x00002tsaknh5dqql",
-                    "error": "TASK_NOT_FOUND",
-                    "timestamp": "2025-12-22T03:22:11.586Z",
-                    "path": "/api/v1/tasks/cmiympu7x00002tsaknh5dqql",
-                    "correlationId": "8ceb6b29-7027-4844-b63f-0e443bedc890",
-                    "errorCode": "TASK_NOT_FOUND"
+                    "message": "Task not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -500,9 +636,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task CUID",
+            "description": "Unique CUID identifier for the task",
             "schema": {
-              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "example": "cm4abc123xyz456def789ghi",
               "type": "string"
             }
           }
@@ -519,7 +655,7 @@
         },
         "responses": {
           "200": {
-            "description": "Task successfully updated",
+            "description": "Task updated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -529,36 +665,54 @@
             }
           },
           "400": {
-            "description": "Invalid input data",
+            "description": "Validation failed or invalid input",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 400,
-                    "message": "Invalid CUID format: invalid-id",
+                    "message": ["Validation error"],
                     "error": "Bad Request",
-                    "errorCode": "VALIDATION_INVALID_CUID",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/invalid-id",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.981Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.981Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
             }
           },
           "403": {
-            "description": "Access denied - you can only access your own tasks",
+            "description": "Insufficient permissions to access this task",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 403,
-                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+                    "message": "You do not have permission to access this task",
                     "error": "Forbidden",
                     "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -571,19 +725,34 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "timestamp": "2025-12-22T18:34:24.981Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
             }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.981Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -602,30 +771,78 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task CUID",
+            "description": "Unique CUID identifier for the task",
             "schema": {
-              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "example": "cm4abc123xyz456def789ghi",
               "type": "string"
             }
           }
         ],
         "responses": {
+          "200": {
+            "description": "Task deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Task deleted successfully"
+                  }
+                }
+              }
+            }
+          },
           "204": {
             "description": "Task successfully deleted"
           },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
           "403": {
-            "description": "Access denied - you can only access your own tasks",
+            "description": "Insufficient permissions to access this task",
             "content": {
               "application/json": {
                 "schema": {
                   "example": {
                     "statusCode": 403,
-                    "message": "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
+                    "message": "You do not have permission to access this task",
                     "error": "Forbidden",
                     "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -638,19 +855,34 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
             }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -671,19 +903,67 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "Task CUID",
+            "description": "Unique CUID identifier for the task",
             "schema": {
-              "example": "cmixpvpir0001p9yp5xq8r7ks",
+              "example": "cm4abc123xyz456def789ghi",
               "type": "string"
             }
           }
         ],
         "responses": {
+          "200": {
+            "description": "Task permanently deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Task permanently deleted"
+                  }
+                }
+              }
+            }
+          },
           "204": {
             "description": "Task permanently deleted"
           },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/admin/purge/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/admin/purge/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
           "403": {
-            "description": "Admin access required",
+            "description": "Forbidden - Admin access required",
             "content": {
               "application/json": {
                 "schema": {
@@ -691,10 +971,10 @@
                     "statusCode": 403,
                     "message": "Forbidden resource",
                     "error": "Forbidden",
-                    "errorCode": "RESOURCE_FORBIDDEN",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "errorCode": "AUTH_FORBIDDEN",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/admin/purge/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
@@ -707,19 +987,34 @@
                 "schema": {
                   "example": {
                     "statusCode": 404,
-                    "message": "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
+                    "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2025-12-13T10:30:00.000Z",
-                    "path": "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
-                    "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/admin/purge/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
                   }
                 }
               }
             }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2025-12-22T18:34:24.982Z",
+                    "path": "/api/v1/tasks/admin/purge/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -747,8 +1042,41 @@
               }
             }
           },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/next-due-date",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Authentication required"
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2025-12-22T18:34:24.987Z",
+                    "path": "/api/v2/tasks/next-due-date",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1315,7 +1643,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "cm4abc123xyz456def789ghi"
           },
           "email": {
             "type": "string",

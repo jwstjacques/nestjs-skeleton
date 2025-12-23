@@ -11,20 +11,7 @@ import {
   HttpStatus,
   UseInterceptors,
 } from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiNotFoundResponse,
-  ApiBadRequestResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiTooManyRequestsResponse,
-  ApiForbiddenResponse,
-} from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiOkResponse, ApiQuery, ApiResponse } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 import { UserRole } from "@prisma/client";
@@ -40,7 +27,18 @@ import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser, Roles } from "../../auth/decorators";
 import { CacheTTL as CacheTTLEnum } from "../../common/cache/cache-keys.constants";
 import { PAGINATION_SWAGGER_QUERIES } from "../../common/constants";
-import { TASK_API_TAG, TASK_SWAGGER_EXAMPLES, TASK_SWAGGER_DOCS } from "./constants";
+import {
+  ApiCreateOperation,
+  ApiReadListOperation,
+  ApiReadOneOperation,
+  ApiUpdateOperation,
+  ApiDeleteOperation,
+  ApiAdminDeleteOperation,
+  ApiTaskIdParam,
+  ApiForbiddenTaskResponse,
+} from "../../common/decorators";
+import { TASK_API_TAG, TASK_SWAGGER_DOCS } from "./constants";
+import { TaskErrorCode } from "./constants";
 
 /**
  * Tasks Controller - Example Module
@@ -76,7 +74,6 @@ const THROTTLE_LIMITS = {
 } as const;
 
 @ApiTags(TASK_API_TAG)
-@ApiBearerAuth("JWT-auth")
 @Controller("tasks")
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
@@ -84,30 +81,12 @@ export class TasksController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
-  @ApiOperation({
+  @ApiCreateOperation({
     summary: TASK_SWAGGER_DOCS.CREATE_SUMMARY,
     description: TASK_SWAGGER_DOCS.CREATE_DESCRIPTION,
-  })
-  @ApiCreatedResponse({
-    description: TASK_SWAGGER_DOCS.CREATE_SUCCESS,
-    type: TaskResponseDto,
-  })
-  @ApiBadRequestResponse({
-    description: TASK_SWAGGER_DOCS.INVALID_INPUT,
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ["title must be longer than or equal to 3 characters"],
-        error: "Bad Request",
-        errorCode: "VALIDATION_FAILED",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiTooManyRequestsResponse({
-    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
+    resourceName: "Task",
+    responseType: TaskResponseDto,
+    path: "/api/v1/tasks",
   })
   async create(
     @Body() createTaskDto: CreateTaskDto,
@@ -122,13 +101,12 @@ export class TasksController {
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(CacheTTLEnum.SHORT)
   @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
-  @ApiOperation({
+  @ApiReadListOperation({
     summary: TASK_SWAGGER_DOCS.GET_ALL_SUMMARY,
     description: TASK_SWAGGER_DOCS.GET_ALL_DESCRIPTION,
-  })
-  @ApiOkResponse({
-    description: TASK_SWAGGER_DOCS.GET_ALL_SUCCESS,
-    type: PaginatedTasksResponseDto,
+    resourceName: "Task",
+    responseType: PaginatedTasksResponseDto,
+    path: "/api/v1/tasks",
   })
   @ApiQuery(PAGINATION_SWAGGER_QUERIES.page())
   @ApiQuery(PAGINATION_SWAGGER_QUERIES.limit())
@@ -193,61 +171,16 @@ export class TasksController {
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(CacheTTLEnum.MEDIUM)
   @Throttle({ medium: THROTTLE_LIMITS.MEDIUM })
-  @ApiOperation({
+  @ApiReadOneOperation({
     summary: TASK_SWAGGER_DOCS.GET_BY_ID_SUMMARY,
     description: TASK_SWAGGER_DOCS.GET_BY_ID_DESCRIPTION,
+    resourceName: "Task",
+    responseType: TaskResponseDto,
+    notFoundErrorCode: TaskErrorCode.TASK_NOT_FOUND,
+    path: "/api/v1/tasks/:id",
   })
-  @ApiParam({
-    name: "id",
-    description: TASK_SWAGGER_DOCS.PARAM_ID,
-    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
-  })
-  @ApiOkResponse({
-    description: TASK_SWAGGER_DOCS.GET_BY_ID_SUCCESS,
-    type: TaskResponseDto,
-  })
-  @ApiNotFoundResponse({
-    description: TASK_SWAGGER_DOCS.NOT_FOUND,
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-        error: "Not Found",
-        errorCode: "TASK_NOT_FOUND",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: "Invalid CUID format",
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: "Invalid CUID format: invalid-id",
-        error: "Bad Request",
-        errorCode: "VALIDATION_INVALID_CUID",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/invalid-id",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: "Cannot access other user's task",
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: "Unauthorized",
-        error: "UnauthorizedException",
-        timestamp: "2025-12-22T03:13:50.701Z",
-        path: "/api/v1/tasks",
-        correlationId: "5c460f20-32c7-425d-a45a-62bb5002d5d1",
-        errorCode: "AUTH_UNAUTHORIZED",
-      },
-    },
-  })
+  @ApiTaskIdParam()
+  @ApiForbiddenTaskResponse("/api/v1/tasks/:id")
   async findOne(
     @Param("id", ParseCuidPipe) id: string,
     @CurrentUser() user: { id: string; role: UserRole },
@@ -259,64 +192,16 @@ export class TasksController {
 
   @Patch(":id")
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
-  @ApiOperation({
+  @ApiUpdateOperation({
     summary: TASK_SWAGGER_DOCS.UPDATE_SUMMARY,
     description: TASK_SWAGGER_DOCS.UPDATE_DESCRIPTION,
+    resourceName: "Task",
+    responseType: TaskResponseDto,
+    notFoundErrorCode: TaskErrorCode.TASK_NOT_FOUND,
+    path: "/api/v1/tasks/:id",
   })
-  @ApiParam({
-    name: "id",
-    description: TASK_SWAGGER_DOCS.PARAM_ID,
-    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
-  })
-  @ApiOkResponse({
-    description: TASK_SWAGGER_DOCS.UPDATE_SUCCESS,
-    type: TaskResponseDto,
-  })
-  @ApiNotFoundResponse({
-    description: TASK_SWAGGER_DOCS.NOT_FOUND,
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-        error: "Not Found",
-        errorCode: "TASK_NOT_FOUND",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: TASK_SWAGGER_DOCS.INVALID_INPUT,
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: "Invalid CUID format: invalid-id",
-        error: "Bad Request",
-        errorCode: "VALIDATION_INVALID_CUID",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/invalid-id",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: TASK_SWAGGER_DOCS.FORBIDDEN,
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
-        error: "Forbidden",
-        errorCode: "TASK_FORBIDDEN",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiTooManyRequestsResponse({
-    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
-  })
+  @ApiTaskIdParam()
+  @ApiForbiddenTaskResponse("/api/v1/tasks/:id")
   async update(
     @Param("id", ParseCuidPipe) id: string,
     @Body() updateTaskDto: UpdateTaskDto,
@@ -330,50 +215,19 @@ export class TasksController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
-  @ApiOperation({
+  @ApiDeleteOperation({
     summary: TASK_SWAGGER_DOCS.DELETE_SUMMARY,
     description: TASK_SWAGGER_DOCS.DELETE_DESCRIPTION,
+    resourceName: "Task",
+    notFoundErrorCode: TaskErrorCode.TASK_NOT_FOUND,
+    path: "/api/v1/tasks/:id",
   })
-  @ApiParam({
-    name: "id",
-    description: TASK_SWAGGER_DOCS.PARAM_ID,
-    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
-  })
+  @ApiTaskIdParam()
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: TASK_SWAGGER_DOCS.DELETE_SUCCESS,
   })
-  @ApiNotFoundResponse({
-    description: TASK_SWAGGER_DOCS.NOT_FOUND,
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-        error: "Not Found",
-        errorCode: "TASK_NOT_FOUND",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: TASK_SWAGGER_DOCS.FORBIDDEN,
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: "You do not have permission to access task: cmixpvpir0001p9yp5xq8r7ks",
-        error: "Forbidden",
-        errorCode: "TASK_FORBIDDEN",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiTooManyRequestsResponse({
-    description: TASK_SWAGGER_DOCS.TOO_MANY_REQUESTS,
-  })
+  @ApiForbiddenTaskResponse("/api/v1/tasks/:id")
   async remove(
     @Param("id", ParseCuidPipe) id: string,
     @CurrentUser() user: { id: string; role: UserRole },
@@ -385,49 +239,17 @@ export class TasksController {
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
-  @ApiOperation({
+  @ApiAdminDeleteOperation({
     summary: TASK_SWAGGER_DOCS.PURGE_SUMMARY,
     description: TASK_SWAGGER_DOCS.PURGE_DESCRIPTION,
+    resourceName: "Task",
+    notFoundErrorCode: TaskErrorCode.TASK_NOT_FOUND,
+    path: "/api/v1/tasks/admin/purge/:id",
   })
-  @ApiParam({
-    name: "id",
-    description: TASK_SWAGGER_DOCS.PARAM_ID,
-    example: TASK_SWAGGER_EXAMPLES.TASK_ID,
-  })
+  @ApiTaskIdParam()
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: TASK_SWAGGER_DOCS.PURGE_SUCCESS,
-  })
-  @ApiForbiddenResponse({
-    description: "Admin access required",
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: "Forbidden resource",
-        error: "Forbidden",
-        errorCode: "RESOURCE_FORBIDDEN",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiNotFoundResponse({
-    description: "Task not found",
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "Task with ID 'cmixpvpir0001p9yp5xq8r7ks' not found",
-        error: "Not Found",
-        errorCode: "TASK_NOT_FOUND",
-        timestamp: "2025-12-13T10:30:00.000Z",
-        path: "/api/v1/tasks/admin/purge/cmixpvpir0001p9yp5xq8r7ks",
-        correlationId: "550e8400-e29b-41d4-a716-446655440000",
-      },
-    },
-  })
-  @ApiTooManyRequestsResponse({
-    description: "Too many requests",
   })
   async purge(@Param("id", ParseCuidPipe) id: string): Promise<void> {
     await this.tasksService.purge(id);

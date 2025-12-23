@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
 import { UserRole } from "@prisma/client";
+import { SWAGGER_CUID_EXAMPLE } from "../../common/constants";
 
 @Exclude()
 export class UserResponseDto {
-  @ApiProperty({ example: "550e8400-e29b-41d4-a716-446655440000" })
+  @ApiProperty({ example: SWAGGER_CUID_EXAMPLE })
   @Expose()
   id!: string;
 

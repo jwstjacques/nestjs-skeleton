@@ -18,14 +18,14 @@ async function exportOpenAPI() {
   const document = SwaggerModule.createDocument(app, config);
 
   // Ensure docs directory exists
-  const docsDir = path.resolve(__dirname, "../docs");
+  const swaggerDir = path.resolve(__dirname, "../swagger");
 
-  if (!fs.existsSync(docsDir)) {
-    fs.mkdirSync(docsDir, { recursive: true });
+  if (!fs.existsSync(swaggerDir)) {
+    fs.mkdirSync(swaggerDir, { recursive: true });
   }
 
   // Export as JSON
-  const jsonPath = path.join(docsDir, "openapi.json");
+  const jsonPath = path.join(swaggerDir, "openapi.json");
 
   fs.writeFileSync(jsonPath, JSON.stringify(document, null, 2));
 

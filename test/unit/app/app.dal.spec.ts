@@ -45,57 +45,61 @@ describe("AppDal", () => {
   });
 
   describe("checkDatabaseConnection", () => {
-    it("should successfully execute a database query", async () => {
-      await expect(appDal.checkDatabaseConnection()).resolves.toBeUndefined();
-    });
+    describe("Success", () => {
+      it("should successfully execute a database query", async () => {
+        await expect(appDal.checkDatabaseConnection()).resolves.toBeUndefined();
+      });
 
-    it("should complete without errors when database is connected", async () => {
-      // This test verifies the connection works without throwing
-      const result = await appDal.checkDatabaseConnection();
+      it("should complete without errors when database is connected", async () => {
+        // This test verifies the connection works without throwing
+        const result = await appDal.checkDatabaseConnection();
 
-      expect(result).toBeUndefined();
+        expect(result).toBeUndefined();
+      });
     });
   });
 
   describe("getUserCount", () => {
-    it("should return a valid user count", async () => {
-      const count = await appDal.getUserCount();
+    describe("Success", () => {
+      it("should return a valid user count", async () => {
+        const count = await appDal.getUserCount();
 
-      expect(typeof count).toBe("number");
-      expect(count).toBeGreaterThanOrEqual(0);
-    });
-
-    it("should return correct count of users", async () => {
-      const timestamp = Date.now();
-
-      // Create test users
-      const user1 = await prisma.user.create({
-        data: {
-          email: `user1-${timestamp}@example.com`,
-          username: `user1${timestamp}`,
-          password: "password",
-          firstName: "User",
-          lastName: "One",
-        },
+        expect(typeof count).toBe("number");
+        expect(count).toBeGreaterThanOrEqual(0);
       });
 
-      cleanup.trackUser(user1.id);
+      it("should return correct count of users", async () => {
+        const timestamp = Date.now();
 
-      const user2 = await prisma.user.create({
-        data: {
-          email: `user2-${timestamp}@example.com`,
-          username: `user2${timestamp}`,
-          password: "password",
-          firstName: "User",
-          lastName: "Two",
-        },
+        // Create test users
+        const user1 = await prisma.user.create({
+          data: {
+            email: `user1-${timestamp}@example.com`,
+            username: `user1${timestamp}`,
+            password: "password",
+            firstName: "User",
+            lastName: "One",
+          },
+        });
+
+        cleanup.trackUser(user1.id);
+
+        const user2 = await prisma.user.create({
+          data: {
+            email: `user2-${timestamp}@example.com`,
+            username: `user2${timestamp}`,
+            password: "password",
+            firstName: "User",
+            lastName: "Two",
+          },
+        });
+
+        cleanup.trackUser(user2.id);
+
+        const count = await appDal.getUserCount();
+
+        expect(count).toBeGreaterThanOrEqual(2);
       });
-
-      cleanup.trackUser(user2.id);
-
-      const count = await appDal.getUserCount();
-
-      expect(count).toBeGreaterThanOrEqual(2);
     });
   });
 });

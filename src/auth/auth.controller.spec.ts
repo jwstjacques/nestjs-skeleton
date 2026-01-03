@@ -12,7 +12,9 @@ describe("AuthController", () => {
     controller = module.get<AuthController>(AuthController);
   });
 
-  it("should be defined", () => {
-    expect(controller).toBeDefined();
+  describe("Success", () => {
+    it("should be defined", () => {
+      expect(controller).toBeDefined();
+    });
   });
 });

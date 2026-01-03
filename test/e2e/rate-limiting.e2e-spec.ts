@@ -70,93 +70,97 @@ describe("Rate Limiting (e2e)", () => {
   });
 
   describe("Short-term Rate Limiting (per second)", () => {
-    it("should allow requests within rate limit", async () => {
-      // With limit of 2/second, first 2 requests should succeed
-      const response1 = await request(app.getHttpServer())
-        .get(`/api/v1/tasks/${taskId}`)
-        .set("Authorization", `Bearer ${accessToken}`)
-        .expect(HttpStatus.OK);
-
-      const response2 = await request(app.getHttpServer())
-        .get(`/api/v1/tasks/${taskId}`)
-        .set("Authorization", `Bearer ${accessToken}`)
-        .expect(HttpStatus.OK);
-
-      expect(response1.statusCode).toBe(HttpStatus.OK);
-      expect(response2.statusCode).toBe(HttpStatus.OK);
-    });
-
-    it("should return 429 when exceeding rate limit", async () => {
-      // With limit of 2/second, the 3rd request should be rate limited
-      const responses = await Promise.all([
-        request(app.getHttpServer())
+    describe("Success", () => {
+      it("should allow requests within rate limit", async () => {
+        // With limit of 2/second, first 2 requests should succeed
+        const response1 = await request(app.getHttpServer())
           .get(`/api/v1/tasks/${taskId}`)
-          .set("Authorization", `Bearer ${accessToken}`),
-        request(app.getHttpServer())
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        const response2 = await request(app.getHttpServer())
           .get(`/api/v1/tasks/${taskId}`)
-          .set("Authorization", `Bearer ${accessToken}`),
-        request(app.getHttpServer())
-          .get(`/api/v1/tasks/${taskId}`)
-          .set("Authorization", `Bearer ${accessToken}`),
-      ]);
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
 
-      // At least one response should be rate limited (429)
-      const rateLimitedResponse = responses.find(
-        (r) => r.statusCode === HttpStatus.TOO_MANY_REQUESTS,
-      );
+        expect(response1.statusCode).toBe(HttpStatus.OK);
+        expect(response2.statusCode).toBe(HttpStatus.OK);
+      });
 
-      expect(rateLimitedResponse).toBeDefined();
-      expect(rateLimitedResponse?.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
-      expect(rateLimitedResponse?.body.message).toContain("Too Many Requests");
-    });
-
-    it("should include Retry-After header in 429 response", async () => {
-      // Exceed rate limit to get 429 response
-      const responses = await Promise.all(
-        Array.from({ length: 5 }, () =>
+      it("should allow requests again after rate limit window expires", async () => {
+        // Make 2 requests to hit the limit
+        await Promise.all([
           request(app.getHttpServer())
             .get(`/api/v1/tasks/${taskId}`)
             .set("Authorization", `Bearer ${accessToken}`),
-        ),
-      );
+          request(app.getHttpServer())
+            .get(`/api/v1/tasks/${taskId}`)
+            .set("Authorization", `Bearer ${accessToken}`),
+        ]);
 
-      const rateLimitedResponse = responses.find(
-        (r) => r.statusCode === HttpStatus.TOO_MANY_REQUESTS,
-      );
+        // Next request should be rate limited
+        const blockedResponse = await request(app.getHttpServer())
+          .get(`/api/v1/tasks/${taskId}`)
+          .set("Authorization", `Bearer ${accessToken}`);
 
-      expect(rateLimitedResponse).toBeDefined();
-      // NestJS throttler returns 'retry-after-short' header
-      expect(rateLimitedResponse?.headers).toHaveProperty("retry-after-short");
+        expect(blockedResponse.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
+
+        // Wait for the 1-second window to expire (plus a small buffer)
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+
+        // Now a request should succeed
+        const successResponse = await request(app.getHttpServer())
+          .get(`/api/v1/tasks/${taskId}`)
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        expect(successResponse.statusCode).toBe(HttpStatus.OK);
+      });
     });
 
-    it("should allow requests again after rate limit window expires", async () => {
-      // Make 2 requests to hit the limit
-      await Promise.all([
-        request(app.getHttpServer())
-          .get(`/api/v1/tasks/${taskId}`)
-          .set("Authorization", `Bearer ${accessToken}`),
-        request(app.getHttpServer())
-          .get(`/api/v1/tasks/${taskId}`)
-          .set("Authorization", `Bearer ${accessToken}`),
-      ]);
+    describe("Failure", () => {
+      it("should return 429 when exceeding rate limit", async () => {
+        // With limit of 2/second, the 3rd request should be rate limited
+        const responses = await Promise.all([
+          request(app.getHttpServer())
+            .get(`/api/v1/tasks/${taskId}`)
+            .set("Authorization", `Bearer ${accessToken}`),
+          request(app.getHttpServer())
+            .get(`/api/v1/tasks/${taskId}`)
+            .set("Authorization", `Bearer ${accessToken}`),
+          request(app.getHttpServer())
+            .get(`/api/v1/tasks/${taskId}`)
+            .set("Authorization", `Bearer ${accessToken}`),
+        ]);
 
-      // Next request should be rate limited
-      const blockedResponse = await request(app.getHttpServer())
-        .get(`/api/v1/tasks/${taskId}`)
-        .set("Authorization", `Bearer ${accessToken}`);
+        // At least one response should be rate limited (429)
+        const rateLimitedResponse = responses.find(
+          (r) => r.statusCode === HttpStatus.TOO_MANY_REQUESTS,
+        );
 
-      expect(blockedResponse.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
+        expect(rateLimitedResponse).toBeDefined();
+        expect(rateLimitedResponse?.statusCode).toBe(HttpStatus.TOO_MANY_REQUESTS);
+        expect(rateLimitedResponse?.body.message).toContain("Too Many Requests");
+      });
 
-      // Wait for the 1-second window to expire (plus a small buffer)
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      it("should include Retry-After header in 429 response", async () => {
+        // Exceed rate limit to get 429 response
+        const responses = await Promise.all(
+          Array.from({ length: 5 }, () =>
+            request(app.getHttpServer())
+              .get(`/api/v1/tasks/${taskId}`)
+              .set("Authorization", `Bearer ${accessToken}`),
+          ),
+        );
 
-      // Now a request should succeed
-      const successResponse = await request(app.getHttpServer())
-        .get(`/api/v1/tasks/${taskId}`)
-        .set("Authorization", `Bearer ${accessToken}`)
-        .expect(HttpStatus.OK);
+        const rateLimitedResponse = responses.find(
+          (r) => r.statusCode === HttpStatus.TOO_MANY_REQUESTS,
+        );
 
-      expect(successResponse.statusCode).toBe(HttpStatus.OK);
+        expect(rateLimitedResponse).toBeDefined();
+        // NestJS throttler returns 'retry-after-short' header
+        expect(rateLimitedResponse?.headers).toHaveProperty("retry-after-short");
+      });
     });
   });
 

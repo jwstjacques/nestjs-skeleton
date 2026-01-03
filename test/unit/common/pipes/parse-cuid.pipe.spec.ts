@@ -9,7 +9,7 @@ describe("ParseCuidPipe", () => {
   });
 
   describe("transform", () => {
-    describe("valid CUIDs", () => {
+    describe("Success", () => {
       it("should pass a valid CUID starting with 'c' and 24 lowercase alphanumeric characters", () => {
         const validCuid = "clh9k7x2a0000qmxbzv0q0001";
 
@@ -35,7 +35,7 @@ describe("ParseCuidPipe", () => {
       });
     });
 
-    describe("invalid CUIDs", () => {
+    describe("Failure", () => {
       it("should throw InvalidCuidException for CUID not starting with 'c'", () => {
         const invalidCuid = "dlh9k7x2a0000qmxbzv0q0001";
 

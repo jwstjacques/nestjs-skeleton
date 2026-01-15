@@ -66,7 +66,7 @@ npm run prisma:seed
 npm run start:dev
 ```
 
-Visit http://localhost:3000/api/docs to see the Swagger documentation.
+Visit http://localhost:3000/api/v1/docs to see the Swagger documentation.
 
 ### Verify Installation
 
@@ -120,9 +120,9 @@ Current coverage: **>99%**
 
 Interactive API documentation is available via Swagger UI:
 
-- **Development**: http://localhost:3000/api/docs
-- **JSON**: `/api/docs-json`
-- **YAML**: `/api/docs-yaml`
+- **Development**: http://localhost:3000/api/v1/docs
+- **JSON**: `/api/v1/docs-json`
+- **YAML**: `/api/v1/docs-yaml`
 
 ### Export OpenAPI Specification
 
@@ -199,6 +199,23 @@ Contributions are welcome! This skeleton is meant to evolve with best practices.
 ## License
 
 This project is [MIT licensed](LICENSE).
+
+## Documentation
+
+Comprehensive documentation is available in the [docs/](docs/) folder:
+
+| Guide                                                     | Description                         |
+| --------------------------------------------------------- | ----------------------------------- |
+| [Development](docs/DEVELOPMENT.md)                        | Local development setup             |
+| [Configuration](docs/CONFIGURATION.md)                    | Environment variables and config    |
+| [Authentication](docs/AUTHENTICATION.md)                  | JWT auth, login, registration       |
+| [Testing](docs/TESTING.md)                                | Unit tests, E2E tests, coverage     |
+| [Production](docs/PRODUCTION.md)                          | Deployment, health checks, security |
+| [Architecture Patterns](docs/architecture/PATTERNS.md)    | DAL, DTOs, exceptions               |
+| [Module Creation](docs/MODULE-CREATION-CHECKLIST.md)      | Adding new modules                  |
+| [Tasks Module Guide](docs/examples/TASKS_MODULE_GUIDE.md) | Reference implementation            |
+
+See [docs/README.md](docs/README.md) for the complete documentation index.
 
 ## Resources
 

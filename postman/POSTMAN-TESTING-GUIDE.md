@@ -1,13 +1,15 @@
 # Postman Testing Guide
 
-This guide walks you through testing the NestJS Task API using Postman.
+> **Note**: This guide includes examples from the **Tasks module**, which serves as a reference implementation in the NestJS API Skeleton. The authentication and health check endpoints are core features, while the Tasks endpoints demonstrate best practices you can follow when building your own modules.
+
+This guide walks you through testing the NestJS API using Postman.
 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Importing the Collection](#importing-the-collection)
 - [Setting Up Environment](#setting-up-environment)
-- [Authentication Workflow](#-authentication-workflow)
+- [Authentication Workflow](#authentication-workflow)
 - [Running Tests](#running-tests)
 - [Test Scenarios](#test-scenarios)
 - [Troubleshooting](#troubleshooting)
@@ -64,11 +66,14 @@ Verify the app is running at: [http://localhost:3000/api/v1/](http://localhost:3
 
 After importing, you should see:
 
-- Collection name: **"NestJS Task Management API"**
-- Three folders:
+- Collection name: **"NestJS API Skeleton"**
+- Four folders:
   - **Authentication** (3 endpoints: Register, Login, Refresh Token)
-  - **Tasks** (6 endpoints)
-  - **Health & Info** (2 endpoints)
+  - **Tasks (Example Module)** (6 endpoints - v1 API)
+  - **Tasks v2 (Enhanced)** (2 endpoints - v2 API with permission checks)
+  - **Health & Info** (1 endpoint)
+
+> **Note**: The collection now includes both v1 and v2 API endpoints. v1 provides full CRUD operations, while v2 offers enhanced read operations with ownership-based access control.
 
 ---
 
@@ -76,7 +81,10 @@ After importing, you should see:
 
 ### Option 1: Use Collection Variables (Quick Start)
 
-The collection already has a `baseUrl` variable configured. No additional setup needed!
+The collection already has `baseUrl` and `baseUrlV2` variables configured. No additional setup needed!
+
+- `baseUrl`: `http://localhost:3000/api/v1` (for v1 endpoints)
+- `baseUrlV2`: `http://localhost:3000/api/v2` (for v2 endpoints)
 
 ### Option 2: Create an Environment (Recommended for Multiple Environments)
 
@@ -85,18 +93,19 @@ The collection already has a `baseUrl` variable configured. No additional setup 
 3. Name it: `NestJS Local`
 4. Add variables:
 
-| Variable  | Initial Value                  | Current Value                  |
-| --------- | ------------------------------ | ------------------------------ |
-| `baseUrl` | `http://localhost:3000/api/v1` | `http://localhost:3000/api/v1` |
-| `userId`  | `cmixpvpir0000p9ypdk6za4qc`    | `cmixpvpir0000p9ypdk6za4qc`    |
-| `taskId`  | _(leave empty)_                | _(will be set during tests)_   |
+| Variable    | Initial Value                  | Current Value                  |
+| ----------- | ------------------------------ | ------------------------------ |
+| `baseUrl`   | `http://localhost:3000/api/v1` | `http://localhost:3000/api/v1` |
+| `baseUrlV2` | `http://localhost:3000/api/v2` | `http://localhost:3000/api/v2` |
+| `userId`    | `cmixpvpir0000p9ypdk6za4qc`    | `cmixpvpir0000p9ypdk6za4qc`    |
+| `taskId`    | _(leave empty)_                | _(will be set during tests)_   |
 
 5. Click **"Save"**
 6. Select the environment from the dropdown (top-right)
 
 ---
 
-## 🔐 Authentication Workflow
+## Authentication Workflow
 
 The API uses JWT-based authentication. All task endpoints require a valid access token.
 
@@ -123,27 +132,61 @@ The API uses JWT-based authentication. All task endpoints require a valid access
 
 1. Select **"Login"** from the Authentication folder
 2. Use the credentials from registration:
+
    ```json
    {
-     "identifier": "john.doe@example.com",
+     "username": "john.doe@example.com",
      "password": "SecurePass123!"
    }
    ```
+
+   > **Note**: The field must be named `username` (not `identifier`), but you can provide either a username OR email address as the value. The backend accepts both.
+
+   **Alternative - Use Seeded Demo Users:**
+
+   If you've run the database seed script (`npm run prisma:seed`), you can use these pre-created accounts:
+
+   ```json
+   // Regular user - John Doe
+   {
+     "username": "johndoe",
+     "password": "Password123!"
+   }
+   ```
+
+   ```json
+   // Regular user - Jane Smith
+   {
+     "username": "janesmith",
+     "password": "Password123!"
+   }
+   ```
+
+   ```json
+   // Admin user
+   {
+     "username": "admin",
+     "password": "Password123!"
+   }
+   ```
+
+   You can also use their email addresses: `john.doe@example.com`, `jane.smith@example.com`, or `admin@example.com`
+
 3. Click **"Send"**
 4. On success (200), the response includes:
    - `accessToken` - Used for API requests (expires in 15 minutes)
    - `refreshToken` - Used to get new access tokens (expires in 7 days)
 
-**🎯 Automatic Token Management**
+**Automatic Token Management**
 
-The collection includes test scripts that automatically save tokens to environment variables:
+The collection includes test scripts that automatically save tokens to collection variables:
 
 ```javascript
 // Runs after successful login/refresh
 if (pm.response.code === 200) {
   const jsonData = pm.response.json();
-  pm.environment.set("accessToken", jsonData.data.accessToken);
-  pm.environment.set("refreshToken", jsonData.data.refreshToken);
+  pm.collectionVariables.set("accessToken", jsonData.data.accessToken);
+  pm.collectionVariables.set("refreshToken", jsonData.data.refreshToken);
 }
 ```
 
@@ -221,7 +264,7 @@ This means:
 
 ### Testing the Complete Workflow
 
-Follow this sequence to test all CRUD operations. **Note:** You must authenticate first (see [Authentication Workflow](#-authentication-workflow) above) before testing task endpoints.
+Follow this sequence to test all CRUD operations. **Note:** You must authenticate first (see [Authentication Workflow](#authentication-workflow) above) before testing task endpoints.
 
 #### Step 1: Authenticate
 
@@ -398,12 +441,14 @@ Follow this sequence to test all CRUD operations. **Note:** You must authenticat
     "byStatus": {
       "TODO": 5,
       "IN_PROGRESS": 4,
-      "COMPLETED": 3
+      "COMPLETED": 2,
+      "CANCELLED": 1
     },
     "byPriority": {
       "LOW": 3,
       "MEDIUM": 4,
-      "HIGH": 5
+      "HIGH": 4,
+      "URGENT": 1
     }
   }
 }
@@ -425,6 +470,79 @@ Follow this sequence to test all CRUD operations. **Note:** You must authenticat
 - Status code: `204`
 
 **Verify:** Run "Get All Tasks" again - the deleted task should not appear in the list (soft delete sets `deletedAt`).
+
+---
+
+#### Step 9: Test v2 Enhanced Endpoints
+
+The v2 API provides enhanced endpoints with ownership-based access control. You must be authenticated to use these endpoints.
+
+**Request 1: Get Next Due Task**
+
+1. Select **"Tasks v2 (Enhanced)"** → **"Get Next Due Task"**
+2. This endpoint returns the task with the nearest upcoming due date (only active tasks: TODO or IN_PROGRESS)
+3. Click **"Send"**
+
+**Expected Response (200 OK):**
+
+```json
+{
+  "id": "cmixpvpir0001p9yp5xq8r7ks",
+  "title": "Complete project documentation",
+  "description": "Write comprehensive docs for all endpoints",
+  "status": "TODO",
+  "priority": "HIGH",
+  "dueDate": "2025-12-31T23:59:59.000Z",
+  "completedAt": null,
+  "userId": "cmixpvpir0000p9ypdk6za4qc",
+  "createdAt": "2025-12-11T10:30:00.000Z",
+  "updatedAt": "2025-12-11T10:30:00.000Z"
+}
+```
+
+> **Note**: Returns `null` if you have no upcoming active tasks with due dates.
+
+**Request 2: Get Task by ID (with Permission Check)**
+
+1. Select **"Tasks v2 (Enhanced)"** → **"Get Task by ID (with Permission Check)"**
+2. Replace `:id` in URL with your task CUID
+3. Click **"Send"**
+
+**Expected Response (200 OK) - If you own the task:**
+
+```json
+{
+  "id": "cmiympu7x00002tsaknh5dqql",
+  "title": "Test Task",
+  "description": "Testing v2 endpoint",
+  "status": "TODO",
+  "priority": "HIGH",
+  "userId": "cmixpvpir0000p9ypdk6za4qc",
+  "createdAt": "2025-12-09T13:41:39.260Z",
+  "updatedAt": "2025-12-09T13:41:39.260Z"
+}
+```
+
+**Expected Response (403 Forbidden) - If you don't own the task:**
+
+```json
+{
+  "statusCode": 403,
+  "message": "You do not have permission to access this task",
+  "error": "Forbidden"
+}
+```
+
+**v2 vs v1 Differences:**
+
+| Feature           | v1 (Tasks)       | v2 (Tasks v2)                      |
+| ----------------- | ---------------- | ---------------------------------- |
+| Get Task by ID    | Returns any task | Ownership check (403 if not owner) |
+| Next Due Date     | Not available    | New endpoint                       |
+| Permission Checks | No               | Owner or Admin only                |
+| CRUD Operations   | Full CRUD        | Read-only                          |
+
+> **Best Practice**: Use v1 for write operations (create, update, delete) and v2 for security-enhanced read operations.
 
 ---
 
@@ -473,6 +591,10 @@ Filter by status and priority:
 ?status=IN_PROGRESS&priority=HIGH
 ```
 
+**Available Status Values:** `TODO`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`
+
+**Available Priority Values:** `LOW`, `MEDIUM`, `HIGH`, `URGENT`
+
 ---
 
 ### Scenario 3: Searching Tasks
@@ -509,6 +631,12 @@ Sort by different fields:
 
 # By status (ascending)
 ?sortBy=status&sortOrder=asc
+
+# By due date
+?sortBy=dueDate&sortOrder=asc
+
+# By title
+?sortBy=title&sortOrder=asc
 ```
 
 ---
@@ -664,6 +792,19 @@ Test validation and error responses with error codes for frontend translation:
 
 ---
 
+### Issue 6: "401 Unauthorized" on Task Endpoints
+
+**Symptoms:** All task requests fail with 401
+
+**Solutions:**
+
+1. Run Login request first to get tokens
+2. Check that tokens were saved (look in collection variables)
+3. Ensure access token hasn't expired (15 minute lifetime)
+4. Run Refresh Token request if expired
+
+---
+
 ## Best Practices
 
 ### 1. Use Environment Variables
@@ -682,7 +823,7 @@ Use Postman's **Tests** tab to automatically save response data:
 // Save task ID from response
 if (pm.response.code === 201) {
   const response = pm.response.json();
-  pm.environment.set("taskId", response.data.id);
+  pm.collectionVariables.set("taskId", response.data.id);
 }
 ```
 
@@ -711,7 +852,7 @@ Run all requests in sequence:
 1. Click **"..."** next to collection name
 2. Select **"Run collection"**
 3. Choose which requests to run
-4. Click **"Run NestJS Task API"**
+4. Click **"Run NestJS API Skeleton"**
 
 ---
 
@@ -731,6 +872,7 @@ All error responses now include an `errorCode` field for consistent error handli
 | `AUTH_TOKEN_EXPIRED`         | 401         | Authentication token expired |
 | `AUTH_TOKEN_INVALID`         | 401         | Invalid authentication token |
 | `AUTH_EMAIL_EXISTS`          | 409         | Email already registered     |
+| `AUTH_USERNAME_EXISTS`       | 409         | Username already taken       |
 | `SYSTEM_RATE_LIMIT_EXCEEDED` | 429         | Too many requests            |
 
 ### Error Response Structure
@@ -765,7 +907,7 @@ pm.test("Has correlation ID", function () {
 });
 ```
 
-For a complete list of error codes, see [ERROR_CODES.md](./ERROR_CODES.md)
+For a complete list of error codes, see [docs/ERROR_CODES.md](../docs/ERROR_CODES.md)
 
 ---
 
@@ -777,7 +919,7 @@ Automatically set headers or variables before each request:
 
 ```javascript
 // Generate timestamp
-pm.environment.set("timestamp", new Date().toISOString());
+pm.collectionVariables.set("timestamp", new Date().toISOString());
 
 // Log request details
 console.log(`Sending request to: ${pm.request.url}`);
@@ -804,25 +946,38 @@ pm.test("Response is JSON", function () {
 });
 ```
 
+### Monitor Token Expiration
+
+Add a pre-request script to check token validity:
+
+```javascript
+// Check if token exists
+if (!pm.collectionVariables.get("accessToken")) {
+  console.warn("No access token! Run Login first.");
+}
+```
+
 ---
 
 ## Summary
 
-You now have a complete guide to testing your NestJS Task API with Postman:
+You now have a complete guide to testing your NestJS API with Postman:
 
-- ✅ Import the collection
-- ✅ Set up environment variables
-- ✅ Run individual requests
-- ✅ Test complete CRUD workflows
-- ✅ Handle errors and edge cases
-- ✅ Use advanced Postman features
+- Import the collection
+- Set up environment variables
+- Authenticate and manage tokens
+- Run individual requests
+- Test complete CRUD workflows
+- Handle errors and edge cases
+- Use v2 enhanced endpoints
+- Use advanced Postman features
 
 For more information, refer to:
 
-- [API Endpoints Documentation](./ENDPOINTS.md)
-- [CRUD Test Results](./CRUD-TEST-RESULTS.md)
-- [Phase 4 Tutorial](../temp/tutorial/NESTJS-PHASE4.md)
+- [API Endpoints Documentation](../docs/ENDPOINTS.md)
+- [Testing Guide](../docs/TESTING.md)
+- [Authentication Guide](../docs/AUTHENTICATION.md)
 
 ---
 
-**Happy Testing! 🚀**
+**Happy Testing!**

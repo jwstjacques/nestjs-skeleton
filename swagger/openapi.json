@@ -1,0 +1,1945 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/status": {
+      "get": {
+        "description": "Returns basic API status for quick monitoring (uptime, environment, database connectivity)",
+        "operationId": "AppController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok",
+                    "timestamp": "2025-11-28T10:30:00.000Z",
+                    "uptime": 12345.67,
+                    "environment": "development",
+                    "database": {
+                      "status": "connected",
+                      "latency": "5ms"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Simple status check",
+        "tags": ["App"]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or user already exists",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "validationError": {
+                    "value": {
+                      "statusCode": 400,
+                      "message": ["email must be an email"],
+                      "error": "Bad Request",
+                      "errorCode": "VALIDATION_FAILED",
+                      "timestamp": "2026-01-15T04:23:23.552Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "emailExists": {
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Email already registered: test@example.com",
+                      "error": "Conflict",
+                      "errorCode": "AUTH_EMAIL_EXISTS",
+                      "timestamp": "2026-01-15T04:23:23.552Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "usernameExists": {
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Username already taken: johndoe",
+                      "error": "Conflict",
+                      "errorCode": "AUTH_USERNAME_EXISTS",
+                      "timestamp": "2026-01-15T04:23:23.552Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a new user",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Invalid email or password",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_INVALID_CREDENTIALS",
+                    "timestamp": "2026-01-15T04:23:23.552Z",
+                    "path": "/api/v1/auth/login",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login with username/email and password",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tokens successfully refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "tokenExpired": {
+                    "value": {
+                      "statusCode": 401,
+                      "message": "Authentication token has expired",
+                      "error": "Unauthorized",
+                      "errorCode": "AUTH_TOKEN_EXPIRED",
+                      "timestamp": "2026-01-15T04:23:23.552Z",
+                      "path": "/api/v1/auth/refresh",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  },
+                  "tokenInvalid": {
+                    "value": {
+                      "statusCode": 401,
+                      "message": "Invalid authentication token",
+                      "error": "Unauthorized",
+                      "errorCode": "AUTH_TOKEN_INVALID",
+                      "timestamp": "2026-01-15T04:23:23.552Z",
+                      "path": "/api/v1/auth/refresh",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Refresh access token using refresh token",
+        "tags": ["auth"]
+      }
+    },
+    "/tasks": {
+      "post": {
+        "description": "Creates a new task for the authenticated user",
+        "operationId": "TasksController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new task",
+        "tags": ["tasks"]
+      },
+      "get": {
+        "description": "Retrieve tasks with optional filtering, sorting, and pagination. Results are cached for improved performance.",
+        "operationId": "TasksController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (default: 1)",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 10, max: 100)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search term to filter results (searches: title, description)",
+            "schema": {
+              "example": "meeting",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order: ascending (ASC) or descending (DESC) (default: DESC)",
+            "schema": {
+              "enum": ["ASC", "DESC"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by task status",
+            "schema": {
+              "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "required": false,
+            "in": "query",
+            "description": "Filter by task priority",
+            "schema": {
+              "enum": ["LOW", "MEDIUM", "HIGH"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by (default: CREATED_AT)",
+            "schema": {
+              "enum": ["CREATED_AT", "UPDATED_AT", "DUE_DATE", "TITLE", "PRIORITY", "STATUS"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaginatedTasksResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.381Z",
+                    "path": "/api/v1/tasks",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all tasks",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/statistics": {
+      "get": {
+        "description": "Returns statistics about tasks including counts by status and priority",
+        "operationId": "TasksController_getStatistics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "totalTasks": 42,
+                    "byStatus": {
+                      "TODO": 10,
+                      "IN_PROGRESS": 15,
+                      "COMPLETED": 17
+                    },
+                    "byPriority": {
+                      "LOW": 8,
+                      "MEDIUM": 20,
+                      "HIGH": 14
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get task statistics",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "description": "Retrieves a single task by its UUID",
+        "operationId": "TasksV2Controller_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique CUID identifier for the task",
+            "schema": {
+              "example": "cm4abc123xyz456def789ghi",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions to access this task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access this task",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get a task by ID",
+        "tags": ["tasks-v2"]
+      },
+      "patch": {
+        "description": "Updates an existing task. Only the task owner can update their tasks.",
+        "operationId": "TasksController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique CUID identifier for the task",
+            "schema": {
+              "example": "cm4abc123xyz456def789ghi",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions to access this task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access this task",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update a task",
+        "tags": ["tasks"]
+      },
+      "delete": {
+        "description": "Soft deletes a task (moves to trash). The task can be restored later. Only the task owner can delete their tasks.",
+        "operationId": "TasksController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique CUID identifier for the task",
+            "schema": {
+              "example": "cm4abc123xyz456def789ghi",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Task deleted successfully"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Task successfully deleted"
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions to access this task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "You do not have permission to access this task",
+                    "error": "Forbidden",
+                    "errorCode": "TASK_FORBIDDEN",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a task (soft delete)",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/{id}/purge": {
+      "delete": {
+        "description": "Permanently deletes a task from the database. This action cannot be undone. Admin only.",
+        "operationId": "TasksController_purge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Unique CUID identifier for the task",
+            "schema": {
+              "example": "cm4abc123xyz456def789ghi",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task permanently deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Task permanently deleted"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Task permanently deleted"
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id/purge",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id/purge",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "message": "Forbidden resource",
+                    "error": "Forbidden",
+                    "errorCode": "AUTH_FORBIDDEN",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id/purge",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 404,
+                    "message": "Task not found",
+                    "error": "Not Found",
+                    "errorCode": "TASK_NOT_FOUND",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id/purge",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 429,
+                    "message": "ThrottlerException: Too Many Requests",
+                    "error": "Too Many Requests",
+                    "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
+                    "timestamp": "2026-01-15T04:23:23.386Z",
+                    "path": "/api/v1/tasks/:id/purge",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Permanently delete a task",
+        "tags": ["tasks"]
+      }
+    },
+    "/tasks/next-due-date": {
+      "get": {
+        "description": "Returns the next task that is due based on due date. Only returns tasks that are not completed.",
+        "operationId": "TasksV2Controller_getNextDueTask",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved next due task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": ["Validation error"],
+                    "error": "Bad Request",
+                    "errorCode": "VALIDATION_FAILED",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/next-due-date",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 401,
+                    "message": "Unauthorized",
+                    "error": "Unauthorized",
+                    "errorCode": "AUTH_UNAUTHORIZED",
+                    "timestamp": "2026-01-15T04:23:23.398Z",
+                    "path": "/api/v2/tasks/next-due-date",
+                    "correlationId": "cm4abc123xyz456def789ghi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get next task by due date",
+        "tags": ["tasks-v2"]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Comprehensive health check",
+        "tags": ["health"]
+      }
+    },
+    "/health/liveness": {
+      "get": {
+        "operationId": "HealthController_checkLiveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liveness probe (Kubernetes)",
+        "tags": ["health"]
+      }
+    },
+    "/health/readiness": {
+      "get": {
+        "operationId": "HealthController_checkReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Readiness probe (Kubernetes)",
+        "tags": ["health"]
+      }
+    }
+  },
+  "info": {
+    "title": "NestJS API",
+    "description": "A production-ready REST API built with NestJS",
+    "version": "1.0",
+    "contact": {
+      "name": "API Support",
+      "url": "https://github.com/yourusername/nestjs-api-skeleton",
+      "email": "support@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication & authorization endpoints"
+    },
+    {
+      "name": "tasks",
+      "description": "Tasks module v1 (Example implementation - can be removed)"
+    },
+    {
+      "name": "tasks-v2",
+      "description": "Tasks module v2 - Enhanced with permission checks"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "Authorization",
+        "description": "Enter JWT token",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "description": "Unique username",
+            "example": "johndoe",
+            "minLength": 3,
+            "maxLength": 30
+          },
+          "password": {
+            "type": "string",
+            "description": "User password (min 8 characters, must include uppercase, lowercase, number, and special character)",
+            "example": "SecureP@ssw0rd",
+            "minLength": 8
+          },
+          "firstName": {
+            "type": "string",
+            "description": "User's first name (optional)",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "User's last name (optional)",
+            "example": "Doe"
+          }
+        },
+        "required": ["email", "username", "password"]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cm4abc123xyz456def789ghi"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe"
+          },
+          "firstName": {
+            "type": "object",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "object",
+            "example": "Doe"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["USER", "ADMIN"],
+            "example": "USER"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-11-28T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "firstName",
+          "lastName",
+          "role",
+          "isActive",
+          "createdAt"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT access token (expires in 15 minutes)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token (expires in 7 days)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "description": "User information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["accessToken", "refreshToken", "user"]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username or email",
+            "example": "johndoe"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "SecurePass123!"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": ["refreshToken"]
+      },
+      "CreateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Implement authentication",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task",
+            "example": "Add JWT authentication to the API",
+            "maxLength": 1000
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "TODO",
+            "default": "TODO"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "MEDIUM",
+            "default": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Due date for the task in ISO 8601 date string format",
+            "example": "2025-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["title"]
+      },
+      "TaskResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the task",
+            "example": "clxyz123456789"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Complete project documentation"
+          },
+          "description": {
+            "type": "object",
+            "description": "Detailed description of the task",
+            "example": "Write comprehensive documentation for all API endpoints"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "IN_PROGRESS"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "HIGH"
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Due date of the task",
+            "example": "2025-12-31T23:59:59.000Z"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was completed",
+            "example": "2025-12-10T15:30:00.000Z"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns the task",
+            "example": "cluserid123456"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was created",
+            "example": "2025-12-10T08:00:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the task was last updated",
+            "example": "2025-12-10T09:15:00.000Z"
+          }
+        },
+        "required": ["id", "title", "status", "priority", "userId", "createdAt", "updatedAt"]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total number of items",
+            "example": 42
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "description": "Number of items per page",
+            "example": 10
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages",
+            "example": 5
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "description": "Whether there is a next page",
+            "example": true
+          },
+          "hasPrevPage": {
+            "type": "boolean",
+            "description": "Whether there is a previous page",
+            "example": false
+          }
+        },
+        "required": ["total", "page", "limit", "totalPages", "hasNextPage", "hasPrevPage"]
+      },
+      "PaginatedTasksResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of tasks",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskResponseDto"
+            }
+          },
+          "meta": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetaDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "meta"]
+      },
+      "UpdateTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the task",
+            "example": "Implement authentication",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the task",
+            "example": "Add JWT authentication to the API",
+            "maxLength": 1000
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the task",
+            "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+            "example": "IN_PROGRESS",
+            "default": "TODO"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level of the task",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+            "example": "MEDIUM",
+            "default": "MEDIUM"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "Due date for the task in ISO 8601 date string format",
+            "example": "2025-12-31T23:59:59.000Z",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Timestamp when the task was completed in ISO 8601 format",
+            "example": "2025-12-10T15:30:00.000Z",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

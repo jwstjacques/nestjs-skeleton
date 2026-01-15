@@ -1,0 +1,13 @@
+echo "🔍 Running pre-push checks..."
+
+# Run tests
+echo "Running tests..."
+npm run test
+
+# Check if tests passed
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed! Push aborted."
+  exit 1
+fi
+
+echo "✅ Pre-push checks passed!"

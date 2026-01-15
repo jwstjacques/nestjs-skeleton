@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// CORE ENUMS - Keep these for your project
+// =============================================================================
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// =============================================================================
+// EXAMPLE MODULE: Tasks - DELETE THIS SECTION FOR NEW PROJECTS
+// =============================================================================
+// To remove the Tasks example module:
+// 1. Delete this entire section (enums + model)
+// 2. Remove the "tasks Task[]" relation from the User model below
+// 3. Run: npm run prisma:migrate:dev --name remove-tasks
+// 4. Delete src/modules/tasks/ folder
+// 5. Remove TasksModule from src/app.module.ts
+// =============================================================================
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+
+  // Date fields (stored in UTC)
+  dueDate     DateTime?    @map("due_date") @db.Timestamptz
+  completedAt DateTime?    @map("completed_at") @db.Timestamptz
+
+  // Relations
+  userId      String       @map("user_id")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamps (stored in UTC)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Soft delete (UTC timestamp)
+  deletedAt   DateTime?    @map("deleted_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([createdAt])
+  @@map("tasks")
+}
+
+// =============================================================================
+// END EXAMPLE MODULE: Tasks
+// =============================================================================
+
+// =============================================================================
+// CORE MODELS - Keep these for your project
+// =============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true) @map("is_active")
+
+  // Relations
+  tasks     Task[]   // DELETE THIS LINE when removing Tasks module
+
+  // Timestamps (stored in UTC)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Soft delete (UTC timestamp)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}

@@ -259,7 +259,7 @@ export function ApiDeleteOperation(config: Omit<CrudOperationConfig, "responseTy
  *   description: "Hard-deletes a task from the database (admin only)",
  *   resourceName: "Task",
  *   notFoundErrorCode: ErrorCode.TASK_NOT_FOUND,
- *   path: "/api/v1/tasks/admin/purge/:id",
+ *   path: "/api/v1/tasks/:id/purge",
  * })
  * async hardDelete(@Param('id') id: string) { ... }
  * ```

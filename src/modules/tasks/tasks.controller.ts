@@ -235,7 +235,7 @@ export class TasksController {
     await this.tasksService.remove(id, user);
   }
 
-  @Delete("admin/purge/:id")
+  @Delete(":id/purge")
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
@@ -244,7 +244,7 @@ export class TasksController {
     description: TASK_SWAGGER_DOCS.PURGE_DESCRIPTION,
     resourceName: "Task",
     notFoundErrorCode: TaskErrorCode.TASK_NOT_FOUND,
-    path: "/api/v1/tasks/admin/purge/:id",
+    path: "/api/v1/tasks/:id/purge",
   })
   @ApiTaskIdParam()
   @ApiResponse({

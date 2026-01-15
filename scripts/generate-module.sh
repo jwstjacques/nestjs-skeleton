@@ -710,7 +710,7 @@ export class ${MODULE_NAME_PASCAL}Controller {
     await this.${MODULE_NAME_CAMEL}Service.remove(id, user);
   }
 
-  @Delete("admin/purge/:id")
+  @Delete(":id/purge")
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ short: THROTTLE_LIMITS.SHORT })
@@ -719,7 +719,7 @@ export class ${MODULE_NAME_PASCAL}Controller {
     description: ${MODULE_NAME_SINGULAR_UPPER}_SWAGGER_DOCS.PURGE_DESCRIPTION,
     resourceName: "${MODULE_NAME_SINGULAR_PASCAL}",
     notFoundErrorCode: ${MODULE_NAME_SINGULAR_PASCAL}ErrorCode.${MODULE_NAME_SINGULAR_UPPER}_NOT_FOUND,
-    path: "/api/v1/${MODULE_NAME}/admin/purge/:id",
+    path: "/api/v1/${MODULE_NAME}/:id/purge",
   })
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: ${MODULE_NAME_SINGULAR_UPPER}_SWAGGER_DOCS.PURGE_SUCCESS })
   async purge(@Param("id", ParseCuidPipe) id: string): Promise<void> {

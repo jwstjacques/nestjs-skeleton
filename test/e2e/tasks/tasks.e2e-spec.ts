@@ -506,7 +506,7 @@ describe("TasksController (e2e)", () => {
     });
   });
 
-  describe("DELETE /tasks/admin/purge/:id", () => {
+  describe("DELETE /tasks/:id/purge", () => {
     let adminToken: string;
     let adminUserId: string;
     let taskToPurge: string;
@@ -545,7 +545,7 @@ describe("TasksController (e2e)", () => {
       it("should permanently delete an existing task with admin role", async () => {
         // Purge the task
         const response = await request(app.getHttpServer())
-          .delete(`/api/v1/tasks/admin/purge/${taskToPurge}`)
+          .delete(`/api/v1/tasks/${taskToPurge}/purge`)
           .set("Authorization", `Bearer ${adminToken}`)
           .expect(HttpStatus.NO_CONTENT);
 
@@ -571,7 +571,7 @@ describe("TasksController (e2e)", () => {
         // Deleting a non-existent task returns 204 (success) rather than 404
         // This is actually better behavior - idempotent deletes are RESTful
         const response = await request(app.getHttpServer())
-          .delete(`/api/v1/tasks/admin/purge/${nonExistentId}`)
+          .delete(`/api/v1/tasks/${nonExistentId}/purge`)
           .set("Authorization", `Bearer ${adminToken}`);
 
         // Idempotent delete - returns 204 even if task doesn't exist
@@ -583,7 +583,7 @@ describe("TasksController (e2e)", () => {
       it("should return 403 when non-admin user attempts to purge", async () => {
         // Regular user (non-admin) attempts to purge
         const response = await request(app.getHttpServer())
-          .delete(`/api/v1/tasks/admin/purge/${taskToPurge}`)
+          .delete(`/api/v1/tasks/${taskToPurge}/purge`)
           .set("Authorization", `Bearer ${accessToken}`) // Regular user token
           .expect(HttpStatus.FORBIDDEN);
 

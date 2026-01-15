@@ -9,7 +9,26 @@ datasource db {
   provider = "postgresql"
 }
 
-// Enums
+// =============================================================================
+// CORE ENUMS - Keep these for your project
+// =============================================================================
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// =============================================================================
+// EXAMPLE MODULE: Tasks - DELETE THIS SECTION FOR NEW PROJECTS
+// =============================================================================
+// To remove the Tasks example module:
+// 1. Delete this entire section (enums + model)
+// 2. Remove the "tasks Task[]" relation from the User model below
+// 3. Run: npm run prisma:migrate:dev --name remove-tasks
+// 4. Delete src/modules/tasks/ folder
+// 5. Remove TasksModule from src/app.module.ts
+// =============================================================================
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
@@ -22,37 +41,6 @@ enum TaskPriority {
   MEDIUM
   HIGH
   URGENT
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-// Models
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  firstName String?  @map("first_name")
-  lastName  String?  @map("last_name")
-  role      UserRole @default(USER)
-  isActive  Boolean  @default(true) @map("is_active")
-
-  // Relations
-  tasks     Task[]
-
-  // Timestamps (stored in UTC)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-
-  // Soft delete (UTC timestamp)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
-
-  @@index([email])
-  @@index([username])
-  @@map("users")
 }
 
 model Task {
@@ -83,4 +71,37 @@ model Task {
   @@index([dueDate])
   @@index([createdAt])
   @@map("tasks")
+}
+
+// =============================================================================
+// END EXAMPLE MODULE: Tasks
+// =============================================================================
+
+// =============================================================================
+// CORE MODELS - Keep these for your project
+// =============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true) @map("is_active")
+
+  // Relations
+  tasks     Task[]   // DELETE THIS LINE when removing Tasks module
+
+  // Timestamps (stored in UTC)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Soft delete (UTC timestamp)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
 }

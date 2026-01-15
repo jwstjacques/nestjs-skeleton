@@ -65,7 +65,6 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:migrate:status": "prisma migrate status",
     "prisma:seed": "npx prisma db seed",
-    "db:init": "./scripts/init-db.sh",
     "db:connect": "./scripts/db-connect.sh",
     "db:backup": "./scripts/db-backup.sh",
     "db:restore": "./scripts/db-restore.sh",
@@ -82,9 +81,11 @@
     "kill:3000": "lsof -ti:3000 | xargs kill -9 2>/dev/null || echo 'No process on port 3000'",
     "kill:6379": "lsof -ti:6379 | xargs kill -9 2>/dev/null || echo 'No process on port 6379'",
     "kill:5432": "lsof -ti:5432 | xargs kill -9 2>/dev/null || echo 'No process on port 5432'",
-    "setup": "npm install && docker-compose up -d postgres redis && npm run db:init && npm run prisma:generate",
+    "setup": "npm install && docker-compose up -d postgres redis && npm run prisma:generate",
     "prepare": "husky",
-    "openapi:export": "ts-node scripts/export-openapi.ts"
+    "openapi:export": "ts-node scripts/export-openapi.ts",
+    "=== GENERATORS ===": "",
+    "generate:module": "./scripts/generate-module.sh"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

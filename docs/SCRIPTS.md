@@ -4,17 +4,18 @@ This project includes utility shell scripts in the `scripts/` directory for comm
 
 ## Quick Reference
 
-| Script               | Description                              |
-| -------------------- | ---------------------------------------- |
-| `docker-start.sh`    | Start Docker containers                  |
-| `docker-stop.sh`     | Stop Docker containers                   |
-| `docker-reset.sh`    | Reset Docker environment (removes data!) |
-| `docker-logs.sh`     | Follow Docker container logs             |
-| `db-connect.sh`      | Open PostgreSQL CLI                      |
-| `db-backup.sh`       | Backup database to file                  |
-| `db-restore.sh`      | Restore database from backup             |
-| `health-check.sh`    | Check service health status              |
-| `generate-module.sh` | Generate new NestJS module               |
+| Script                   | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `docker-start.sh`        | Start Docker containers                  |
+| `docker-stop.sh`         | Stop Docker containers                   |
+| `docker-reset.sh`        | Reset Docker environment (removes data!) |
+| `docker-logs.sh`         | Follow Docker container logs             |
+| `db-connect.sh`          | Open PostgreSQL CLI                      |
+| `db-backup.sh`           | Backup database to file                  |
+| `db-restore.sh`          | Restore database from backup             |
+| `health-check.sh`        | Check service health status              |
+| `generate-module.sh`     | Generate new NestJS module               |
+| `remove-tasks-module.sh` | Remove Tasks example module              |
 
 ## Docker Scripts
 
@@ -241,6 +242,62 @@ src/modules/products/
 5. Add tests
 
 See [MODULE-CREATION-CHECKLIST.md](./MODULE-CREATION-CHECKLIST.md) for complete steps.
+
+## Remove Tasks Module
+
+### remove-tasks-module.sh
+
+Removes the example Tasks module from the skeleton project, leaving a clean slate for your own modules.
+
+```bash
+./scripts/remove-tasks-module.sh
+```
+
+**What it does:**
+
+1. Removes `src/modules/tasks/` directory
+2. Removes `test/unit/tasks/` and `test/e2e/tasks/` directories
+3. Updates `app.module.ts` to remove TasksModule
+4. Updates Prisma schema to remove Task model and enums
+5. Updates rate-limiting tests to use `xit()` (skipped)
+6. Cleans task references from swagger config
+7. Regenerates Prisma client
+8. Creates a migration to drop the tasks table
+9. Builds the project to verify changes
+
+**Output:**
+
+```
+==============================================================================
+                     Remove Tasks Module Script
+==============================================================================
+
+Step 1: Removing task source files...
+  ✓ Removed src/modules/tasks/
+
+Step 2: Removing task unit tests...
+  ✓ Removed test/unit/tasks/
+
+...
+
+==============================================================================
+Tasks module removal complete!
+==============================================================================
+
+Next steps:
+  1. Review the changes with: git diff
+  2. Apply the migration with: npm run prisma:migrate:dev
+  3. Run tests to verify: npm run test
+  4. Run E2E tests: npm run test:e2e
+```
+
+**Important notes:**
+
+- Documentation files are preserved for reference
+- Rate limiting tests are skipped (not deleted) until you add a new module
+- The migration is created but NOT applied automatically
+
+See [scripts/REMOVE_TASKS_MODULE.md](./scripts/REMOVE_TASKS_MODULE.md) for detailed documentation.
 
 ## Making Scripts Executable
 

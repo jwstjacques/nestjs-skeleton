@@ -54,12 +54,13 @@ This folder contains comprehensive documentation for the NestJS API Skeleton pro
 
 ## Deployment & Operations
 
-| Document                                             | Description                                                    |
-| ---------------------------------------------------- | -------------------------------------------------------------- |
-| [PRODUCTION.md](PRODUCTION.md)                       | Production deployment, health checks, monitoring, and security |
-| [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) | Complete list of all environment variables                     |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md)             | Common issues and solutions                                    |
-| [SCRIPTS.md](SCRIPTS.md)                             | Shell scripts reference (docker, db, module generator)         |
+| Document                                                         | Description                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------- |
+| [PRODUCTION.md](PRODUCTION.md)                                   | Production deployment, health checks, monitoring, and security |
+| [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)             | Complete list of all environment variables                     |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md)                         | Common issues and solutions                                    |
+| [SCRIPTS.md](SCRIPTS.md)                                         | Shell scripts reference (docker, db, module generator)         |
+| [scripts/REMOVE_TASKS_MODULE.md](scripts/REMOVE_TASKS_MODULE.md) | Remove Tasks example module script documentation               |
 
 ## Module Development
 

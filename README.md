@@ -210,6 +210,7 @@ Comprehensive documentation is available in the [docs/](docs/) folder:
 | [Configuration](docs/CONFIGURATION.md)                    | Environment variables and config    |
 | [Authentication](docs/AUTHENTICATION.md)                  | JWT auth, login, registration       |
 | [Testing](docs/TESTING.md)                                | Unit tests, E2E tests, coverage     |
+| [Debugging](docs/DEBUGGING.md)                            | VS Code breakpoint debugging        |
 | [Production](docs/PRODUCTION.md)                          | Deployment, health checks, security |
 | [Architecture Patterns](docs/architecture/PATTERNS.md)    | DAL, DTOs, exceptions               |
 | [Module Creation](docs/MODULE-CREATION-CHECKLIST.md)      | Adding new modules                  |

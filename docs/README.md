@@ -33,6 +33,7 @@ This folder contains comprehensive documentation for the NestJS API Skeleton pro
 | Document                                 | Description                                                           |
 | ---------------------------------------- | --------------------------------------------------------------------- |
 | [TESTING.md](TESTING.md)                 | Test structure, utilities, unit tests, and E2E tests                  |
+| [DEBUGGING.md](DEBUGGING.md)             | VS Code debugging with breakpoints for app and tests                  |
 | [COVERAGE.md](COVERAGE.md)               | Code coverage thresholds and branch coverage explanation              |
 | [POSTMAN-TESTING.md](POSTMAN-TESTING.md) | Postman testing overview (see [postman/](../postman/) for full guide) |
 
@@ -114,6 +115,7 @@ This folder contains comprehensive documentation for the NestJS API Skeleton pro
 ### For Troubleshooting
 
 1. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues
-2. [ERROR_CODES.md](ERROR_CODES.md) - Understand errors
-3. [LOGGING.md](LOGGING.md) - Debug with logs
-4. [COVERAGE.md](COVERAGE.md) - Coverage questions
+2. [DEBUGGING.md](DEBUGGING.md) - VS Code breakpoint debugging
+3. [ERROR_CODES.md](ERROR_CODES.md) - Understand errors
+4. [LOGGING.md](LOGGING.md) - Debug with logs
+5. [COVERAGE.md](COVERAGE.md) - Coverage questions

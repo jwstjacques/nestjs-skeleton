@@ -80,6 +80,8 @@
     "docker:prod": "docker-compose up -d app",
     "=== SETUP ===": "",
     "kill:3000": "lsof -ti:3000 | xargs kill -9 2>/dev/null || echo 'No process on port 3000'",
+    "kill:6379": "lsof -ti:6379 | xargs kill -9 2>/dev/null || echo 'No process on port 6379'",
+    "kill:5432": "lsof -ti:5432 | xargs kill -9 2>/dev/null || echo 'No process on port 5432'",
     "setup": "npm install && docker-compose up -d postgres redis && npm run db:init && npm run prisma:generate",
     "prepare": "husky",
     "openapi:export": "ts-node scripts/export-openapi.ts"

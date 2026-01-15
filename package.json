@@ -60,7 +60,7 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "=== DATABASE ===": "",
     "prisma:generate": "prisma generate",
-    "prisma:studio": "prisma studio",
+    "prisma:studio": "./scripts/prisma-studio.sh",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:migrate:status": "prisma migrate status",

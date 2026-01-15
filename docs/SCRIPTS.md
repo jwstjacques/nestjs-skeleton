@@ -13,6 +13,7 @@ This project includes utility shell scripts in the `scripts/` directory for comm
 | `db-connect.sh`          | Open PostgreSQL CLI                      |
 | `db-backup.sh`           | Backup database to file                  |
 | `db-restore.sh`          | Restore database from backup             |
+| `prisma-studio.sh`       | Open Prisma Studio (non-production only) |
 | `health-check.sh`        | Check service health status              |
 | `generate-module.sh`     | Generate new NestJS module               |
 | `remove-tasks-module.sh` | Remove Tasks example module              |
@@ -169,6 +170,47 @@ Decompressing backup...
 Restoring database...
 ✅ Database restored successfully!
 ```
+
+### prisma-studio.sh
+
+Opens Prisma Studio, a visual database management interface. **Blocked in production environments for security.**
+
+```bash
+npm run prisma:studio
+# or
+./scripts/prisma-studio.sh
+```
+
+**Safety features:**
+
+1. Blocks execution when `NODE_ENV=production`
+2. Warns if `DATABASE_URL` contains "prod" or "production"
+3. Requires confirmation for production-like database URLs
+
+**Output (development):**
+
+```
+🔍 Starting Prisma Studio...
+   Environment: development
+
+Prisma Studio is up on http://localhost:5555
+```
+
+**Output (production - blocked):**
+
+```
+❌ Error: Prisma Studio is disabled in production environments
+
+Prisma Studio provides direct database access and should not
+be used in production for security reasons.
+
+For production database access, use:
+  - Read replicas with proper access controls
+  - Database admin tools with audit logging
+  - ./scripts/db-connect.sh for CLI access
+```
+
+---
 
 ## Health Check
 

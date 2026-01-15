@@ -152,7 +152,7 @@ Copy `.env.example` to `.env` and adjust values as needed. Key variables:
 | `REDIS_HOST`         | Redis host                                | localhost   |
 | `REDIS_PORT`         | Redis port                                | 6379        |
 | `SWAGGER_ENABLED`    | Enable Swagger UI                         | true        |
-| `SWAGGER_PATH`       | Swagger UI path                           | api/docs    |
+| `SWAGGER_PATH`       | Swagger UI path                           | docs        |
 
 See `.env.example` for complete variable documentation.
 

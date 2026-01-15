@@ -11,8 +11,6 @@ import { AppConfigSchema } from "../schemas/app.schema";
  * - NODE_ENV: Application environment (development|staging|production|test)
  * - PORT: Server port number
  * - HOST: Server host
- * - API_PREFIX: API route prefix
- * - API_VERSION: API version number
  *
  * @returns Validated AppConfig object
  */
@@ -21,7 +19,6 @@ export default registerAs("app", () => {
     nodeEnv: process.env.NODE_ENV,
     port: process.env.PORT,
     host: process.env.HOST,
-    apiPrefix: process.env.API_PREFIX,
   };
 
   // Validate and parse with Zod schema

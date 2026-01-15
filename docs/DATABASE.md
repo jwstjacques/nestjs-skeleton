@@ -83,7 +83,7 @@ npm run db:seed
 ### Utilities
 
 ```bash
-# Open Prisma Studio
+# Open Prisma Studio (standalone)
 npm run prisma:studio
 
 # Check migration status
@@ -92,6 +92,35 @@ npm run prisma:migrate:status
 # Generate Prisma Client
 npm run prisma:generate
 ```
+
+## Prisma Studio
+
+Prisma Studio is a visual database browser that allows you to view and edit data directly.
+
+### Automatic Launch (Development)
+
+When running `npm run start:dev`, Prisma Studio automatically starts in the background:
+
+- **URL**: <http://localhost:5555>
+- Only runs in development mode (not in production)
+- Runs silently without opening a browser window
+- Shuts down automatically when the dev server stops
+
+### Manual Launch
+
+To run Prisma Studio separately:
+
+```bash
+npm run prisma:studio
+```
+
+### Features
+
+- Browse all database tables
+- View, filter, and sort records
+- Create, update, and delete records
+- View relationships between tables
+- Export data as JSON
 
 ## Seeded Data
 

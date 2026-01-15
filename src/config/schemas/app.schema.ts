@@ -26,12 +26,6 @@ export const AppConfigSchema = z.object({
    * @default 'localhost'
    */
   host: z.string().default("localhost"),
-
-  /**
-   * API prefix (e.g., 'api')
-   * @default 'api'
-   */
-  apiPrefix: z.string().default("api"),
 });
 
 /**

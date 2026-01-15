@@ -63,6 +63,17 @@ cp .env.example .env
 npm run start:dev
 ```
 
+When the dev server starts, you'll have access to:
+
+| Service       | URL                                   |
+| ------------- | ------------------------------------- |
+| API           | <http://localhost:3000>               |
+| Swagger Docs  | <http://localhost:3000/docs>          |
+| Health Check  | <http://localhost:3000/api/v1/health> |
+| Prisma Studio | <http://localhost:5555>               |
+
+Prisma Studio launches automatically in development mode for visual database browsing.
+
 ## API Documentation
 
 ### Swagger UI

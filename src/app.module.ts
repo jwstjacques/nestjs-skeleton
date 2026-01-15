@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerModule } from "@nestjs/throttler";
@@ -93,8 +93,8 @@ import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // Apply correlation ID middleware first to generate/validate correlation IDs
-    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
+    consumer.apply(CorrelationIdMiddleware).forRoutes({ path: "*path", method: RequestMethod.ALL });
     // Apply request logger middleware second to log with correlation IDs
-    consumer.apply(RequestLoggerMiddleware).forRoutes("*");
+    consumer.apply(RequestLoggerMiddleware).forRoutes({ path: "*path", method: RequestMethod.ALL });
   }
 }

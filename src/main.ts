@@ -10,6 +10,7 @@ import { createSwaggerConfig, createHelmetConfig } from "./config";
 import compression from "compression";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import helmet from "helmet";
+import { spawn, ChildProcess } from "child_process";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,15 +39,10 @@ async function bootstrap() {
     credentials: corsCredentials,
   });
 
-  // Global prefix - use from config
-  const apiPrefix = configService.get<string>("app.apiPrefix", "api");
-
-  app.setGlobalPrefix(apiPrefix);
-
-  // Enable URI versioning for API v2 endpoints
+  // Enable URI versioning (routes: /api/v1/tasks, /api/v2/tasks)
   app.enableVersioning({
     type: VersioningType.URI,
-    prefix: "v", // Adds 'v' before version number (e.g., /api/v1/, /api/v2/)
+    prefix: "api/v",
     defaultVersion: "1",
   });
 
@@ -75,7 +71,7 @@ async function bootstrap() {
   const config = createSwaggerConfig(configService);
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup(`${apiPrefix}/${swaggerPath}`, app, document, {
+  SwaggerModule.setup(swaggerPath, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: "alpha",
@@ -98,13 +94,32 @@ async function bootstrap() {
   const logger = app.get<LoggerService>(WINSTON_MODULE_NEST_PROVIDER);
 
   logger.log(`🚀 Application is running on: http://${host}:${port}`, "Bootstrap");
-  logger.log(
-    `📚 API Documentation: http://${host}:${port}/${apiPrefix}/${swaggerPath}`,
-    "Bootstrap",
-  );
-  logger.log(`❤️  Health check: http://${host}:${port}/${apiPrefix}/v1/health`, "Bootstrap");
-  logger.log(`🔄 API v1: http://${host}:${port}/${apiPrefix}/v1/*`, "Bootstrap");
-  logger.log(`🆕 API v2: http://${host}:${port}/${apiPrefix}/v2/*`, "Bootstrap");
+  logger.log(`📚 API Documentation: http://${host}:${port}/${swaggerPath}`, "Bootstrap");
+  logger.log(`❤️  Health check: http://${host}:${port}/api/v1/health`, "Bootstrap");
+  logger.log(`🔄 API v1: http://${host}:${port}/api/v1/*`, "Bootstrap");
+  logger.log(`🆕 API v2: http://${host}:${port}/api/v2/*`, "Bootstrap");
+
+  // Prisma Studio (non-production only)
+  const nodeEnv = configService.get<string>("app.env", "development");
+  let studioProcess: ChildProcess | null = null;
+  const studioPort = 5555;
+
+  if (nodeEnv !== "production") {
+    studioProcess = spawn(
+      "npx",
+      ["prisma", "studio", "--port", String(studioPort), "--browser", "none"],
+      {
+        stdio: "ignore",
+        detached: false,
+      },
+    );
+
+    studioProcess.on("error", (err) => {
+      logger.warn(`Prisma Studio failed to start: ${err.message}`, "Bootstrap");
+    });
+
+    logger.log(`🔍 Prisma Studio: http://${host}:${studioPort}`, "Bootstrap");
+  }
 
   // Enable graceful shutdown
   app.enableShutdownHooks();
@@ -116,6 +131,11 @@ async function bootstrap() {
     process.on(signal, () => {
       void (async () => {
         logger.log(`Received ${signal}, starting graceful shutdown...`, "Bootstrap");
+
+        // Kill Prisma Studio if running
+        if (studioProcess) {
+          studioProcess.kill();
+        }
 
         try {
           await app.close();

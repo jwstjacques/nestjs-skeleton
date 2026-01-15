@@ -286,17 +286,10 @@ export class TestSetup {
 
     const app = moduleFixture.createNestApplication();
 
-    // Set global prefix (default to 'api' to match main.ts)
-    const prefix = options.globalPrefix !== undefined ? options.globalPrefix : "api";
-
-    if (prefix) {
-      app.setGlobalPrefix(prefix);
-    }
-
-    // Enable URI versioning (matches main.ts)
+    // Enable URI versioning (matches main.ts - routes: /api/v1/tasks, /api/v2/tasks)
     app.enableVersioning({
       type: VersioningType.URI,
-      prefix: "v", // Adds 'v' before version number (e.g., /api/v1/, /api/v2/)
+      prefix: "api/v",
       defaultVersion: "1",
     });
 

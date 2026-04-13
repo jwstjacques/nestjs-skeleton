@@ -225,36 +225,53 @@ describe("TasksService", () => {
   });
 
   describe("update", () => {
+    // The update method now uses tasksDal.transaction() with optimistic locking.
+    // Mock transaction to execute the callback with a mock tx client.
+    const mockTx = {
+      task: {
+        findUnique: jest.fn(),
+        updateMany: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      mockTasksDal.transaction.mockImplementation(
+        async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
+      );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     describe("Success", () => {
       it("should update a task", async () => {
         const updateTaskDto = { title: "Updated Title" };
-        const updatedTask = { ...mockTask, ...updateTaskDto };
+        const updatedTask = { ...mockTask, ...updateTaskDto, version: 1 };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue(updatedTask);
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         const result = await service.update("test-task-id", updateTaskDto, mockTestUser);
 
         expect(result).toEqual(updatedTask);
-        expect(mockTasksDal.update).toHaveBeenCalled();
+        expect(mockTx.task.updateMany).toHaveBeenCalled();
       });
 
       it("should set completedAt when status changes to COMPLETED", async () => {
         const updateTaskDto = { status: TaskStatus.COMPLETED };
+        const updatedTask = { ...mockTask, status: TaskStatus.COMPLETED, completedAt: new Date() };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          status: TaskStatus.COMPLETED,
-          completedAt: new Date(),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: expect.any(Date) as Date,
+            data: expect.objectContaining({
+              completedAt: expect.any(Date) as Date,
+            }),
           }),
         );
       });
@@ -262,58 +279,56 @@ describe("TasksService", () => {
       it("should clear completedAt when status changes from COMPLETED", async () => {
         const updateTaskDto = { status: TaskStatus.TODO };
         const completedTask = { ...mockTask, status: TaskStatus.COMPLETED };
+        const updatedTask = { ...completedTask, status: TaskStatus.TODO, completedAt: null };
 
-        mockTasksDal.findUnique.mockResolvedValue(completedTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...completedTask,
-          status: TaskStatus.TODO,
-          completedAt: null,
-        });
+        mockTx.task.findUnique
+          .mockResolvedValueOnce(completedTask)
+          .mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: null,
+            data: expect.objectContaining({
+              completedAt: null,
+            }),
           }),
         );
       });
 
       it("should update task with dueDate", async () => {
         const updateTaskDto = { dueDate: "2025-12-31T00:00:00.000Z" };
+        const updatedTask = { ...mockTask, dueDate: new Date(updateTaskDto.dueDate) };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          dueDate: new Date(updateTaskDto.dueDate),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            dueDate: new Date(updateTaskDto.dueDate),
+            data: expect.objectContaining({
+              dueDate: new Date(updateTaskDto.dueDate),
+            }),
           }),
         );
       });
 
       it("should update task with completedAt", async () => {
         const updateTaskDto = { completedAt: "2025-12-10T00:00:00.000Z" };
+        const updatedTask = { ...mockTask, completedAt: new Date(updateTaskDto.completedAt) };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          completedAt: new Date(updateTaskDto.completedAt),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: new Date(updateTaskDto.completedAt),
+            data: expect.objectContaining({
+              completedAt: new Date(updateTaskDto.completedAt),
+            }),
           }),
         );
       });
@@ -321,18 +336,34 @@ describe("TasksService", () => {
   });
 
   describe("remove", () => {
+    const mockTx = {
+      task: {
+        findUnique: jest.fn(),
+        updateMany: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      mockTasksDal.transaction.mockImplementation(
+        async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
+      );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     describe("Success", () => {
       it("should soft delete a task", async () => {
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.softDelete.mockResolvedValue({
-          ...mockTask,
-          deletedAt: new Date(),
-        });
+        const deletedTask = { ...mockTask, deletedAt: new Date() };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(deletedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         const result = await service.remove("test-task-id", mockTestUser);
 
         expect(result.deletedAt).toBeDefined();
-        expect(mockTasksDal.softDelete).toHaveBeenCalledWith("test-task-id");
+        expect(mockTx.task.updateMany).toHaveBeenCalled();
       });
     });
   });

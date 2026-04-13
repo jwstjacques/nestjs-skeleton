@@ -3,6 +3,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiBearerAuth,
@@ -43,7 +44,7 @@ export class AuthController {
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Login with username/email and password" })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: "User successfully logged in",
     type: AuthResponseDto,
   })
@@ -65,7 +66,7 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @ApiOperation({ summary: "Refresh access token using refresh token" })
   @ApiBearerAuth("JWT-auth")
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: "Tokens successfully refreshed",
     schema: {
       example: AUTH_SWAGGER_EXAMPLES.tokensRefreshed,
@@ -79,7 +80,7 @@ export class AuthController {
       },
     },
   })
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @CurrentUser("userId") userId: string) {
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @CurrentUser("id") userId: string) {
     const tokens = await this.authService.refreshTokens(userId);
 
     return { data: tokens };

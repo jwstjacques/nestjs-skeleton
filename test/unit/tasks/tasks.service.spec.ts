@@ -1,7 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TasksService } from "../../../src/modules/tasks/tasks.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
-import { TaskNotFoundException } from "../../../src/modules/tasks/exceptions";
+import {
+  TaskNotFoundException,
+  TaskForbiddenException,
+} from "../../../src/modules/tasks/exceptions";
 import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { TaskSortBy } from "../../../src/modules/tasks/dto/query-task.dto";
 import { SortOrder } from "../../../src/common/constants";
@@ -360,15 +363,14 @@ describe("TasksService", () => {
     describe("Success", () => {
       it("should return task statistics", async () => {
         mockTasksDal.count.mockResolvedValueOnce(10);
-        mockTasksDal.groupBy
-          .mockResolvedValueOnce([
-            { status: TaskStatus.TODO, _count: 5 },
-            { status: TaskStatus.COMPLETED, _count: 5 },
-          ])
-          .mockResolvedValueOnce([
-            { priority: TaskPriority.HIGH, _count: 6 },
-            { priority: TaskPriority.LOW, _count: 4 },
-          ]);
+        mockTasksDal.countByStatus.mockResolvedValueOnce([
+          { status: TaskStatus.TODO, _count: 5 },
+          { status: TaskStatus.COMPLETED, _count: 5 },
+        ]);
+        mockTasksDal.countByPriority.mockResolvedValueOnce([
+          { priority: TaskPriority.HIGH, _count: 6 },
+          { priority: TaskPriority.LOW, _count: 4 },
+        ]);
         mockTasksDal.countOverdue.mockResolvedValueOnce(2);
 
         const result = await service.getStatistics(mockTestUser);
@@ -383,12 +385,13 @@ describe("TasksService", () => {
         const user = { id: "user-123", role: UserRole.USER };
 
         mockTasksDal.count.mockResolvedValueOnce(5);
-        mockTasksDal.groupBy
-          .mockResolvedValueOnce([
-            { status: TaskStatus.TODO, _count: 3 },
-            { status: TaskStatus.IN_PROGRESS, _count: 2 },
-          ])
-          .mockResolvedValueOnce([{ priority: TaskPriority.HIGH, _count: 5 }]);
+        mockTasksDal.countByStatus.mockResolvedValueOnce([
+          { status: TaskStatus.TODO, _count: 3 },
+          { status: TaskStatus.IN_PROGRESS, _count: 2 },
+        ]);
+        mockTasksDal.countByPriority.mockResolvedValueOnce([
+          { priority: TaskPriority.HIGH, _count: 5 },
+        ]);
         mockTasksDal.countOverdue.mockResolvedValueOnce(1);
 
         const result = await service.getStatistics(user);
@@ -455,13 +458,13 @@ describe("TasksService", () => {
     });
 
     describe("Failure", () => {
-      it("should throw ForbiddenException for non-owner/non-admin", async () => {
+      it("should throw TaskForbiddenException for non-owner/non-admin", async () => {
         const otherUser = { id: "other-user-id", role: "USER" };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
         await expect(service.findOneWithPermissions("task-id", otherUser)).rejects.toThrow(
-          "You do not have permission to access this task",
+          TaskForbiddenException,
         );
       });
 

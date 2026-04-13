@@ -119,6 +119,8 @@ export const TASK_MESSAGES = {
   ALREADY_COMPLETED: (id: string) => `Task is already completed: ${id}`,
   INVALID_STATUS: (status: string) => `Invalid task status: ${status}`,
   INVALID_PRIORITY: (priority: string) => `Invalid task priority: ${priority}`,
+  CONFLICT: (id: string) =>
+    `Task ${id} was modified by another request. Please retry with the latest version.`,
 } as const;
 
 // ============================================================================

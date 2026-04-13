@@ -3,7 +3,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../database/prisma.service";
-import { UserNotFoundException, UserInactiveException } from "../../common/exceptions";
+import { AuthenticationFailedException, UserInactiveException } from "../../common/exceptions";
 
 export interface JwtPayload {
   sub: string;
@@ -21,8 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>("JWT_SECRET") || "your-secret-key-change-in-production",
+      secretOrKey: configService.getOrThrow<string>("security.jwt.secret"),
     });
   }
 
@@ -32,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     });
 
     if (!user) {
-      throw new UserNotFoundException(payload.sub);
+      throw new AuthenticationFailedException();
     }
 
     if (!user.isActive) {

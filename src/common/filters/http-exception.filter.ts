@@ -135,8 +135,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
     // Handle standard Error
     else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
+      message = DEFAULT_ERROR_MESSAGE;
+      error = DEFAULT_ERROR_NAME;
       errorCode = ErrorCode.SYSTEM_INTERNAL_ERROR;
     }
     // Handle unknown errors

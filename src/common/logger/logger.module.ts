@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { WinstonModule } from "nest-winston";
 import * as winston from "winston";
-import * as path from "path";
-import { AsyncLocalStorage } from "async_hooks";
+import * as path from "node:path";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 /**
  * Custom Winston format to include correlation ID and user ID in log entries

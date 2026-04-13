@@ -406,9 +406,9 @@ describe("TasksDal", () => {
     });
   });
 
-  describe("groupBy", () => {
+  describe("countByStatus", () => {
     describe("Success", () => {
-      it("should group tasks by status", async () => {
+      it("should count tasks grouped by status", async () => {
         // Create tasks with different statuses
         const task1 = await tasksDal.create({
           title: "Todo 1",
@@ -433,28 +433,22 @@ describe("TasksDal", () => {
 
         cleanup.trackTasks([task1.id, task2.id, task3.id]);
 
-        const grouped = await tasksDal.groupBy({
-          by: ["status"],
-          where: { userId: testUserId, deletedAt: null },
-          _count: true,
-        });
+        const grouped = await tasksDal.countByStatus({ userId: testUserId });
 
-        type GroupedByStatus = { status: TaskStatus; _count: number };
-
-        const todoGroup = grouped.find(
-          (g: any) => (g as GroupedByStatus).status === TaskStatus.TODO,
-        ) as GroupedByStatus | undefined;
+        const todoGroup = grouped.find((g) => g.status === TaskStatus.TODO);
 
         expect(todoGroup?._count).toBe(2);
 
-        const inProgressGroup = grouped.find(
-          (g: any) => (g as GroupedByStatus).status === TaskStatus.IN_PROGRESS,
-        ) as GroupedByStatus | undefined;
+        const inProgressGroup = grouped.find((g) => g.status === TaskStatus.IN_PROGRESS);
 
         expect(inProgressGroup?._count).toBe(1);
       });
+    });
+  });
 
-      it("should group tasks by priority", async () => {
+  describe("countByPriority", () => {
+    describe("Success", () => {
+      it("should count tasks grouped by priority", async () => {
         const highTask = await tasksDal.create({
           title: "High Priority",
           status: TaskStatus.TODO,
@@ -471,11 +465,7 @@ describe("TasksDal", () => {
 
         cleanup.trackTasks([highTask.id, mediumTask.id]);
 
-        const grouped = await tasksDal.groupBy({
-          by: ["priority"],
-          where: { userId: testUserId, deletedAt: null },
-          _count: true,
-        });
+        const grouped = await tasksDal.countByPriority({ userId: testUserId });
 
         expect(grouped.length).toBeGreaterThanOrEqual(2);
       });

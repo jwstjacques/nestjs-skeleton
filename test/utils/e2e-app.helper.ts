@@ -6,14 +6,14 @@ import * as request from "supertest";
 import { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { TransformInterceptor } from "@app/common/interceptors/transform.interceptor";
-import { PrismaModule } from "@app/database/prisma.module";
+import { DatabaseModule } from "@app/database/database.module";
 import { CorrelationService } from "@app/common/correlation";
 
 export async function createApp(
   prismaClient: PrismaClient,
 ): Promise<[INestApplication, request.Agent]> {
   const moduleRef: TestingModule = await Test.createTestingModule({
-    imports: [AppModule, PrismaModule.forTest(prismaClient)],
+    imports: [AppModule, DatabaseModule.forTest(prismaClient)],
   }).compile();
 
   const app = moduleRef.createNestApplication();

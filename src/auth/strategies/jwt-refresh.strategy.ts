@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../database/prisma.service";
 import { JwtPayload } from "./jwt.strategy";
-import { UserNotFoundException, UserInactiveException } from "../../common/exceptions";
+import { AuthenticationFailedException, UserInactiveException } from "../../common/exceptions";
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
@@ -15,9 +15,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
     super({
       jwtFromRequest: ExtractJwt.fromBodyField("refreshToken"),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>("JWT_REFRESH_SECRET") ||
-        "your-refresh-secret-change-in-production",
+      secretOrKey: configService.getOrThrow<string>("security.jwt.refreshSecret"),
     });
   }
 
@@ -27,7 +25,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
     });
 
     if (!user) {
-      throw new UserNotFoundException(payload.sub);
+      throw new AuthenticationFailedException();
     }
 
     if (!user.isActive) {
@@ -35,7 +33,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
     }
 
     return {
-      userId: payload.sub,
+      id: payload.sub,
       username: payload.username,
       email: payload.email,
       role: payload.role,

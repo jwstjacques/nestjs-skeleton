@@ -10,7 +10,7 @@ import { createSwaggerConfig, createHelmetConfig } from "./config";
 import compression from "compression";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import helmet from "helmet";
-import { spawn, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "node:child_process";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -67,23 +67,27 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   // Swagger configuration - pass configService
+  const swaggerEnabled = configService.get<boolean>("swagger.enabled", true);
   const swaggerPath = configService.get<string>("swagger.path", "docs");
-  const config = createSwaggerConfig(configService);
-  const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup(swaggerPath, app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      tagsSorter: "alpha",
-      operationsSorter: "alpha",
-    },
-    customSiteTitle: "Task API Docs",
-    customfavIcon: "https://nestjs.com/img/logo-small.svg",
-    customCss: `
-      .swagger-ui .topbar { display: none }
-      .swagger-ui .info { margin: 50px 0 }
-    `,
-  });
+  if (swaggerEnabled) {
+    const config = createSwaggerConfig(configService);
+    const document = SwaggerModule.createDocument(app, config);
+
+    SwaggerModule.setup(swaggerPath, app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorter: "alpha",
+        operationsSorter: "alpha",
+      },
+      customSiteTitle: "Task API Docs",
+      customfavIcon: "https://nestjs.com/img/logo-small.svg",
+      customCss: `
+        .swagger-ui .topbar { display: none }
+        .swagger-ui .info { margin: 50px 0 }
+      `,
+    });
+  }
 
   // Port configuration - get from config
   const port = configService.get<number>("app.port", 3000);
@@ -94,18 +98,19 @@ async function bootstrap() {
   const logger = app.get<LoggerService>(WINSTON_MODULE_NEST_PROVIDER);
 
   logger.log(`🚀 Application is running on: http://${host}:${port}`, "Bootstrap");
-  logger.log(`📚 API Documentation: http://${host}:${port}/${swaggerPath}`, "Bootstrap");
+  if (swaggerEnabled) {
+    logger.log(`📚 API Documentation: http://${host}:${port}/${swaggerPath}`, "Bootstrap");
+  }
   logger.log(`❤️  Health check: http://${host}:${port}/api/v1/health`, "Bootstrap");
   logger.log(`🔄 API v1: http://${host}:${port}/api/v1/*`, "Bootstrap");
   logger.log(`🆕 API v2: http://${host}:${port}/api/v2/*`, "Bootstrap");
 
-  // Prisma Studio (non-production only)
-  const nodeEnv = configService.get<string>("app.env", "development");
-  let studioProcess: ChildProcess | null = null;
+  // Prisma Studio (development only)
+  const nodeEnv = configService.get<string>("app.nodeEnv", "development");
   const studioPort = 5555;
 
-  if (nodeEnv !== "production") {
-    studioProcess = spawn(
+  if (nodeEnv === "development") {
+    const studioProcess: ChildProcess = spawn(
       "npx",
       ["prisma", "studio", "--port", String(studioPort), "--browser", "none"],
       {
@@ -123,31 +128,6 @@ async function bootstrap() {
 
   // Enable graceful shutdown
   app.enableShutdownHooks();
-
-  // Handle shutdown signals
-  const signals = ["SIGTERM", "SIGINT"] as const;
-
-  signals.forEach((signal) => {
-    process.on(signal, () => {
-      void (async () => {
-        logger.log(`Received ${signal}, starting graceful shutdown...`, "Bootstrap");
-
-        // Kill Prisma Studio if running
-        if (studioProcess) {
-          studioProcess.kill();
-        }
-
-        try {
-          await app.close();
-          logger.log("Application closed successfully", "Bootstrap");
-          process.exit(0);
-        } catch (error) {
-          logger.error("Error during shutdown", error as Error, "Bootstrap");
-          process.exit(1);
-        }
-      })();
-    });
-  });
 }
 
 void bootstrap();

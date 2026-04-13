@@ -13,6 +13,7 @@ export default [
       ".lintstagedrc.js",
       "jest.config.js",
       "prisma.config.ts",
+      "prisma/seed.ts",
       "dist",
       "node_modules",
       "coverage",

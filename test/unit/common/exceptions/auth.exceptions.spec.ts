@@ -5,8 +5,8 @@ import {
   TokenInvalidException,
   UserNotFoundException,
   UserInactiveException,
-  EmailExistsException,
-  UsernameExistsException,
+  RegistrationConflictException,
+  AuthenticationFailedException,
   WeakPasswordException,
 } from "../../../../src/common/exceptions/auth.exceptions";
 import { ErrorCode } from "../../../../src/common/constants/error-codes.constants";
@@ -90,26 +90,16 @@ describe("Auth Exceptions", () => {
 
   describe("UserNotFoundException", () => {
     describe("Success", () => {
-      it("should create exception with default message when no identifier provided", () => {
+      it("should create exception with unified authentication failed message", () => {
         const exception = new UserNotFoundException();
 
         expect(exception.getStatus()).toBe(HttpStatus.UNAUTHORIZED);
-        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_USER_NOT_FOUND);
+        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_AUTHENTICATION_FAILED);
 
         const response = exception.getResponse() as Record<string, unknown>;
 
-        expect(response.message).toBe("User account not found");
-        expect(response.errorCode).toBe(ErrorCode.AUTH_USER_NOT_FOUND);
-      });
-
-      it("should create exception with identifier in message", () => {
-        const userId = "clh9k7x2a0000qmxbzv0q0001";
-        const exception = new UserNotFoundException(userId);
-
-        const response = exception.getResponse() as Record<string, unknown>;
-
-        expect(response.message).toBe(`User not found: ${userId}`);
-        expect(response.errorCode).toBe(ErrorCode.AUTH_USER_NOT_FOUND);
+        expect(response.message).toBe("Authentication failed");
+        expect(response.errorCode).toBe(ErrorCode.AUTH_AUTHENTICATION_FAILED);
       });
     });
   });
@@ -139,54 +129,34 @@ describe("Auth Exceptions", () => {
     });
   });
 
-  describe("EmailExistsException", () => {
+  describe("RegistrationConflictException", () => {
     describe("Success", () => {
-      it("should create exception with default message when no email provided", () => {
-        const exception = new EmailExistsException();
+      it("should create exception with unified registration failed message", () => {
+        const exception = new RegistrationConflictException();
 
         expect(exception.getStatus()).toBe(HttpStatus.CONFLICT);
-        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_EMAIL_EXISTS);
+        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_REGISTRATION_FAILED);
 
         const response = exception.getResponse() as Record<string, unknown>;
 
-        expect(response.message).toBe("Email address is already registered");
-        expect(response.errorCode).toBe(ErrorCode.AUTH_EMAIL_EXISTS);
-      });
-
-      it("should create exception with email in message", () => {
-        const email = "test@example.com";
-        const exception = new EmailExistsException(email);
-
-        const response = exception.getResponse() as Record<string, unknown>;
-
-        expect(response.message).toBe(`Email already registered: ${email}`);
-        expect(response.errorCode).toBe(ErrorCode.AUTH_EMAIL_EXISTS);
+        expect(response.message).toBe("Registration failed");
+        expect(response.errorCode).toBe(ErrorCode.AUTH_REGISTRATION_FAILED);
       });
     });
   });
 
-  describe("UsernameExistsException", () => {
+  describe("AuthenticationFailedException", () => {
     describe("Success", () => {
-      it("should create exception with default message when no username provided", () => {
-        const exception = new UsernameExistsException();
+      it("should create exception with unified authentication failed message", () => {
+        const exception = new AuthenticationFailedException();
 
-        expect(exception.getStatus()).toBe(HttpStatus.CONFLICT);
-        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_USERNAME_EXISTS);
-
-        const response = exception.getResponse() as Record<string, unknown>;
-
-        expect(response.message).toBe("Username is already taken");
-        expect(response.errorCode).toBe(ErrorCode.AUTH_USERNAME_EXISTS);
-      });
-
-      it("should create exception with username in message", () => {
-        const username = "johndoe";
-        const exception = new UsernameExistsException(username);
+        expect(exception.getStatus()).toBe(HttpStatus.UNAUTHORIZED);
+        expect(exception.getErrorCode()).toBe(ErrorCode.AUTH_AUTHENTICATION_FAILED);
 
         const response = exception.getResponse() as Record<string, unknown>;
 
-        expect(response.message).toBe(`Username already taken: ${username}`);
-        expect(response.errorCode).toBe(ErrorCode.AUTH_USERNAME_EXISTS);
+        expect(response.message).toBe("Authentication failed");
+        expect(response.errorCode).toBe(ErrorCode.AUTH_AUTHENTICATION_FAILED);
       });
     });
   });

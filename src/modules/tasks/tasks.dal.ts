@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
-import { Task, Prisma, TaskStatus } from "@prisma/client";
+import { Task, Prisma, TaskStatus, TaskPriority } from "@prisma/client";
 
 /**
  * Data Access Layer for Tasks
@@ -98,15 +98,43 @@ export class TasksDal {
   }
 
   /**
-   * Group tasks by a field for statistics
-   * Note: Uses explicit any due to Prisma's complex conditional types
-   * that don't work well with wrapper methods. The runtime behavior
-   * and return types are still properly typed by Prisma.
+   * Count tasks grouped by status
+   * @param where Filter criteria
+   * @returns Array of status counts
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  groupBy(args: any): any {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return this.prisma.task.groupBy(args);
+  async countByStatus(
+    where: Prisma.TaskWhereInput,
+  ): Promise<{ status: TaskStatus; _count: number }[]> {
+    const results = await this.prisma.task.groupBy({
+      by: ["status"],
+      where: { ...where, deletedAt: null },
+      _count: true,
+    });
+
+    return results.map((r) => ({
+      status: r.status,
+      _count: typeof r._count === "number" ? r._count : (r._count as { _all: number })._all,
+    }));
+  }
+
+  /**
+   * Count tasks grouped by priority
+   * @param where Filter criteria
+   * @returns Array of priority counts
+   */
+  async countByPriority(
+    where: Prisma.TaskWhereInput,
+  ): Promise<{ priority: TaskPriority; _count: number }[]> {
+    const results = await this.prisma.task.groupBy({
+      by: ["priority"],
+      where: { ...where, deletedAt: null },
+      _count: true,
+    });
+
+    return results.map((r) => ({
+      priority: r.priority,
+      _count: typeof r._count === "number" ? r._count : (r._count as { _all: number })._all,
+    }));
   }
 
   /**
@@ -126,6 +154,15 @@ export class TasksDal {
   }
 
   /**
+   * Execute operations within a Prisma interactive transaction
+   * @param fn Transaction callback receiving a transaction client
+   * @returns Result of the transaction callback
+   */
+  async transaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(fn);
+  }
+
+  /**
    * Find the next due task for a user (v2 API)
    * Returns the task with the nearest upcoming due date
    * Only includes active tasks (TODO or IN_PROGRESS)
@@ -140,14 +177,14 @@ export class TasksDal {
         userId,
         deletedAt: null,
         dueDate: {
-          gte: now, // Due date greater than or equal to now
+          gte: now,
         },
         status: {
-          in: [TaskStatus.TODO, TaskStatus.IN_PROGRESS], // Only active tasks
+          in: [TaskStatus.TODO, TaskStatus.IN_PROGRESS],
         },
       },
       orderBy: {
-        dueDate: "asc", // Nearest due date first
+        dueDate: "asc",
       },
     });
   }

@@ -21,10 +21,8 @@ export class TokenInvalidException extends ApplicationException {
 }
 
 export class UserNotFoundException extends ApplicationException {
-  constructor(identifier?: string) {
-    const message = identifier ? `User not found: ${identifier}` : undefined;
-
-    super(ErrorCode.AUTH_USER_NOT_FOUND, message, HttpStatus.UNAUTHORIZED);
+  constructor() {
+    super(ErrorCode.AUTH_AUTHENTICATION_FAILED, "Authentication failed", HttpStatus.UNAUTHORIZED);
   }
 }
 
@@ -34,19 +32,15 @@ export class UserInactiveException extends ApplicationException {
   }
 }
 
-export class EmailExistsException extends ApplicationException {
-  constructor(email?: string) {
-    const message = email ? `Email already registered: ${email}` : undefined;
-
-    super(ErrorCode.AUTH_EMAIL_EXISTS, message, HttpStatus.CONFLICT);
+export class RegistrationConflictException extends ApplicationException {
+  constructor() {
+    super(ErrorCode.AUTH_REGISTRATION_FAILED, "Registration failed", HttpStatus.CONFLICT);
   }
 }
 
-export class UsernameExistsException extends ApplicationException {
-  constructor(username?: string) {
-    const message = username ? `Username already taken: ${username}` : undefined;
-
-    super(ErrorCode.AUTH_USERNAME_EXISTS, message, HttpStatus.CONFLICT);
+export class AuthenticationFailedException extends ApplicationException {
+  constructor() {
+    super(ErrorCode.AUTH_AUTHENTICATION_FAILED, "Authentication failed", HttpStatus.UNAUTHORIZED);
   }
 }
 

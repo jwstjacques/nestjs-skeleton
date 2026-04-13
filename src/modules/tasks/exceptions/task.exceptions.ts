@@ -8,32 +8,8 @@ export class TaskForbiddenException extends ApplicationException {
   }
 }
 
-export class TaskInvalidStatusException extends ApplicationException {
-  constructor(status: string) {
-    super(
-      TaskErrorCode.TASK_INVALID_STATUS,
-      TASK_MESSAGES.INVALID_STATUS(status),
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-}
-
-export class TaskInvalidPriorityException extends ApplicationException {
-  constructor(priority: string) {
-    super(
-      TaskErrorCode.TASK_INVALID_PRIORITY,
-      TASK_MESSAGES.INVALID_PRIORITY(priority),
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-}
-
-export class TaskAlreadyCompletedException extends ApplicationException {
+export class TaskConflictException extends ApplicationException {
   constructor(taskId: string) {
-    super(
-      TaskErrorCode.TASK_ALREADY_COMPLETED,
-      TASK_MESSAGES.ALREADY_COMPLETED(taskId),
-      HttpStatus.CONFLICT,
-    );
+    super(TaskErrorCode.TASK_CONFLICT, TASK_MESSAGES.CONFLICT(taskId), HttpStatus.CONFLICT);
   }
 }

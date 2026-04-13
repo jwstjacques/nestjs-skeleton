@@ -1,14 +1,16 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { ApiTags, ApiOperation, ApiOkResponse } from "@nestjs/swagger";
 import {
   HealthCheckService,
-  HttpHealthIndicator,
   PrismaHealthIndicator,
   HealthCheck,
   MemoryHealthIndicator,
   DiskHealthIndicator,
+  type HealthIndicatorResult,
 } from "@nestjs/terminus";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 import { PrismaService } from "../database/prisma.service";
 import { Public } from "@app/auth/decorators";
 
@@ -17,12 +19,12 @@ import { Public } from "@app/auth/decorators";
 export class HealthController {
   constructor(
     private health: HealthCheckService,
-    private http: HttpHealthIndicator,
     private prismaHealth: PrismaHealthIndicator,
     private memory: MemoryHealthIndicator,
     private disk: DiskHealthIndicator,
     private prisma: PrismaService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   @Public()
@@ -54,6 +56,8 @@ export class HealthController {
     return this.health.check([
       // Database health
       () => this.prismaHealth.pingCheck("database", this.prisma),
+      // Redis health
+      () => this.checkRedis(),
       // Memory heap check - get threshold from config
       () =>
         this.memory.checkHeap(
@@ -97,6 +101,8 @@ export class HealthController {
     return this.health.check([
       // Database must be available
       () => this.prismaHealth.pingCheck("database", this.prisma),
+      // Redis health
+      () => this.checkRedis(),
       // Memory within limits - get thresholds from config
       () =>
         this.memory.checkHeap(
@@ -104,5 +110,23 @@ export class HealthController {
           this.configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024,
         ),
     ]);
+  }
+
+  private async checkRedis(): Promise<HealthIndicatorResult> {
+    try {
+      const testKey = "health:ping";
+      const testValue = Date.now().toString();
+
+      await this.cacheManager.set(testKey, testValue, 10);
+      const result = await this.cacheManager.get<string>(testKey);
+
+      if (result === testValue) {
+        return { redis: { status: "up" } };
+      }
+
+      return { redis: { status: "down", message: "Read-back mismatch" } };
+    } catch (error) {
+      return { redis: { status: "down", message: (error as Error).message } };
+    }
   }
 }

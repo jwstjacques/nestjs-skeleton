@@ -143,8 +143,13 @@ export class TasksService {
       // Auto-set completedAt when status changes to COMPLETED
       if (updateTaskDto.status === TaskStatus.COMPLETED && !updateTaskDto.completedAt) {
         updateData.completedAt = new Date();
-      } else if (updateTaskDto.status && updateTaskDto.status !== TaskStatus.COMPLETED) {
-        // Clear completedAt when status changes from COMPLETED
+      } else if (
+        updateTaskDto.status &&
+        updateTaskDto.status !== TaskStatus.COMPLETED &&
+        !updateTaskDto.completedAt
+      ) {
+        // Clear completedAt when status changes from COMPLETED,
+        // but only if no explicit completedAt was provided
         updateData.completedAt = null;
       }
 

@@ -1,0 +1,20 @@
+# Local development defaults.
+# Copy to docker-compose.override.yml (which is gitignored).
+# Docker Compose automatically merges override files with docker-compose.yml.
+#
+#   cp docker-compose.override.yml.example docker-compose.override.yml
+#
+# Do NOT commit docker-compose.override.yml to version control.
+
+services:
+  redis:
+    command: redis-server --appendonly yes --requirepass devpassword
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "devpassword", "ping"]
+
+  app:
+    environment:
+      REDIS_PASSWORD: devpassword
+      CORS_ORIGIN: "*"
+      JWT_SECRET: dev-jwt-secret-that-is-at-least-32-characters-long-for-local
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-at-least-32-characters-long-local

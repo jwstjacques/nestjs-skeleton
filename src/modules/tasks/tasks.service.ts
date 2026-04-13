@@ -4,11 +4,18 @@ import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto }
 import { TaskNotFoundException, TaskForbiddenException, TaskConflictException } from "./exceptions";
 import { TasksDal } from "./tasks.dal";
 
-interface UserContext {
+/**
+ * Context for the authenticated user making the request.
+ * Matches the shape returned by JWT strategy validate().
+ */
+export interface UserContext {
   id: string;
   role: UserRole;
 }
 
+/**
+ * Aggregated task statistics for a user or all users (admin).
+ */
 export interface TaskStatistics {
   total: number;
   byStatus: Record<TaskStatus, number>;
@@ -297,7 +304,7 @@ export class TasksService {
    * Find one task by ID with permission checks (v2 API)
    * User must be the task owner or an admin
    */
-  async findOneWithPermissions(id: string, user: { id: string; role: string }): Promise<Task> {
+  async findOneWithPermissions(id: string, user: { id: string; role: UserRole }): Promise<Task> {
     this.logger.log(`Finding task ${id} for user ${user.id} (with permission check)`);
 
     const task = await this.tasksDal.findUnique(id);
@@ -308,7 +315,7 @@ export class TasksService {
 
     // Permission check: user must be task owner or admin
     const isOwner = task.userId === user.id;
-    const isAdmin = user.role === "ADMIN";
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isOwner && !isAdmin) {
       this.logger.warn(

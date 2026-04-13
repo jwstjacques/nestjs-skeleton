@@ -17,15 +17,28 @@ import { Public } from "@app/auth/decorators";
 @ApiTags("health")
 @Controller("health")
 export class HealthController {
+  private readonly heapThresholdBytes: number;
+  private readonly rssThresholdBytes: number;
+  private readonly diskThresholdPercent: number;
+  private readonly diskPath: string;
+
   constructor(
     private health: HealthCheckService,
     private prismaHealth: PrismaHealthIndicator,
     private memory: MemoryHealthIndicator,
     private disk: DiskHealthIndicator,
     private prisma: PrismaService,
-    private configService: ConfigService,
+    configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) {
+    this.heapThresholdBytes =
+      configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024;
+    this.rssThresholdBytes =
+      configService.get<number>("observability.health.memoryRssMB", 300) * 1024 * 1024;
+    this.diskThresholdPercent =
+      configService.get<number>("observability.health.diskThreshold", 0.9) * 100;
+    this.diskPath = configService.get<string>("observability.health.diskPath", "/");
+  }
 
   @Public()
   @Get()
@@ -38,6 +51,7 @@ export class HealthController {
         status: "ok",
         info: {
           database: { status: "up" },
+          redis: { status: "up" },
           memory_heap: { status: "up" },
           memory_rss: { status: "up" },
           storage: { status: "up" },
@@ -45,6 +59,7 @@ export class HealthController {
         error: {},
         details: {
           database: { status: "up" },
+          redis: { status: "up" },
           memory_heap: { status: "up" },
           memory_rss: { status: "up" },
           storage: { status: "up" },
@@ -54,28 +69,14 @@ export class HealthController {
   })
   check() {
     return this.health.check([
-      // Database health
       () => this.prismaHealth.pingCheck("database", this.prisma),
-      // Redis health
       () => this.checkRedis(),
-      // Memory heap check - get threshold from config
-      () =>
-        this.memory.checkHeap(
-          "memory_heap",
-          this.configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024,
-        ),
-      // Memory RSS check - get threshold from config
-      () =>
-        this.memory.checkRSS(
-          "memory_rss",
-          this.configService.get<number>("observability.health.memoryRssMB", 300) * 1024 * 1024,
-        ),
-      // Disk storage check - get threshold and path from config
+      () => this.memory.checkHeap("memory_heap", this.heapThresholdBytes),
+      () => this.memory.checkRSS("memory_rss", this.rssThresholdBytes),
       () =>
         this.disk.checkStorage("storage", {
-          thresholdPercent:
-            this.configService.get<number>("observability.health.diskThreshold", 0.9) * 100,
-          path: this.configService.get<string>("observability.health.diskPath", "/"),
+          thresholdPercent: this.diskThresholdPercent,
+          path: this.diskPath,
         }),
     ]);
   }
@@ -86,10 +87,7 @@ export class HealthController {
   @ApiOperation({ summary: "Liveness probe (Kubernetes)" })
   @ApiOkResponse({ description: "Service is alive" })
   checkLiveness() {
-    return this.health.check([
-      // Basic check - is the service responding?
-      () => Promise.resolve({ api: { status: "up" } }),
-    ]);
+    return this.health.check([() => Promise.resolve({ api: { status: "up" } })]);
   }
 
   @Public()
@@ -99,16 +97,9 @@ export class HealthController {
   @ApiOkResponse({ description: "Service is ready to accept traffic" })
   checkReadiness() {
     return this.health.check([
-      // Database must be available
       () => this.prismaHealth.pingCheck("database", this.prisma),
-      // Redis health
       () => this.checkRedis(),
-      // Memory within limits - get thresholds from config
-      () =>
-        this.memory.checkHeap(
-          "memory_heap",
-          this.configService.get<number>("observability.health.memoryHeapMB", 150) * 1024 * 1024,
-        ),
+      () => this.memory.checkHeap("memory_heap", this.heapThresholdBytes),
     ]);
   }
 

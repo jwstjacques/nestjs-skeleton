@@ -96,7 +96,7 @@ export const OPTIONAL_ENV_VARS = {
   [ENV_KEYS.SWAGGER_PATH]: "docs",
   [ENV_KEYS.PAGINATION_DEFAULT_LIMIT]: "10",
   [ENV_KEYS.PAGINATION_MAX_LIMIT]: "100",
-  [ENV_KEYS.CORS_ORIGIN]: "http://localhost:3000",
+  [ENV_KEYS.CORS_ORIGIN]: "*", // Development only. Production must set explicit origins.
   [ENV_KEYS.LOG_DIR]: "logs",
   [ENV_KEYS.LOG_FILE]: "logs/app.log",
 } as const;

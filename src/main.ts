@@ -107,7 +107,7 @@ async function bootstrap() {
 
   // Prisma Studio (development only)
   const nodeEnv = configService.get<string>("app.nodeEnv", "development");
-  const studioPort = 5555;
+  const studioPort = configService.get<number>("app.prismaStudioPort", 5555);
 
   if (nodeEnv === "development") {
     const studioProcess: ChildProcess = spawn(

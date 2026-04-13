@@ -596,7 +596,7 @@ describe("TasksService", () => {
   describe("findOneWithPermissions", () => {
     describe("Success", () => {
       it("should allow task owner to access their task", async () => {
-        const user = { id: "test-user-id", role: "USER" };
+        const user = { id: "test-user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
@@ -607,7 +607,7 @@ describe("TasksService", () => {
       });
 
       it("should allow admin to access any task", async () => {
-        const adminUser = { id: "admin-id", role: "ADMIN" };
+        const adminUser = { id: "admin-id", role: UserRole.ADMIN };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
@@ -619,7 +619,7 @@ describe("TasksService", () => {
 
     describe("Failure", () => {
       it("should throw TaskForbiddenException for non-owner/non-admin", async () => {
-        const otherUser = { id: "other-user-id", role: "USER" };
+        const otherUser = { id: "other-user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
@@ -629,7 +629,7 @@ describe("TasksService", () => {
       });
 
       it("should throw TaskNotFoundException if task does not exist", async () => {
-        const user = { id: "user-id", role: "USER" };
+        const user = { id: "user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(null);
 

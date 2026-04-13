@@ -45,7 +45,7 @@ enum TaskPriority {
 
 model Task {
   id          String       @id @default(cuid())
-  title       String
+  title       String       @db.VarChar(200)
   description String?     @db.VarChar(1000)
   status      TaskStatus   @default(TODO)
   priority    TaskPriority @default(MEDIUM)

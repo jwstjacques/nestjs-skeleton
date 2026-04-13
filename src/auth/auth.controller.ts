@@ -24,6 +24,7 @@ export class AuthController {
 
   @Public()
   @Post("register")
+  @Throttle({ strict: { ttl: 3600000, limit: 5 } })
   @ApiOperation({ summary: "Register a new user" })
   @ApiCreatedResponse({
     description: "User successfully registered",

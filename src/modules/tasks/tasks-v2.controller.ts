@@ -1,9 +1,11 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiOkResponse } from "@nestjs/swagger";
+import { plainToInstance } from "class-transformer";
 import { TasksService } from "./tasks.service";
 import { TaskResponseDto } from "./dto";
 import { ParseCuidPipe } from "../../common/pipes";
 import { CurrentUser } from "../../auth/decorators";
+import { ValidatedUser } from "../../auth/interfaces/validated-user.interface";
 import { TASK_SWAGGER_DOCS, TaskErrorCode } from "./constants";
 import {
   ApiAuthValidationResponses,
@@ -11,13 +13,6 @@ import {
   ApiTaskIdParam,
   ApiForbiddenTaskResponse,
 } from "../../common/decorators";
-
-interface UserPayload {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
 
 /**
  * Tasks v2 Controller - API Versioning
@@ -48,8 +43,14 @@ export class TasksV2Controller {
     description: TASK_SWAGGER_DOCS.GET_NEXT_DUE_SUCCESS,
     type: TaskResponseDto,
   })
-  async getNextDueTask(@CurrentUser() user: UserPayload): Promise<TaskResponseDto | null> {
-    return this.tasksService.findNextDueTask(user.id);
+  async getNextDueTask(@CurrentUser() user: ValidatedUser): Promise<TaskResponseDto | null> {
+    const task = await this.tasksService.findNextDueTask(user.id);
+
+    if (!task) {
+      return null;
+    }
+
+    return plainToInstance(TaskResponseDto, task, { excludeExtraneousValues: true });
   }
 
   /**
@@ -69,8 +70,10 @@ export class TasksV2Controller {
   @ApiForbiddenTaskResponse("/api/v2/tasks/:id")
   async findOne(
     @Param("id", ParseCuidPipe) id: string,
-    @CurrentUser() user: UserPayload,
+    @CurrentUser() user: ValidatedUser,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.findOneWithPermissions(id, user);
+    const task = await this.tasksService.findOneWithPermissions(id, user);
+
+    return plainToInstance(TaskResponseDto, task, { excludeExtraneousValues: true });
   }
 }

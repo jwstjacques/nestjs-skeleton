@@ -115,6 +115,12 @@ export class AuthService {
     };
   }
 
+  // Pre-computed dummy hash to ensure constant-time response when user is not found.
+  // Prevents timing oracle that distinguishes "user exists" (~250ms bcrypt) from
+  // "user not found" (<10ms no bcrypt).
+  private static readonly DUMMY_HASH =
+    "$2b$12$LJ3m4ys3Lg6Fc3CmH7JFMuZZ0v7gLFGkNOKUhLA5a2dJ7GXKD8W2S";
+
   async validateUser(usernameOrEmail: string, password: string): Promise<User | null> {
     const context = this.correlationService.getLogContext();
 
@@ -126,13 +132,17 @@ export class AuthService {
     });
 
     if (!user) {
-      this.logger.debug(`${context} User not found: ${usernameOrEmail}`);
+      // Compare against dummy hash to prevent timing oracle
+      await bcrypt.compare(password, AuthService.DUMMY_HASH);
+      this.logger.warn(`${context} Login failed for: ${usernameOrEmail}`);
 
       return null;
     }
 
     if (!user.isActive) {
-      this.logger.warn(`${context} Login attempt for inactive user: ${usernameOrEmail}`);
+      // Compare against dummy hash to prevent timing oracle
+      await bcrypt.compare(password, AuthService.DUMMY_HASH);
+      this.logger.warn(`${context} Login failed for: ${usernameOrEmail}`);
 
       return null;
     }
@@ -140,7 +150,7 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      this.logger.warn(`${context} Invalid password for user: ${usernameOrEmail}`);
+      this.logger.warn(`${context} Login failed for: ${usernameOrEmail}`);
 
       return null;
     }

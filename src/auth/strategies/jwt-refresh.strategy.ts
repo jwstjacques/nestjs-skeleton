@@ -5,6 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../database/prisma.service";
 import { JwtPayload } from "./jwt.strategy";
 import { AuthenticationFailedException, UserInactiveException } from "../../common/exceptions";
+import { ValidatedUser } from "../interfaces/validated-user.interface";
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
@@ -19,7 +20,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload): Promise<ValidatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub, deletedAt: null },
     });

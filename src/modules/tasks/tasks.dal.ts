@@ -94,7 +94,7 @@ export class TasksDal {
    * @param id Task ID
    */
   async delete(id: string): Promise<void> {
-    await this.prisma.$executeRaw`DELETE FROM "tasks" WHERE id = ${id}`;
+    await this.prisma.task.delete({ where: { id } });
   }
 
   /**

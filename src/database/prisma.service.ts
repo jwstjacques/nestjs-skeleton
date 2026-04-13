@@ -42,7 +42,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       user: url.username,
       password: url.password,
       database: url.pathname.slice(1), // Remove leading slash
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      ssl: useSsl ? { rejectUnauthorized: true } : false,
       max: DB_CONNECTION.MAX_POOL_SIZE,
       min: DB_CONNECTION.MIN_POOL_SIZE,
       idleTimeoutMillis: DB_CONNECTION.IDLE_TIMEOUT,

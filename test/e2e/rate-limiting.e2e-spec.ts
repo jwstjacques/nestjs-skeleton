@@ -1,6 +1,7 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import request from "supertest";
 import * as bcrypt from "bcrypt";
 import { AppModule } from "../../src/app.module";
@@ -36,6 +37,23 @@ describe("Rate Limiting (e2e)", () => {
     app = await Setup.createTestApp([AppModule], { enableThrottling: true });
     prisma = app.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
+
+    // Flush stale throttle counters from previous test suites.
+    // The auth e2e suite shares the same Redis and its counters
+    // (written with longer TTLs) persist across app instances.
+    try {
+      const throttlerStorage = app.get(ThrottlerStorageRedisService);
+
+      if (throttlerStorage.redis) {
+        const keys = await throttlerStorage.redis.keys("*throttler*");
+
+        if (keys.length > 0) {
+          await throttlerStorage.redis.del(...keys);
+        }
+      }
+    } catch {
+      // Redis not available or no throttler keys -- continue
+    }
 
     // Create the test user directly via Prisma to avoid rate limiting
     // on the registration endpoint during setup. Then login to get tokens.
@@ -95,6 +113,25 @@ describe("Rate Limiting (e2e)", () => {
 
     await cleanup.cleanupAll();
     await Setup.closeTestApp(app);
+  });
+
+  // Flush throttle keys before each test to ensure clean state.
+  // Without this, a test that intentionally exceeds the limit poisons
+  // subsequent tests in the same suite.
+  beforeEach(async () => {
+    try {
+      const throttlerStorage = app.get(ThrottlerStorageRedisService);
+
+      if (throttlerStorage.redis) {
+        const keys = await throttlerStorage.redis.keys("*throttler*");
+
+        if (keys.length > 0) {
+          await throttlerStorage.redis.del(...keys);
+        }
+      }
+    } catch {
+      // continue
+    }
   });
 
   describe("Short-term Rate Limiting (per second)", () => {

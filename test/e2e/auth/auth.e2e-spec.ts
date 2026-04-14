@@ -414,6 +414,152 @@ describe("Auth API (e2e)", () => {
   });
 
   // ============================================================================
+  // Logout Tests
+  // ============================================================================
+
+  describe("POST /auth/logout", () => {
+    describe("Success", () => {
+      it("should logout successfully with valid access token", async () => {
+        const userData = TestDataFactory.createUserData();
+        const regResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/register")
+          .send(userData)
+          .expect(HttpStatus.CREATED);
+
+        const accessToken = regResponse.body.data.accessToken;
+        const userId = regResponse.body.data.user.id;
+
+        cleanup.trackUser(userId);
+
+        const logoutResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        expect(logoutResponse.body.data).toHaveProperty("message", "Successfully logged out");
+      });
+
+      it("should reject the token on subsequent requests after logout", async () => {
+        const userData = TestDataFactory.createUserData();
+        const regResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/register")
+          .send(userData)
+          .expect(HttpStatus.CREATED);
+
+        const accessToken = regResponse.body.data.accessToken;
+        const userId = regResponse.body.data.user.id;
+
+        cleanup.trackUser(userId);
+
+        // Verify token works before logout
+        await request(app.getHttpServer())
+          .get("/api/v1/tasks")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        // Logout
+        await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        // Verify token is rejected after logout
+        await request(app.getHttpServer())
+          .get("/api/v1/tasks")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.UNAUTHORIZED);
+      });
+
+      it("should not affect other tokens after logout", async () => {
+        const userData = TestDataFactory.createUserData();
+        const regResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/register")
+          .send(userData)
+          .expect(HttpStatus.CREATED);
+
+        const userId = regResponse.body.data.user.id;
+
+        cleanup.trackUser(userId);
+
+        // Login to get a second token
+        const loginResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/login")
+          .send({ username: userData.username, password: userData.password })
+          .expect(HttpStatus.OK);
+
+        const firstToken = regResponse.body.data.accessToken;
+        const secondToken = loginResponse.body.data.accessToken;
+
+        // Logout with first token
+        await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .set("Authorization", `Bearer ${firstToken}`)
+          .expect(HttpStatus.OK);
+
+        // First token should be rejected
+        await request(app.getHttpServer())
+          .get("/api/v1/tasks")
+          .set("Authorization", `Bearer ${firstToken}`)
+          .expect(HttpStatus.UNAUTHORIZED);
+
+        // Second token should still work
+        await request(app.getHttpServer())
+          .get("/api/v1/tasks")
+          .set("Authorization", `Bearer ${secondToken}`)
+          .expect(HttpStatus.OK);
+      });
+
+      it("should allow re-login after logout", async () => {
+        const userData = TestDataFactory.createUserData();
+        const regResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/register")
+          .send(userData)
+          .expect(HttpStatus.CREATED);
+
+        const accessToken = regResponse.body.data.accessToken;
+        const userId = regResponse.body.data.user.id;
+
+        cleanup.trackUser(userId);
+
+        // Logout
+        await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .expect(HttpStatus.OK);
+
+        // Re-login should work
+        const loginResponse = await request(app.getHttpServer())
+          .post("/api/v1/auth/login")
+          .send({ username: userData.username, password: userData.password })
+          .expect(HttpStatus.OK);
+
+        const newToken = loginResponse.body.data.accessToken;
+
+        // New token should work
+        await request(app.getHttpServer())
+          .get("/api/v1/tasks")
+          .set("Authorization", `Bearer ${newToken}`)
+          .expect(HttpStatus.OK);
+      });
+    });
+
+    describe("Failure", () => {
+      it("should return 401 when logging out without a token", async () => {
+        await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .expect(HttpStatus.UNAUTHORIZED);
+      });
+
+      it("should return 401 when logging out with an invalid token", async () => {
+        await request(app.getHttpServer())
+          .post("/api/v1/auth/logout")
+          .set("Authorization", "Bearer invalid-token")
+          .expect(HttpStatus.UNAUTHORIZED);
+      });
+    });
+  });
+
+  // ============================================================================
   // Authorization Tests
   // ============================================================================
 

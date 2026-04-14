@@ -15,6 +15,7 @@ export enum TaskErrorCode {
   TASK_CREATION_FAILED = "TASK_CREATION_FAILED",
   TASK_UPDATE_FAILED = "TASK_UPDATE_FAILED",
   TASK_DELETE_FAILED = "TASK_DELETE_FAILED",
+  TASK_CONFLICT = "TASK_CONFLICT",
 }
 
 /**
@@ -30,4 +31,6 @@ export const TaskErrorMessages: Record<TaskErrorCode, string> = {
   [TaskErrorCode.TASK_CREATION_FAILED]: "Failed to create task",
   [TaskErrorCode.TASK_UPDATE_FAILED]: "Failed to update task",
   [TaskErrorCode.TASK_DELETE_FAILED]: "Failed to delete task",
+  [TaskErrorCode.TASK_CONFLICT]:
+    "Task was modified by another request. Please retry with the latest version.",
 };

@@ -1,44 +1,47 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
 import { Request, Response } from "express";
 
+/** Paths that should NOT receive Location headers even on successful POST. */
+const EXCLUDED_AUTH_PATHS = [
+  "/api/v1/auth/login",
+  "/api/v1/auth/refresh",
+  "/api/v1/auth/register",
+] as const;
+
+/** HTTP methods that create or modify resources and may need Location headers. */
+const MUTATION_METHODS = ["POST", "PUT", "PATCH"] as const;
+
+/** Response data shape with optional nested resource. */
+interface ResponseData {
+  id?: string;
+  data?: { id?: string };
+}
+
 @Injectable()
 export class LocationHeaderInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LocationHeaderInterceptor.name);
 
-  // Paths that should NOT receive Location headers even on successful POST
-  private readonly excludedPaths = [
-    "/api/v1/auth/login", // Login returns tokens for existing user
-    "/api/v1/auth/refresh", // Refresh returns new tokens, doesn't create a resource
-    "/api/v1/auth/register", // Register is an operation, not a resource creation
-  ];
-
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
     const method = request.method;
 
-    // Only process POST, PUT, and PATCH requests
-    if (!["POST", "PUT", "PATCH"].includes(method)) {
+    if (!(MUTATION_METHODS as readonly string[]).includes(method)) {
       return next.handle();
     }
 
-    // Skip excluded paths (login, refresh, etc.)
-    if (this.excludedPaths.includes(request.path)) {
+    if ((EXCLUDED_AUTH_PATHS as readonly string[]).includes(request.path)) {
       return next.handle();
     }
 
     return next.handle().pipe(
-      tap((data) => {
-        // Only add Location header for successful responses (2xx status codes)
+      tap((data: unknown) => {
         const statusCode = response.statusCode;
 
         if (statusCode >= 200 && statusCode < 300) {
-          const locationUrl = this.buildLocationUrl(request, data);
+          const locationUrl = this.buildLocationUrl(request, data as ResponseData);
 
           if (locationUrl) {
             response.setHeader("Location", locationUrl);
@@ -49,31 +52,29 @@ export class LocationHeaderInterceptor implements NestInterceptor {
     );
   }
 
-  /**
-   * Builds the Location URL based on the request and response data
-   */
-  private buildLocationUrl(request: Request, data: any): string | null {
+  private buildLocationUrl(request: Request, data: ResponseData): string | null {
     try {
-      // Extract the resource ID from the response
       const resourceId = this.extractResourceId(data);
 
       if (!resourceId) {
         return null;
       }
 
-      // Get the base URL
       const protocol = request.protocol;
       const host = request.get("host");
+
+      if (!host) {
+        return null;
+      }
+
       const baseUrl = `${protocol}://${host}`;
 
-      // For POST requests, append the ID to the current path
       if (request.method === "POST") {
         const path = request.path.endsWith("/") ? request.path.slice(0, -1) : request.path;
 
         return `${baseUrl}${path}/${resourceId}`;
       }
 
-      // For PUT and PATCH requests, use the current full URL (which already includes the ID)
       return `${baseUrl}${request.path}`;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -84,25 +85,17 @@ export class LocationHeaderInterceptor implements NestInterceptor {
     }
   }
 
-  /**
-   * Extracts the resource ID from the response data
-   * Handles various response structures (wrapped, unwrapped, nested)
-   */
-  private extractResourceId(data: any): string | null {
+  private extractResourceId(data: ResponseData): string | null {
     if (!data || typeof data !== "object") {
       return null;
     }
 
-    // Check if data has an 'id' field directly
     if (data.id) {
       return data.id;
     }
 
-    // Check if data is wrapped in a 'data' field
-    if (data.data && typeof data.data === "object") {
-      if (data.data.id) {
-        return data.data.id;
-      }
+    if (data.data && typeof data.data === "object" && data.data.id) {
+      return data.data.id;
     }
 
     return null;

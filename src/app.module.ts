@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/c
 import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AppDal } from "./app.dal";
@@ -29,28 +30,35 @@ import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard";
     AppConfigModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => [
-        {
-          name: "short",
-          ttl: config.get<number>("throttle.short.ttl", 1000),
-          limit: config.get<number>("throttle.short.limit", 10),
-        },
-        {
-          name: "medium",
-          ttl: config.get<number>("throttle.medium.ttl", 10000),
-          limit: config.get<number>("throttle.medium.limit", 50),
-        },
-        {
-          name: "long",
-          ttl: config.get<number>("throttle.long.ttl", 60000),
-          limit: config.get<number>("throttle.long.limit", 200),
-        },
-        {
-          name: "strict",
-          ttl: config.get<number>("throttle.strict.ttl", 900000),
-          limit: config.get<number>("throttle.strict.limit", 5),
-        },
-      ],
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            name: "short",
+            ttl: config.get<number>("throttle.short.ttl", 1000),
+            limit: config.get<number>("throttle.short.limit", 10),
+          },
+          {
+            name: "medium",
+            ttl: config.get<number>("throttle.medium.ttl", 10000),
+            limit: config.get<number>("throttle.medium.limit", 50),
+          },
+          {
+            name: "long",
+            ttl: config.get<number>("throttle.long.ttl", 60000),
+            limit: config.get<number>("throttle.long.limit", 200),
+          },
+          {
+            name: "strict",
+            ttl: config.get<number>("throttle.strict.ttl", 900000),
+            limit: config.get<number>("throttle.strict.limit", 5),
+          },
+        ],
+        storage: new ThrottlerStorageRedisService({
+          host: config.get<string>("cache.redis.host", "localhost"),
+          port: config.get<number>("cache.redis.port", 6379),
+          password: config.get<string>("cache.redis.password", ""),
+        }),
+      }),
     }),
     CorrelationModule,
     LoggerModule,

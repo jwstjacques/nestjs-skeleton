@@ -1,5 +1,8 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import request from "supertest";
+import * as bcrypt from "bcrypt";
 import { AppModule } from "../../src/app.module";
 import { PrismaService } from "../../src/database/prisma.service";
 import { TestCleanup } from "../utils/test-cleanup";
@@ -30,34 +33,62 @@ describe("Rate Limiting (e2e)", () => {
     process.env.THROTTLE_SHORT_LIMIT = "2";
     process.env.THROTTLE_SHORT_TTL = "1000";
 
-    app = await Setup.createTestApp([AppModule]);
+    // enableThrottling: true overrides Redis storage with in-memory storage,
+    // giving this test suite isolated throttle state (no shared Redis counters
+    // from other test suites).
+    app = await Setup.createTestApp([AppModule], { enableThrottling: true });
     prisma = app.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
 
-    // Create a test user and get auth token
+    // Create the test user directly via Prisma to avoid rate limiting
+    // on the registration endpoint during setup. Then login to get tokens.
     const userData = TestDataFactory.createUserData();
-    const registerResponse = await request(app.getHttpServer())
-      .post("/api/v1/auth/register")
-      .send(userData)
-      .expect(HttpStatus.CREATED);
+    const hashedPassword = await bcrypt.hash(userData.password, 12);
 
-    accessToken = registerResponse.body.data.accessToken;
-    const userId = registerResponse.body.data.user.id;
+    const user = await prisma.user.create({
+      data: {
+        email: userData.email,
+        username: userData.username,
+        password: hashedPassword,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+      },
+    });
 
-    cleanup.trackUser(userId);
+    cleanup.trackUser(user.id);
 
-    // Create a test task to query
-    const taskResponse = await request(app.getHttpServer())
-      .post("/api/v1/tasks")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({
+    // Sign a JWT directly to avoid hitting the rate-limited login endpoint.
+    // The global CustomThrottlerGuard tracks by IP (127.0.0.1), and the
+    // auth e2e suite that runs before this one may have exhausted the
+    // throttle budget in Redis.
+    const jwtService = app.get(JwtService);
+    const configService = app.get(ConfigService);
+
+    accessToken = await jwtService.signAsync(
+      {
+        sub: user.id,
+        jti: `test-${Date.now()}`,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      {
+        secret: configService.getOrThrow<string>("security.jwt.secret"),
+        expiresIn: "15m",
+      },
+    );
+
+    // Create a test task directly via Prisma to avoid using throttled API
+    const task = await prisma.task.create({
+      data: {
         title: "Test task for rate limiting",
         description: "This task is used for rate limiting tests",
-        dueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-      })
-      .expect(HttpStatus.CREATED);
+        dueDate: new Date(Date.now() + 86400000),
+        userId: user.id,
+      },
+    });
 
-    taskId = taskResponse.body.data.id;
+    taskId = task.id;
   });
 
   afterAll(async () => {
@@ -67,6 +98,13 @@ describe("Rate Limiting (e2e)", () => {
 
     await cleanup.cleanupAll();
     await Setup.closeTestApp(app);
+  });
+
+  // Wait for the throttle window (1s) to expire between tests.
+  // Without this, a test that intentionally exceeds the limit
+  // poisons subsequent tests in the same suite.
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1100));
   });
 
   describe("Short-term Rate Limiting (per second)", () => {
@@ -211,17 +249,39 @@ describe("Rate Limiting (e2e)", () => {
 
   describe("Rate Limiting with Different User Sessions", () => {
     it("should enforce rate limits per user/IP separately", async () => {
-      // Create a second user
+      // Create a second user directly via Prisma (bypasses throttled API)
       const userData2 = TestDataFactory.createUserData();
-      const registerResponse2 = await request(app.getHttpServer())
-        .post("/api/v1/auth/register")
-        .send(userData2)
-        .expect(HttpStatus.CREATED);
+      const hashedPassword2 = await bcrypt.hash(userData2.password, 12);
 
-      const accessToken2 = registerResponse2.body.data.accessToken;
-      const userId2 = registerResponse2.body.data.user.id;
+      const user2 = await prisma.user.create({
+        data: {
+          email: userData2.email,
+          username: userData2.username,
+          password: hashedPassword2,
+          firstName: userData2.firstName,
+          lastName: userData2.lastName,
+        },
+      });
 
-      cleanup.trackUser(userId2);
+      cleanup.trackUser(user2.id);
+
+      // Sign JWT directly (bypasses throttled login endpoint)
+      const jwtService = app.get(JwtService);
+      const configService = app.get(ConfigService);
+
+      const accessToken2 = await jwtService.signAsync(
+        {
+          sub: user2.id,
+          jti: `test-${Date.now()}`,
+          username: user2.username,
+          email: user2.email,
+          role: user2.role,
+        },
+        {
+          secret: configService.getOrThrow<string>("security.jwt.secret"),
+          expiresIn: "15m",
+        },
+      );
 
       // First user makes 2 requests (hits limit)
       await Promise.all([

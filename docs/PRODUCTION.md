@@ -504,7 +504,7 @@ docker-compose up -d --no-deps --build api
 docker stats nestjs-api
 
 # Generate heap snapshot
-node --inspect=9229 dist/main.js
+node --inspect=9229 dist/src/main.js
 # Connect Chrome DevTools
 # Take heap snapshot
 ```

@@ -14,6 +14,11 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    console.error("FATAL: Refusing to seed a production database. Aborting.");
+    process.exit(1);
+  }
+
   console.log("🌱 Starting database seeding...");
 
   // Clear existing data
@@ -22,7 +27,8 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Hash password for demo users
-  const hashedPassword = await bcrypt.hash("Password123!", 10);
+  const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS || "12", 10);
+  const hashedPassword = await bcrypt.hash("Password123!", bcryptRounds);
 
   // Create admin user
   const adminUser = await prisma.user.create({

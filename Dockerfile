@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20.11.1-alpine3.19 AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:20.11.1-alpine3.19
 
 WORKDIR /app
 
@@ -58,8 +58,12 @@ USER nestjs
 # Expose port
 EXPOSE 3000
 
+# Heap limit ~75% of container memory. Default 384MB assumes 512MB container.
+# Override at deploy time via NODE_OPTIONS env var.
+ENV NODE_OPTIONS="--max-old-space-size=384"
+
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

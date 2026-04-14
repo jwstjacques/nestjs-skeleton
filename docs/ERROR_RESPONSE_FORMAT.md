@@ -39,7 +39,7 @@ interface ErrorResponse {
 ### Optional Fields
 
 - **`errorCode`** (string): Application-specific error code for programmatic error handling
-  - Examples: `TASK_NOT_FOUND`, `AUTH_EMAIL_EXISTS`, `VALIDATION_FAILED`
+  - Examples: `TASK_NOT_FOUND`, `AUTH_REGISTRATION_FAILED`, `VALIDATION_FAILED`
   - See `src/common/constants/error-codes.constants.ts` for all codes
 - **`details`** (unknown): Additional context-specific error information
   - Used for complex errors that need extra information
@@ -144,14 +144,14 @@ interface ErrorResponse {
 
 ### 409 Conflict
 
-**Resource already exists:**
+**Registration conflict:**
 
 ```json
 {
   "statusCode": 409,
-  "message": "Email already registered: test@example.com",
+  "message": "Registration failed",
   "error": "Conflict",
-  "errorCode": "AUTH_EMAIL_EXISTS",
+  "errorCode": "AUTH_REGISTRATION_FAILED",
   "timestamp": "2025-12-21T10:30:00.000Z",
   "path": "/api/v1/auth/register",
   "correlationId": "550e8400-e29b-41d4-a716-446655440000"
@@ -210,8 +210,7 @@ The application defines specific error codes for programmatic error handling. Th
 
 ### Authentication Error Codes
 
-- `AUTH_EMAIL_EXISTS` - Email already registered
-- `AUTH_USERNAME_EXISTS` - Username already taken
+- `AUTH_REGISTRATION_FAILED` - Registration failed (email or username conflict)
 - `AUTH_INVALID_CREDENTIALS` - Invalid login credentials
 - `AUTH_TOKEN_EXPIRED` - JWT token has expired
 - `AUTH_TOKEN_INVALID` - JWT token is invalid
@@ -392,7 +391,7 @@ For multiple examples:
       validationError: {
         value: { /* error response */ }
       },
-      emailExists: {
+      registrationConflict: {
         value: { /* error response */ }
       }
     }

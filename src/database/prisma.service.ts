@@ -4,6 +4,7 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { CorrelationService } from "@app/common/correlation";
+import { DB_CONNECTION } from "./database.constants";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -27,7 +28,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     try {
       url = new URL(dbUrl);
     } catch {
-      throw new Error(`Invalid DATABASE_URL format: ${dbUrl}`);
+      throw new Error("DATABASE_URL is not a valid URL");
     }
 
     // Get environment and SSL settings from config
@@ -41,7 +42,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       user: url.username,
       password: url.password,
       database: url.pathname.slice(1), // Remove leading slash
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      ssl: useSsl ? { rejectUnauthorized: true } : false,
+      max: DB_CONNECTION.MAX_POOL_SIZE,
+      min: DB_CONNECTION.MIN_POOL_SIZE,
+      idleTimeoutMillis: DB_CONNECTION.IDLE_TIMEOUT,
+      connectionTimeoutMillis: DB_CONNECTION.TIMEOUT,
     });
 
     // Create Prisma adapter for PostgreSQL

@@ -1,15 +1,19 @@
-import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus, Headers } from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiUnauthorizedResponse,
   ApiBearerAuth,
+  ApiTooManyRequestsResponse,
 } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto, AuthResponseDto, RefreshTokenDto } from "./dto";
 import { JwtRefreshGuard } from "./guards";
+import { LoginThrottlerGuard } from "./guards/login-throttler.guard";
 import { CurrentUser, Public } from "./decorators";
 import { AUTH_SWAGGER_EXAMPLES } from "./constants";
 
@@ -26,13 +30,26 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
-    description: "Invalid input data or user already exists",
+    description: "Invalid input data",
     content: {
       "application/json": {
-        examples: AUTH_SWAGGER_EXAMPLES.register,
+        examples: {
+          validationError: AUTH_SWAGGER_EXAMPLES.register.validationError,
+        },
       },
     },
   })
+  @ApiConflictResponse({
+    description: "Email or username already registered",
+    content: {
+      "application/json": {
+        examples: {
+          registrationConflict: AUTH_SWAGGER_EXAMPLES.register.registrationConflict,
+        },
+      },
+    },
+  })
+  @ApiTooManyRequestsResponse({ description: "Too many registration attempts" })
   async register(@Body() registerDto: RegisterDto) {
     const result = await this.authService.register(registerDto);
 
@@ -42,8 +59,10 @@ export class AuthController {
   @Public()
   @Post("login")
   @HttpCode(HttpStatus.OK)
+  @UseGuards(LoginThrottlerGuard)
   @ApiOperation({ summary: "Login with username/email and password" })
-  @ApiCreatedResponse({
+  @ApiTooManyRequestsResponse({ description: "Too many login attempts for this account" })
+  @ApiOkResponse({
     description: "User successfully logged in",
     type: AuthResponseDto,
   })
@@ -59,13 +78,33 @@ export class AuthController {
     return { data: result };
   }
 
+  @Post("logout")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Logout and revoke current access token" })
+  @ApiOkResponse({ description: "Successfully logged out" })
+  @ApiUnauthorizedResponse({ description: "Invalid or expired token" })
+  async logout(@Headers("authorization") authHeader: string) {
+    // Token is already validated by the global JwtAuthGuard.
+    // Decode the payload to get jti and exp for blacklisting.
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()) as {
+      jti: string;
+      exp: number;
+    };
+
+    await this.authService.logout(payload.jti, payload.exp);
+
+    return { data: { message: "Successfully logged out" } };
+  }
+
   @Public()
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtRefreshGuard)
   @ApiOperation({ summary: "Refresh access token using refresh token" })
   @ApiBearerAuth("JWT-auth")
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: "Tokens successfully refreshed",
     schema: {
       example: AUTH_SWAGGER_EXAMPLES.tokensRefreshed,
@@ -79,7 +118,7 @@ export class AuthController {
       },
     },
   })
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @CurrentUser("userId") userId: string) {
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @CurrentUser("id") userId: string) {
     const tokens = await this.authService.refreshTokens(userId);
 
     return { data: tokens };

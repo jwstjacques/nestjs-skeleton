@@ -3,15 +3,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 import { CorrelationService } from "../../common/correlation";
-
-interface RequestWithUser {
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  };
-}
+import { RequestWithUser } from "../interfaces/validated-user.interface";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {

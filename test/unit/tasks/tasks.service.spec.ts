@@ -1,7 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TasksService } from "../../../src/modules/tasks/tasks.service";
 import { TasksDal } from "../../../src/modules/tasks/tasks.dal";
-import { TaskNotFoundException } from "../../../src/modules/tasks/exceptions";
+import {
+  TaskNotFoundException,
+  TaskForbiddenException,
+  TaskConflictException,
+} from "../../../src/modules/tasks/exceptions";
 import { TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { TaskSortBy } from "../../../src/modules/tasks/dto/query-task.dto";
 import { SortOrder } from "../../../src/common/constants";
@@ -222,36 +226,53 @@ describe("TasksService", () => {
   });
 
   describe("update", () => {
+    // The update method now uses tasksDal.transaction() with optimistic locking.
+    // Mock transaction to execute the callback with a mock tx client.
+    const mockTx = {
+      task: {
+        findUnique: jest.fn(),
+        updateMany: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      mockTasksDal.transaction.mockImplementation(
+        async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
+      );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     describe("Success", () => {
       it("should update a task", async () => {
         const updateTaskDto = { title: "Updated Title" };
-        const updatedTask = { ...mockTask, ...updateTaskDto };
+        const updatedTask = { ...mockTask, ...updateTaskDto, version: 1 };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue(updatedTask);
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         const result = await service.update("test-task-id", updateTaskDto, mockTestUser);
 
         expect(result).toEqual(updatedTask);
-        expect(mockTasksDal.update).toHaveBeenCalled();
+        expect(mockTx.task.updateMany).toHaveBeenCalled();
       });
 
       it("should set completedAt when status changes to COMPLETED", async () => {
         const updateTaskDto = { status: TaskStatus.COMPLETED };
+        const updatedTask = { ...mockTask, status: TaskStatus.COMPLETED, completedAt: new Date() };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          status: TaskStatus.COMPLETED,
-          completedAt: new Date(),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: expect.any(Date) as Date,
+            data: expect.objectContaining({
+              completedAt: expect.any(Date) as Date,
+            }),
           }),
         );
       });
@@ -259,77 +280,219 @@ describe("TasksService", () => {
       it("should clear completedAt when status changes from COMPLETED", async () => {
         const updateTaskDto = { status: TaskStatus.TODO };
         const completedTask = { ...mockTask, status: TaskStatus.COMPLETED };
+        const updatedTask = { ...completedTask, status: TaskStatus.TODO, completedAt: null };
 
-        mockTasksDal.findUnique.mockResolvedValue(completedTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...completedTask,
-          status: TaskStatus.TODO,
-          completedAt: null,
-        });
+        mockTx.task.findUnique
+          .mockResolvedValueOnce(completedTask)
+          .mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: null,
+            data: expect.objectContaining({
+              completedAt: null,
+            }),
           }),
         );
       });
 
       it("should update task with dueDate", async () => {
         const updateTaskDto = { dueDate: "2025-12-31T00:00:00.000Z" };
+        const updatedTask = { ...mockTask, dueDate: new Date(updateTaskDto.dueDate) };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          dueDate: new Date(updateTaskDto.dueDate),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            dueDate: new Date(updateTaskDto.dueDate),
+            data: expect.objectContaining({
+              dueDate: new Date(updateTaskDto.dueDate),
+            }),
           }),
         );
       });
 
       it("should update task with completedAt", async () => {
         const updateTaskDto = { completedAt: "2025-12-10T00:00:00.000Z" };
+        const updatedTask = { ...mockTask, completedAt: new Date(updateTaskDto.completedAt) };
 
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.update.mockResolvedValue({
-          ...mockTask,
-          completedAt: new Date(updateTaskDto.completedAt),
-        });
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         await service.update("test-task-id", updateTaskDto, mockTestUser);
 
-        expect(mockTasksDal.update).toHaveBeenCalledWith(
-          "test-task-id",
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            completedAt: new Date(updateTaskDto.completedAt),
+            data: expect.objectContaining({
+              completedAt: new Date(updateTaskDto.completedAt),
+            }),
           }),
+        );
+      });
+
+      it("should preserve explicit completedAt when status is not COMPLETED", async () => {
+        const updateTaskDto = {
+          status: TaskStatus.IN_PROGRESS,
+          completedAt: "2025-12-10T00:00:00.000Z",
+        };
+        const updatedTask = {
+          ...mockTask,
+          status: TaskStatus.IN_PROGRESS,
+          completedAt: new Date(updateTaskDto.completedAt),
+        };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
+
+        await service.update("test-task-id", updateTaskDto, mockTestUser);
+
+        // The else-if fix means completedAt should be the explicit value,
+        // NOT null (which was the bug before the fix)
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              completedAt: new Date(updateTaskDto.completedAt),
+            }),
+          }),
+        );
+      });
+
+      it("should allow admin to update any task", async () => {
+        const adminUser = { id: "admin-id", role: UserRole.ADMIN };
+        const updateTaskDto = { title: "Admin Updated" };
+        const updatedTask = { ...mockTask, ...updateTaskDto, version: 1 };
+
+        mockTx.task.findUnique
+          .mockResolvedValueOnce(mockTask) // task owned by test-user-id
+          .mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
+
+        // Admin can update task owned by different user
+        const result = await service.update("test-task-id", updateTaskDto, adminUser);
+
+        expect(result).toEqual(updatedTask);
+      });
+
+      it("should include version check in updateMany where clause", async () => {
+        const updateTaskDto = { title: "Updated" };
+        const taskWithVersion3 = { ...mockTask, version: 3 };
+        const updatedTask = { ...taskWithVersion3, title: "Updated", version: 4 };
+
+        mockTx.task.findUnique
+          .mockResolvedValueOnce(taskWithVersion3)
+          .mockResolvedValueOnce(updatedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
+
+        await service.update("test-task-id", updateTaskDto, mockTestUser);
+
+        expect(mockTx.task.updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              id: "test-task-id",
+              version: 3, // Must match the version read from the database
+            }),
+            data: expect.objectContaining({
+              version: { increment: 1 },
+            }),
+          }),
+        );
+      });
+    });
+
+    describe("Failure", () => {
+      it("should throw TaskConflictException when version conflict occurs", async () => {
+        const updateTaskDto = { title: "Updated Title" };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 0 }); // Version conflict
+
+        await expect(service.update("test-task-id", updateTaskDto, mockTestUser)).rejects.toThrow(
+          TaskConflictException,
+        );
+      });
+
+      it("should throw TaskNotFoundException when task does not exist", async () => {
+        mockTx.task.findUnique.mockResolvedValueOnce(null);
+
+        await expect(service.update("test-task-id", { title: "X" }, mockTestUser)).rejects.toThrow(
+          TaskNotFoundException,
+        );
+      });
+
+      it("should throw TaskForbiddenException when user is not owner or admin", async () => {
+        const otherUser = { id: "other-user-id", role: UserRole.USER };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask);
+
+        await expect(service.update("test-task-id", { title: "X" }, otherUser)).rejects.toThrow(
+          TaskForbiddenException,
         );
       });
     });
   });
 
   describe("remove", () => {
+    const mockTx = {
+      task: {
+        findUnique: jest.fn(),
+        updateMany: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      mockTasksDal.transaction.mockImplementation(
+        async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
+      );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
     describe("Success", () => {
       it("should soft delete a task", async () => {
-        mockTasksDal.findUnique.mockResolvedValue(mockTask);
-        mockTasksDal.softDelete.mockResolvedValue({
-          ...mockTask,
-          deletedAt: new Date(),
-        });
+        const deletedTask = { ...mockTask, deletedAt: new Date() };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask).mockResolvedValueOnce(deletedTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 1 });
 
         const result = await service.remove("test-task-id", mockTestUser);
 
         expect(result.deletedAt).toBeDefined();
-        expect(mockTasksDal.softDelete).toHaveBeenCalledWith("test-task-id");
+        expect(mockTx.task.updateMany).toHaveBeenCalled();
+      });
+    });
+
+    describe("Failure", () => {
+      it("should throw TaskConflictException when version conflict occurs on delete", async () => {
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask);
+        mockTx.task.updateMany.mockResolvedValue({ count: 0 });
+
+        await expect(service.remove("test-task-id", mockTestUser)).rejects.toThrow(
+          TaskConflictException,
+        );
+      });
+
+      it("should throw TaskNotFoundException when task not found for deletion", async () => {
+        mockTx.task.findUnique.mockResolvedValueOnce(null);
+
+        await expect(service.remove("test-task-id", mockTestUser)).rejects.toThrow(
+          TaskNotFoundException,
+        );
+      });
+
+      it("should throw TaskForbiddenException when non-owner tries to delete", async () => {
+        const otherUser = { id: "other-user-id", role: UserRole.USER };
+
+        mockTx.task.findUnique.mockResolvedValueOnce(mockTask);
+
+        await expect(service.remove("test-task-id", otherUser)).rejects.toThrow(
+          TaskForbiddenException,
+        );
       });
     });
   });
@@ -360,15 +523,14 @@ describe("TasksService", () => {
     describe("Success", () => {
       it("should return task statistics", async () => {
         mockTasksDal.count.mockResolvedValueOnce(10);
-        mockTasksDal.groupBy
-          .mockResolvedValueOnce([
-            { status: TaskStatus.TODO, _count: 5 },
-            { status: TaskStatus.COMPLETED, _count: 5 },
-          ])
-          .mockResolvedValueOnce([
-            { priority: TaskPriority.HIGH, _count: 6 },
-            { priority: TaskPriority.LOW, _count: 4 },
-          ]);
+        mockTasksDal.countByStatus.mockResolvedValueOnce([
+          { status: TaskStatus.TODO, _count: 5 },
+          { status: TaskStatus.COMPLETED, _count: 5 },
+        ]);
+        mockTasksDal.countByPriority.mockResolvedValueOnce([
+          { priority: TaskPriority.HIGH, _count: 6 },
+          { priority: TaskPriority.LOW, _count: 4 },
+        ]);
         mockTasksDal.countOverdue.mockResolvedValueOnce(2);
 
         const result = await service.getStatistics(mockTestUser);
@@ -383,12 +545,13 @@ describe("TasksService", () => {
         const user = { id: "user-123", role: UserRole.USER };
 
         mockTasksDal.count.mockResolvedValueOnce(5);
-        mockTasksDal.groupBy
-          .mockResolvedValueOnce([
-            { status: TaskStatus.TODO, _count: 3 },
-            { status: TaskStatus.IN_PROGRESS, _count: 2 },
-          ])
-          .mockResolvedValueOnce([{ priority: TaskPriority.HIGH, _count: 5 }]);
+        mockTasksDal.countByStatus.mockResolvedValueOnce([
+          { status: TaskStatus.TODO, _count: 3 },
+          { status: TaskStatus.IN_PROGRESS, _count: 2 },
+        ]);
+        mockTasksDal.countByPriority.mockResolvedValueOnce([
+          { priority: TaskPriority.HIGH, _count: 5 },
+        ]);
         mockTasksDal.countOverdue.mockResolvedValueOnce(1);
 
         const result = await service.getStatistics(user);
@@ -433,7 +596,7 @@ describe("TasksService", () => {
   describe("findOneWithPermissions", () => {
     describe("Success", () => {
       it("should allow task owner to access their task", async () => {
-        const user = { id: "test-user-id", role: "USER" };
+        const user = { id: "test-user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
@@ -444,7 +607,7 @@ describe("TasksService", () => {
       });
 
       it("should allow admin to access any task", async () => {
-        const adminUser = { id: "admin-id", role: "ADMIN" };
+        const adminUser = { id: "admin-id", role: UserRole.ADMIN };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
@@ -455,18 +618,18 @@ describe("TasksService", () => {
     });
 
     describe("Failure", () => {
-      it("should throw ForbiddenException for non-owner/non-admin", async () => {
-        const otherUser = { id: "other-user-id", role: "USER" };
+      it("should throw TaskForbiddenException for non-owner/non-admin", async () => {
+        const otherUser = { id: "other-user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(mockTask);
 
         await expect(service.findOneWithPermissions("task-id", otherUser)).rejects.toThrow(
-          "You do not have permission to access this task",
+          TaskForbiddenException,
         );
       });
 
       it("should throw TaskNotFoundException if task does not exist", async () => {
-        const user = { id: "user-id", role: "USER" };
+        const user = { id: "user-id", role: UserRole.USER };
 
         mockTasksDal.findUnique.mockResolvedValue(null);
 

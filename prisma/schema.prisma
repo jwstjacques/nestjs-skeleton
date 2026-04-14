@@ -45,10 +45,11 @@ enum TaskPriority {
 
 model Task {
   id          String       @id @default(cuid())
-  title       String
-  description String?
+  title       String       @db.VarChar(200)
+  description String?     @db.VarChar(1000)
   status      TaskStatus   @default(TODO)
   priority    TaskPriority @default(MEDIUM)
+  version     Int          @default(0)
 
   // Date fields (stored in UTC)
   dueDate     DateTime?    @map("due_date") @db.Timestamptz
@@ -65,9 +66,8 @@ model Task {
   // Soft delete (UTC timestamp)
   deletedAt   DateTime?    @map("deleted_at") @db.Timestamptz
 
-  @@index([userId])
-  @@index([status])
-  @@index([priority])
+  @@index([userId, status])
+  @@index([userId, deletedAt])
   @@index([dueDate])
   @@index([createdAt])
   @@map("tasks")
@@ -101,7 +101,5 @@ model User {
   // Soft delete (UTC timestamp)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz
 
-  @@index([email])
-  @@index([username])
   @@map("users")
 }

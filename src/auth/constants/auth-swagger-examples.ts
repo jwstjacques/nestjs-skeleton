@@ -30,19 +30,11 @@ export const AUTH_SWAGGER_EXAMPLES = {
         AUTH_PATHS.REGISTER,
       ),
     },
-    emailExists: {
+    registrationConflict: {
       value: createSwaggerErrorExample(
         HttpStatus.CONFLICT,
-        "Email already registered: test@example.com",
-        ErrorCode.AUTH_EMAIL_EXISTS,
-        AUTH_PATHS.REGISTER,
-      ),
-    },
-    usernameExists: {
-      value: createSwaggerErrorExample(
-        HttpStatus.CONFLICT,
-        "Username already taken: johndoe",
-        ErrorCode.AUTH_USERNAME_EXISTS,
+        "Registration failed",
+        ErrorCode.AUTH_REGISTRATION_FAILED,
         AUTH_PATHS.REGISTER,
       ),
     },

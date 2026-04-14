@@ -1,11 +1,8 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-
-interface RequestWithUser {
-  user?: Record<string, unknown>;
-}
+import { RequestWithUser, ValidatedUser } from "../interfaces/validated-user.interface";
 
 export const CurrentUser = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext) => {
+  (data: keyof ValidatedUser | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
 

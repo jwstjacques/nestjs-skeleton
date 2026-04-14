@@ -214,8 +214,7 @@ The collection includes examples for common auth errors:
 
 **Register Errors:**
 
-- `AUTH_EMAIL_EXISTS` (409) - Email already registered
-- `AUTH_USERNAME_EXISTS` (409) - Username taken
+- `AUTH_REGISTRATION_FAILED` (409) - Registration failed (email or username conflict)
 - `VALIDATION_FAILED` (400) - Invalid email format or weak password
 
 **Login Errors:**
@@ -871,8 +870,7 @@ All error responses now include an `errorCode` field for consistent error handli
 | `AUTH_INVALID_CREDENTIALS`   | 401         | Invalid login credentials    |
 | `AUTH_TOKEN_EXPIRED`         | 401         | Authentication token expired |
 | `AUTH_TOKEN_INVALID`         | 401         | Invalid authentication token |
-| `AUTH_EMAIL_EXISTS`          | 409         | Email already registered     |
-| `AUTH_USERNAME_EXISTS`       | 409         | Username already taken       |
+| `AUTH_REGISTRATION_FAILED`   | 409         | Registration failed          |
 | `SYSTEM_RATE_LIMIT_EXCEEDED` | 429         | Too many requests            |
 
 ### Error Response Structure

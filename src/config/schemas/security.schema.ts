@@ -39,6 +39,13 @@ export const SecurityConfigSchema = z.object({
   }),
 
   /**
+   * Bcrypt cost factor (salt rounds) for password hashing
+   * OWASP 2024 recommendation: 12
+   * @default 12
+   */
+  bcryptRounds: z.coerce.number().int().min(10).max(20).default(12),
+
+  /**
    * CORS (Cross-Origin Resource Sharing) configuration
    */
   cors: z.object({

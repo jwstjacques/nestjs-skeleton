@@ -119,6 +119,8 @@ export const TASK_MESSAGES = {
   ALREADY_COMPLETED: (id: string) => `Task is already completed: ${id}`,
   INVALID_STATUS: (status: string) => `Invalid task status: ${status}`,
   INVALID_PRIORITY: (priority: string) => `Invalid task priority: ${priority}`,
+  CONFLICT: (id: string) =>
+    `Task ${id} was modified by another request. Please retry with the latest version.`,
 } as const;
 
 // ============================================================================
@@ -307,7 +309,6 @@ export const TASK_LIMITS = {
   TITLE_MIN_LENGTH: 3,
   TITLE_MAX_LENGTH: 200,
   DESCRIPTION_MAX_LENGTH: 1000,
-  MAX_TASKS_PER_USER: 1000,
   DEFAULT_PAGE_SIZE: 10,
   MAX_PAGE_SIZE: 100,
 } as const;

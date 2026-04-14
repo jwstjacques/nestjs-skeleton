@@ -1,7 +1,7 @@
-import { IsOptional, IsEnum, IsString } from "class-validator";
+import { IsOptional, IsEnum } from "class-validator";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { BaseSortByFields, SortOrder, ValidationMessages } from "../../../common/constants";
+import { BaseSortByFields, SortOrder } from "../../../common/constants";
 import { PaginatedQueryDto } from "../../../common/dto";
 import { TASK_VALIDATION_MESSAGES } from "../constants";
 
@@ -76,8 +76,4 @@ export class QueryTaskDto extends PaginatedQueryDto<TaskSortBy> {
   @IsOptional()
   @IsEnum(SortOrder, { message: TASK_VALIDATION_MESSAGES.SORT_ORDER_INVALID })
   sortOrder?: SortOrder = SortOrder.DESC;
-
-  @IsOptional()
-  @IsString({ message: ValidationMessages.mustBeString("User ID") })
-  userId?: string;
 }

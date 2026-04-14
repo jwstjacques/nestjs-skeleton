@@ -399,7 +399,7 @@ export class TasksService {
 
 // Module configuration
 @Module({
-  imports: [PrismaModule, CacheModule.register()],
+  imports: [DatabaseModule, CacheModule.register()],
   controllers: [TasksController],
   providers: [TasksService, TasksDal],
   exports: [TasksService],

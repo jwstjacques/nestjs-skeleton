@@ -64,10 +64,16 @@ export class HttpCacheInterceptor extends NestCacheInterceptor {
             );
           } else {
             // Cache successful response (fire and forget)
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            void this.cacheManager.set(cacheKey, response).then(() => {
-              this.logger.debug(`Cached successful response for key: ${cacheKey}`);
-            });
+            /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+            void this.cacheManager
+              .set(cacheKey, response)
+              .then(() => {
+                this.logger.debug(`Cached successful response for key: ${cacheKey}`);
+              })
+              .catch((err: Error) => {
+                this.logger.error(`Cache set error for key ${cacheKey}: ${err.message}`);
+              });
+            /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
           }
 
           observer.next(response);
@@ -88,36 +94,21 @@ export class HttpCacheInterceptor extends NestCacheInterceptor {
       return undefined;
     }
 
-    // Build cache key from URL and query parameters
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const url = httpAdapter.getRequestUrl(request);
 
-    // Extract user ID from JWT token (since interceptors run before guards)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const authHeader = request.headers?.authorization as string | undefined;
+    // Use the verified user object from the auth guard (populated by Passport
+    // after JWT signature verification). Never decode the JWT manually --
+    // an unverified token is attacker-controlled input.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userId: string | undefined = request.user?.id;
 
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
+    if (userId) {
+      const cacheKey = `${String(url)}:user:${userId}`;
 
-      try {
-        // Decode JWT (without verification - just to get the payload for cache key)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+      this.logger.debug(`Cache key with user: ${cacheKey}`);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        const userId = payload.sub || payload.id;
-
-        if (userId) {
-          const cacheKey = `${url}:user:${userId}`;
-
-          this.logger.debug(`Cache key with user: ${cacheKey}`);
-
-          return cacheKey;
-        }
-      } catch (error) {
-        // If JWT decode fails, fall back to URL-only cache key
-        this.logger.warn("Failed to decode JWT for cache key: " + (error as Error).message);
-      }
+      return cacheKey;
     }
 
     this.logger.debug(`Cache key without user: ${String(url)}`);

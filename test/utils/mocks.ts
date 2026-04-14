@@ -22,6 +22,7 @@ export const mockTask: Task = {
   priority: TaskPriority.MEDIUM,
   dueDate: null,
   completedAt: null,
+  version: 0,
   userId: "test-user-id",
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -59,7 +60,9 @@ export const mockTasksDal = {
   update: jest.fn(),
   softDelete: jest.fn(),
   delete: jest.fn(),
-  groupBy: jest.fn(),
+  countByStatus: jest.fn(),
+  countByPriority: jest.fn(),
   countOverdue: jest.fn(),
   findNextDueTask: jest.fn(),
+  transaction: jest.fn(),
 };

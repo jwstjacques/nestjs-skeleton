@@ -1,12 +1,26 @@
-import { Injectable, Logger, ForbiddenException } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Task, Prisma, TaskStatus, TaskPriority, UserRole } from "@prisma/client";
 import { CreateTaskDto, UpdateTaskDto, QueryTaskDto, PaginatedTasksResponseDto } from "./dto";
-import { TaskNotFoundException, TaskForbiddenException } from "./exceptions";
+import { TaskNotFoundException, TaskForbiddenException, TaskConflictException } from "./exceptions";
 import { TasksDal } from "./tasks.dal";
 
-interface UserContext {
+/**
+ * Context for the authenticated user making the request.
+ * Matches the shape returned by JWT strategy validate().
+ */
+export interface UserContext {
   id: string;
   role: UserRole;
+}
+
+/**
+ * Aggregated task statistics for a user or all users (admin).
+ */
+export interface TaskStatistics {
+  total: number;
+  byStatus: Record<TaskStatus, number>;
+  byPriority: Record<TaskPriority, number>;
+  overdue: number;
 }
 
 @Injectable()
@@ -102,58 +116,109 @@ export class TasksService {
   /**
    * Update a task
    * Admins can update any task, users only their own
+   * Uses optimistic concurrency control via version check within a transaction
    */
   async update(id: string, updateTaskDto: UpdateTaskDto, user: UserContext): Promise<Task> {
-    // Verify task exists and user has access
-    await this.findOne(id, user);
+    return this.tasksDal.transaction(async (tx) => {
+      const existing = await tx.task.findUnique({
+        where: { id, deletedAt: null },
+      });
 
-    this.logger.log(`Updating task ${id}`);
+      if (!existing) {
+        throw new TaskNotFoundException(id);
+      }
 
-    const updateData: Prisma.TaskUpdateInput = {
-      ...updateTaskDto,
-    };
+      if (user.role !== UserRole.ADMIN && existing.userId !== user.id) {
+        throw new TaskForbiddenException(id);
+      }
 
-    // Convert date strings to Date objects
-    if (updateTaskDto.dueDate) {
-      updateData.dueDate = new Date(updateTaskDto.dueDate);
-    }
+      this.logger.log(`Updating task ${id}`);
 
-    if (updateTaskDto.completedAt) {
-      updateData.completedAt = new Date(updateTaskDto.completedAt);
-    }
+      const updateData: Prisma.TaskUpdateInput = {
+        ...updateTaskDto,
+      };
 
-    // Auto-set completedAt when status changes to COMPLETED
-    if (updateTaskDto.status === TaskStatus.COMPLETED && !updateTaskDto.completedAt) {
-      updateData.completedAt = new Date();
-    }
+      // Convert date strings to Date objects
+      if (updateTaskDto.dueDate) {
+        updateData.dueDate = new Date(updateTaskDto.dueDate);
+      }
 
-    // Clear completedAt when status changes from COMPLETED
-    if (updateTaskDto.status && updateTaskDto.status !== TaskStatus.COMPLETED) {
-      updateData.completedAt = null;
-    }
+      if (updateTaskDto.completedAt) {
+        updateData.completedAt = new Date(updateTaskDto.completedAt);
+      }
 
-    const task = await this.tasksDal.update(id, updateData);
+      // Auto-set completedAt when status changes to COMPLETED
+      if (updateTaskDto.status === TaskStatus.COMPLETED && !updateTaskDto.completedAt) {
+        updateData.completedAt = new Date();
+      } else if (
+        updateTaskDto.status &&
+        updateTaskDto.status !== TaskStatus.COMPLETED &&
+        !updateTaskDto.completedAt
+      ) {
+        // Clear completedAt when status changes from COMPLETED,
+        // but only if no explicit completedAt was provided
+        updateData.completedAt = null;
+      }
 
-    this.logger.log(`Task ${id} updated successfully`);
+      // Transaction provides atomicity; version check provides concurrency control.
+      // Both are needed -- the transaction alone does NOT prevent lost updates
+      // under Read Committed isolation.
+      const result = await tx.task.updateMany({
+        where: { id, version: existing.version },
+        data: {
+          ...updateData,
+          version: { increment: 1 },
+        },
+      });
 
-    return task;
+      if (result.count === 0) {
+        throw new TaskConflictException(id);
+      }
+
+      const updated = await tx.task.findUnique({ where: { id } });
+
+      this.logger.log(`Task ${id} updated successfully`);
+
+      return updated!;
+    });
   }
 
   /**
    * Soft delete a task
    * Admins can delete any task, users only their own
+   * Uses optimistic concurrency control via version check within a transaction
    */
   async remove(id: string, user: UserContext): Promise<Task> {
-    // Verify task exists and user has access
-    await this.findOne(id, user);
+    return this.tasksDal.transaction(async (tx) => {
+      const existing = await tx.task.findUnique({
+        where: { id, deletedAt: null },
+      });
 
-    this.logger.log(`Soft deleting task ${id}`);
+      if (!existing) {
+        throw new TaskNotFoundException(id);
+      }
 
-    const task = await this.tasksDal.softDelete(id);
+      if (user.role !== UserRole.ADMIN && existing.userId !== user.id) {
+        throw new TaskForbiddenException(id);
+      }
 
-    this.logger.log(`Task ${id} soft deleted successfully`);
+      this.logger.log(`Soft deleting task ${id}`);
 
-    return task;
+      const result = await tx.task.updateMany({
+        where: { id, version: existing.version },
+        data: { deletedAt: new Date(), version: { increment: 1 } },
+      });
+
+      if (result.count === 0) {
+        throw new TaskConflictException(id);
+      }
+
+      const deleted = await tx.task.findUnique({ where: { id } });
+
+      this.logger.log(`Task ${id} soft deleted successfully`);
+
+      return deleted!;
+    });
   }
 
   /**
@@ -171,26 +236,17 @@ export class TasksService {
    * Get task statistics
    * Admins see stats for all tasks, users only their own
    */
-  async getStatistics(user: UserContext): Promise<object> {
+  async getStatistics(user: UserContext): Promise<TaskStatistics> {
     const where: Prisma.TaskWhereInput = {
       deletedAt: null,
       // Only filter by userId if user is not an admin
       ...(user.role !== UserRole.ADMIN && { userId: user.id }),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const [total, byStatus, byPriority, overdue] = await Promise.all([
+    const [total, byStatusResults, byPriorityResults, overdue] = await Promise.all([
       this.tasksDal.count(where),
-      this.tasksDal.groupBy({
-        by: ["status"],
-        where,
-        _count: true,
-      }),
-      this.tasksDal.groupBy({
-        by: ["priority"],
-        where,
-        _count: true,
-      }),
+      this.tasksDal.countByStatus(where),
+      this.tasksDal.countByPriority(where),
       // For overdue, we need to handle admin case differently
       user.role === UserRole.ADMIN
         ? this.tasksDal.count({
@@ -201,33 +257,23 @@ export class TasksService {
         : this.tasksDal.countOverdue(user.id),
     ]);
 
-    type GroupByResult = {
-      status?: TaskStatus;
-      priority?: TaskPriority;
-      _count: number;
-    };
-
     return {
       total,
-      byStatus: (byStatus as GroupByResult[]).reduce(
-        (acc: Record<string, number>, curr) => {
-          if (curr.status) {
-            acc[curr.status] = curr._count;
-          }
+      byStatus: byStatusResults.reduce(
+        (acc, curr) => {
+          acc[curr.status] = curr._count;
 
           return acc;
         },
-        {} as Record<string, number>,
+        {} as Record<TaskStatus, number>,
       ),
-      byPriority: (byPriority as GroupByResult[]).reduce(
-        (acc: Record<string, number>, curr) => {
-          if (curr.priority) {
-            acc[curr.priority as string] = curr._count;
-          }
+      byPriority: byPriorityResults.reduce(
+        (acc, curr) => {
+          acc[curr.priority] = curr._count;
 
           return acc;
         },
-        {} as Record<string, number>,
+        {} as Record<TaskPriority, number>,
       ),
       overdue,
     };
@@ -258,7 +304,7 @@ export class TasksService {
    * Find one task by ID with permission checks (v2 API)
    * User must be the task owner or an admin
    */
-  async findOneWithPermissions(id: string, user: { id: string; role: string }): Promise<Task> {
+  async findOneWithPermissions(id: string, user: { id: string; role: UserRole }): Promise<Task> {
     this.logger.log(`Finding task ${id} for user ${user.id} (with permission check)`);
 
     const task = await this.tasksDal.findUnique(id);
@@ -269,13 +315,13 @@ export class TasksService {
 
     // Permission check: user must be task owner or admin
     const isOwner = task.userId === user.id;
-    const isAdmin = user.role === "ADMIN";
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isOwner && !isAdmin) {
       this.logger.warn(
         `Access denied: User ${user.id} attempted to access task ${id} owned by ${task.userId}`,
       );
-      throw new ForbiddenException("You do not have permission to access this task");
+      throw new TaskForbiddenException(id);
     }
 
     this.logger.log(`Task ${id} retrieved successfully by user ${user.id}`);

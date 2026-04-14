@@ -64,12 +64,19 @@ import { TaskErrorCode } from "./constants";
  */
 
 /**
- * Throttle limits for task operations
- * Note: Decorators require static values at load time, before ConfigService is available.
- * These match the defaults in throttleConfig provider.
+ * Throttle limits for task operations.
+ *
+ * @nestjs/throttler decorators require compile-time constants -- ConfigService
+ * is not available at decoration time. These MUST match the throttler config
+ * in app.module.ts ThrottlerModule.forRootAsync(). If you change limits there,
+ * update them here too.
+ *
+ * grep marker: THROTTLE_SYNC
  */
 const THROTTLE_LIMITS = {
+  /** 10 requests per 1 second (THROTTLE_SYNC: throttle.short in app.module.ts) */
   SHORT: { ttl: 1000, limit: 10 },
+  /** 50 requests per 10 seconds (THROTTLE_SYNC: throttle.medium in app.module.ts) */
   MEDIUM: { ttl: 10000, limit: 50 },
 } as const;
 

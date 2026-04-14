@@ -45,6 +45,7 @@ export default registerAs("security", () => {
       refreshSecret: process.env.JWT_REFRESH_SECRET,
       refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
     },
+    bcryptRounds: process.env.BCRYPT_ROUNDS,
     cors: {
       origin: corsOrigin,
       credentials: process.env.CORS_CREDENTIALS,

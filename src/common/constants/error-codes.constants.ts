@@ -13,11 +13,11 @@ export enum ErrorCode {
   AUTH_TOKEN_INVALID = "AUTH_TOKEN_INVALID",
   AUTH_USER_NOT_FOUND = "AUTH_USER_NOT_FOUND",
   AUTH_USER_INACTIVE = "AUTH_USER_INACTIVE",
-  AUTH_EMAIL_EXISTS = "AUTH_EMAIL_EXISTS",
-  AUTH_USERNAME_EXISTS = "AUTH_USERNAME_EXISTS",
   AUTH_WEAK_PASSWORD = "AUTH_WEAK_PASSWORD",
   AUTH_UNAUTHORIZED = "AUTH_UNAUTHORIZED",
   AUTH_FORBIDDEN = "AUTH_FORBIDDEN",
+  AUTH_REGISTRATION_FAILED = "AUTH_REGISTRATION_FAILED",
+  AUTH_AUTHENTICATION_FAILED = "AUTH_AUTHENTICATION_FAILED",
 
   // User Errors (3000-3999)
   USER_NOT_FOUND = "USER_NOT_FOUND",
@@ -49,6 +49,9 @@ export enum ErrorCode {
   RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND",
   RESOURCE_CONFLICT = "RESOURCE_CONFLICT",
   RESOURCE_GONE = "RESOURCE_GONE",
+
+  // Task Concurrency Errors
+  TASK_CONFLICT = "TASK_CONFLICT",
 }
 
 /**
@@ -62,11 +65,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.AUTH_TOKEN_INVALID]: "Invalid authentication token",
   [ErrorCode.AUTH_USER_NOT_FOUND]: "User account not found",
   [ErrorCode.AUTH_USER_INACTIVE]: "User account is inactive",
-  [ErrorCode.AUTH_EMAIL_EXISTS]: "Email address is already registered",
-  [ErrorCode.AUTH_USERNAME_EXISTS]: "Username is already taken",
   [ErrorCode.AUTH_WEAK_PASSWORD]: "Password does not meet security requirements",
   [ErrorCode.AUTH_UNAUTHORIZED]: "You are not authorized to perform this action",
   [ErrorCode.AUTH_FORBIDDEN]: "Access to this resource is forbidden",
+  [ErrorCode.AUTH_REGISTRATION_FAILED]: "Registration failed",
+  [ErrorCode.AUTH_AUTHENTICATION_FAILED]: "Authentication failed",
 
   // Users
   [ErrorCode.USER_NOT_FOUND]: "User not found",
@@ -98,4 +101,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.RESOURCE_NOT_FOUND]: "Requested resource not found",
   [ErrorCode.RESOURCE_CONFLICT]: "Resource conflict",
   [ErrorCode.RESOURCE_GONE]: "Resource no longer available",
+
+  // Task Concurrency
+  [ErrorCode.TASK_CONFLICT]:
+    "Task was modified by another request. Please retry with the latest version.",
 };

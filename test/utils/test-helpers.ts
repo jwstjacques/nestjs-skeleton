@@ -5,9 +5,6 @@
 
 import { INestApplication, ValidationPipe, VersioningType } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { ThrottlerGuard } from "@nestjs/throttler";
-import { CustomThrottlerGuard } from "../../src/common/guards/custom-throttler.guard";
-import { LoginThrottlerGuard } from "../../src/auth/guards/login-throttler.guard";
 import request from "supertest";
 import { TransformInterceptor } from "../../src/common/interceptors/transform.interceptor";
 import { PrismaService } from "@app/database/prisma.service";
@@ -287,22 +284,29 @@ export class TestSetup {
       enableThrottling?: boolean;
     } = {},
   ): Promise<INestApplication> {
-    let builder = Test.createTestingModule({ imports });
-
     // Disable rate limiting by default in e2e tests to prevent 429s
     // when tests register multiple users across describe blocks.
     // Pass { enableThrottling: true } for rate-limiting-specific tests.
+    //
+    // Strategy: set all throttle tier limits to 10000 via env vars
+    // before the NestJS module boots. This affects both the module-level
+    // ThrottlerModule config AND the per-route @Throttle decorators
+    // (which reference the same named tiers). The env vars are read by
+    // the throttle config provider at startup.
     if (options.enableThrottling !== true) {
-      builder = builder
-        .overrideGuard(ThrottlerGuard)
-        .useValue({ canActivate: () => true })
-        .overrideGuard(CustomThrottlerGuard)
-        .useValue({ canActivate: () => true })
-        .overrideGuard(LoginThrottlerGuard)
-        .useValue({ canActivate: () => true });
+      process.env.THROTTLE_SHORT_LIMIT = "10000";
+      process.env.THROTTLE_SHORT_TTL = "60000";
+      process.env.THROTTLE_MEDIUM_LIMIT = "10000";
+      process.env.THROTTLE_MEDIUM_TTL = "60000";
+      process.env.THROTTLE_LONG_LIMIT = "10000";
+      process.env.THROTTLE_LONG_TTL = "60000";
+      process.env.THROTTLE_STRICT_LIMIT = "10000";
+      process.env.THROTTLE_STRICT_TTL = "60000";
     }
 
-    const moduleFixture: TestingModule = await builder.compile();
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports,
+    }).compile();
 
     const app = moduleFixture.createNestApplication();
 

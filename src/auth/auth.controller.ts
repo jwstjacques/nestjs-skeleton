@@ -10,7 +10,6 @@ import {
   ApiBearerAuth,
   ApiTooManyRequestsResponse,
 } from "@nestjs/swagger";
-import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto, AuthResponseDto, RefreshTokenDto } from "./dto";
 import { JwtRefreshGuard } from "./guards";
@@ -25,7 +24,6 @@ export class AuthController {
 
   @Public()
   @Post("register")
-  @Throttle({ strict: { ttl: 3600000, limit: 5 } })
   @ApiOperation({ summary: "Register a new user" })
   @ApiCreatedResponse({
     description: "User successfully registered",
@@ -62,7 +60,6 @@ export class AuthController {
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @UseGuards(LoginThrottlerGuard)
-  @Throttle({ strict: { ttl: 900000, limit: 5 } })
   @ApiOperation({ summary: "Login with username/email and password" })
   @ApiTooManyRequestsResponse({ description: "Too many login attempts for this account" })
   @ApiOkResponse({

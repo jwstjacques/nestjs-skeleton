@@ -52,18 +52,17 @@ Error codes are organized by domain and follow the pattern: `{DOMAIN}_{TYPE}_{SP
 
 ## Authentication Errors (AUTH\_\*)
 
-| Error Code                 | HTTP Status | Default Message                               | When It Occurs                      |
-| -------------------------- | ----------- | --------------------------------------------- | ----------------------------------- |
-| `AUTH_INVALID_CREDENTIALS` | 401         | Invalid email or password                     | Login with incorrect credentials    |
-| `AUTH_TOKEN_EXPIRED`       | 401         | Authentication token has expired              | JWT token is expired                |
-| `AUTH_TOKEN_INVALID`       | 401         | Invalid authentication token                  | JWT token is malformed or invalid   |
-| `AUTH_USER_NOT_FOUND`      | 401         | User account not found                        | User lookup fails during auth       |
-| `AUTH_USER_INACTIVE`       | 401         | User account is inactive                      | User account is deactivated         |
-| `AUTH_EMAIL_EXISTS`        | 409         | Email address is already registered           | Registration with existing email    |
-| `AUTH_USERNAME_EXISTS`     | 409         | Username is already taken                     | Registration with existing username |
-| `AUTH_WEAK_PASSWORD`       | 400         | Password does not meet security requirements  | Password fails validation rules     |
-| `AUTH_UNAUTHORIZED`        | 401         | You are not authorized to perform this action | General unauthorized access         |
-| `AUTH_FORBIDDEN`           | 403         | Access to this resource is forbidden          | Insufficient permissions            |
+| Error Code                 | HTTP Status | Default Message                               | When It Occurs                               |
+| -------------------------- | ----------- | --------------------------------------------- | -------------------------------------------- |
+| `AUTH_INVALID_CREDENTIALS` | 401         | Invalid email or password                     | Login with incorrect credentials             |
+| `AUTH_TOKEN_EXPIRED`       | 401         | Authentication token has expired              | JWT token is expired                         |
+| `AUTH_TOKEN_INVALID`       | 401         | Invalid authentication token                  | JWT token is malformed or invalid            |
+| `AUTH_USER_NOT_FOUND`      | 401         | User account not found                        | User lookup fails during auth                |
+| `AUTH_USER_INACTIVE`       | 401         | User account is inactive                      | User account is deactivated                  |
+| `AUTH_REGISTRATION_FAILED` | 409         | Registration failed                           | Registration with existing email or username |
+| `AUTH_WEAK_PASSWORD`       | 400         | Password does not meet security requirements  | Password fails validation rules              |
+| `AUTH_UNAUTHORIZED`        | 401         | You are not authorized to perform this action | General unauthorized access                  |
+| `AUTH_FORBIDDEN`           | 403         | Access to this resource is forbidden          | Insufficient permissions                     |
 
 ### Examples
 
@@ -81,14 +80,14 @@ Error codes are organized by domain and follow the pattern: `{DOMAIN}_{TYPE}_{SP
 }
 ```
 
-**Email Already Exists:**
+**Registration Conflict:**
 
 ```json
 {
   "statusCode": 409,
-  "message": "Email already registered: john@example.com",
+  "message": "Registration failed",
   "error": "Conflict",
-  "errorCode": "AUTH_EMAIL_EXISTS",
+  "errorCode": "AUTH_REGISTRATION_FAILED",
   "timestamp": "2025-12-13T10:30:00.000Z",
   "path": "/api/v1/auth/register",
   "correlationId": "550e8400-e29b-41d4-a716-446655440000"
@@ -267,7 +266,7 @@ export interface ApiError {
 {
   "errors": {
     "AUTH_INVALID_CREDENTIALS": "Invalid email or password",
-    "AUTH_EMAIL_EXISTS": "This email is already registered",
+    "AUTH_REGISTRATION_FAILED": "Registration failed",
     "TASK_NOT_FOUND": "The task you're looking for doesn't exist",
     "TASK_FORBIDDEN": "You don't have permission to access this task",
     "VALIDATION_INVALID_CUID": "Invalid ID format",
@@ -279,7 +278,7 @@ export interface ApiError {
 {
   "errors": {
     "AUTH_INVALID_CREDENTIALS": "Correo electrónico o contraseña inválidos",
-    "AUTH_EMAIL_EXISTS": "Este correo ya está registrado",
+    "AUTH_REGISTRATION_FAILED": "El registro ha fallado",
     "TASK_NOT_FOUND": "La tarea que buscas no existe",
     "TASK_FORBIDDEN": "No tienes permiso para acceder a esta tarea",
     "VALIDATION_INVALID_CUID": "Formato de ID inválido",

@@ -68,7 +68,7 @@ import { TasksModule } from "./modules/tasks/tasks.module";
       ],
     }),
     AppConfigModule,
-    PrismaModule,
+    DatabaseModule,
     CacheConfigModule,
     AuthModule,
     UsersModule,
@@ -823,7 +823,7 @@ export default registerAs("yourModule", () => {
 4. **Register in AppConfigModule**:
 
 ```typescript
-// src/config/app-config.module.ts
+// src/config/config.module.ts
 import yourModuleConfig from "./providers/your-module.config";
 
 @Module({

@@ -6,20 +6,13 @@ This document provides a complete reference for all environment variables used i
 
 ## Configuration Files
 
-- `.env.example` - Main example with all variables documented
-- `.env.template` - Detailed template with explanations
-- `.env.development.example` - Development environment preset
-- `.env.production.example` - Production environment preset
-- `.env.test.example` - Test environment preset
+- `.env.example` - Example with all variables documented and defaults
 
 ## Quick Start
 
 ```bash
-# For local development
-cp .env.development.example .env
-
-# Or start from template
-cp .env.template .env
+# Copy the example and fill in your values
+cp .env.example .env
 ```
 
 ## Variable Categories
@@ -216,12 +209,12 @@ npm run test:all
 
 All environment variables are validated at startup using Zod schemas located in:
 
-- `src/config/app.config.ts` - Application settings
-- `src/config/database.config.ts` - Database configuration
-- `src/config/jwt.config.ts` - JWT authentication
-- `src/config/redis.config.ts` - Redis cache
-- `src/config/throttler.config.ts` - Rate limiting
-- `src/config/pagination.config.ts` - Pagination settings
+- `src/config/schemas/app.schema.ts` - Application settings
+- `src/config/schemas/database.schema.ts` - Database configuration
+- `src/config/schemas/security.schema.ts` - JWT, CORS, Helmet
+- `src/config/schemas/cache.schema.ts` - Redis cache
+- `src/config/schemas/throttle.schema.ts` - Rate limiting
+- `src/config/schemas/pagination.schema.ts` - Pagination settings
 
 If validation fails, the application will:
 

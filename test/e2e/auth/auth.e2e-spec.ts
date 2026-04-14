@@ -94,7 +94,10 @@ describe("Auth API (e2e)", () => {
           .expect(HttpStatus.CONFLICT);
 
         expect(conflictResponse.body).toHaveProperty("statusCode", HttpStatus.CONFLICT);
-        expect(conflictResponse.body).toHaveProperty("errorCode", ErrorCode.AUTH_EMAIL_EXISTS);
+        expect(conflictResponse.body).toHaveProperty(
+          "errorCode",
+          ErrorCode.AUTH_REGISTRATION_FAILED,
+        );
       });
 
       it("should return 409 CONFLICT when registering with duplicate username", async () => {
@@ -125,7 +128,10 @@ describe("Auth API (e2e)", () => {
           .expect(HttpStatus.CONFLICT);
 
         expect(conflictResponse.body).toHaveProperty("statusCode", HttpStatus.CONFLICT);
-        expect(conflictResponse.body).toHaveProperty("errorCode", ErrorCode.AUTH_USERNAME_EXISTS);
+        expect(conflictResponse.body).toHaveProperty(
+          "errorCode",
+          ErrorCode.AUTH_REGISTRATION_FAILED,
+        );
       });
 
       it("should return 400 BAD_REQUEST with invalid email format", async () => {

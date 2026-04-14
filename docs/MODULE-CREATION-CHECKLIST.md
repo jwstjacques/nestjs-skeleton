@@ -161,7 +161,7 @@ Use this checklist when creating a new module to ensure all best practices are f
 
 - [ ] Update `<module>.module.ts`
 - [ ] Import required modules:
-  - [ ] `PrismaModule`
+  - [ ] `DatabaseModule`
   - [ ] `CacheModule` (if using cache)
   - [ ] Other dependencies
 - [ ] Declare controllers

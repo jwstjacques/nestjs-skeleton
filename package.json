@@ -87,6 +87,8 @@
     "setup": "npm install && docker-compose up -d postgres redis && npm run prisma:generate",
     "prepare": "husky",
     "openapi:export": "ts-node scripts/export-openapi.ts",
+    "=== QUALITY ===": "",
+    "check:docs": "./scripts/check-docs-staleness.sh",
     "=== GENERATORS ===": "",
     "generate:module": "./scripts/generate-module.sh"
   },

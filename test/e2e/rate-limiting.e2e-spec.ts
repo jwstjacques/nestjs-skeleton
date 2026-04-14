@@ -1,5 +1,6 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import request from "supertest";
+import * as bcrypt from "bcrypt";
 import { AppModule } from "../../src/app.module";
 import { PrismaService } from "../../src/database/prisma.service";
 import { TestCleanup } from "../utils/test-cleanup";
@@ -34,17 +35,31 @@ describe("Rate Limiting (e2e)", () => {
     prisma = app.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
 
-    // Create a test user and get auth token
+    // Create the test user directly via Prisma to avoid rate limiting
+    // on the registration endpoint during setup. Then login to get tokens.
     const userData = TestDataFactory.createUserData();
-    const registerResponse = await request(app.getHttpServer())
-      .post("/api/v1/auth/register")
-      .send(userData)
-      .expect(HttpStatus.CREATED);
+    const hashedPassword = await bcrypt.hash(userData.password, 12);
 
-    accessToken = registerResponse.body.data.accessToken;
-    const userId = registerResponse.body.data.user.id;
+    const user = await prisma.user.create({
+      data: {
+        email: userData.email,
+        username: userData.username,
+        password: hashedPassword,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+      },
+    });
 
-    cleanup.trackUser(userId);
+    cleanup.trackUser(user.id);
+
+    // Login to get tokens (login uses LoginThrottlerGuard which tracks
+    // by username, so a fresh username won't be rate-limited)
+    const loginResponse = await request(app.getHttpServer())
+      .post("/api/v1/auth/login")
+      .send({ username: userData.username, password: userData.password })
+      .expect(HttpStatus.OK);
+
+    accessToken = loginResponse.body.data.accessToken;
 
     // Create a test task to query
     const taskResponse = await request(app.getHttpServer())
@@ -53,7 +68,7 @@ describe("Rate Limiting (e2e)", () => {
       .send({
         title: "Test task for rate limiting",
         description: "This task is used for rate limiting tests",
-        dueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+        dueDate: new Date(Date.now() + 86400000).toISOString(),
       })
       .expect(HttpStatus.CREATED);
 

@@ -94,7 +94,16 @@ export class TasksDal {
    * @param id Task ID
    */
   async delete(id: string): Promise<void> {
-    await this.prisma.task.delete({ where: { id } });
+    try {
+      await this.prisma.task.delete({ where: { id } });
+    } catch (error) {
+      // P2025: record not found -- treat as idempotent (already deleted)
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return;
+      }
+
+      throw error;
+    }
   }
 
   /**

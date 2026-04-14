@@ -45,7 +45,10 @@ describe("Rate Limiting (e2e)", () => {
       const throttlerStorage = app.get(ThrottlerStorageRedisService);
 
       if (throttlerStorage.redis) {
-        const keys = await throttlerStorage.redis.keys("*throttler*");
+        // Throttler keys use pattern: {key:tierName}:hits and {key:tierName}:blocked
+        const hitKeys = await throttlerStorage.redis.keys("*:hits");
+        const blockKeys = await throttlerStorage.redis.keys("*:blocked");
+        const keys = [...hitKeys, ...blockKeys];
 
         if (keys.length > 0) {
           await throttlerStorage.redis.del(...keys);
@@ -123,7 +126,10 @@ describe("Rate Limiting (e2e)", () => {
       const throttlerStorage = app.get(ThrottlerStorageRedisService);
 
       if (throttlerStorage.redis) {
-        const keys = await throttlerStorage.redis.keys("*throttler*");
+        // Throttler keys use pattern: {key:tierName}:hits and {key:tierName}:blocked
+        const hitKeys = await throttlerStorage.redis.keys("*:hits");
+        const blockKeys = await throttlerStorage.redis.keys("*:blocked");
+        const keys = [...hitKeys, ...blockKeys];
 
         if (keys.length > 0) {
           await throttlerStorage.redis.del(...keys);

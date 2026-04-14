@@ -57,7 +57,7 @@
             }
           },
           "400": {
-            "description": "Invalid input data or user already exists",
+            "description": "Invalid input data",
             "content": {
               "application/json": {
                 "examples": {
@@ -67,18 +67,7 @@
                       "message": ["email must be an email"],
                       "error": "Bad Request",
                       "errorCode": "VALIDATION_FAILED",
-                      "timestamp": "2026-04-14T00:24:14.265Z",
-                      "path": "/api/v1/auth/register",
-                      "correlationId": "cm4abc123xyz456def789ghi"
-                    }
-                  },
-                  "registrationConflict": {
-                    "value": {
-                      "statusCode": 409,
-                      "message": "Registration failed",
-                      "error": "Conflict",
-                      "errorCode": "AUTH_REGISTRATION_FAILED",
-                      "timestamp": "2026-04-14T00:24:14.265Z",
+                      "timestamp": "2026-04-14T00:29:13.840Z",
                       "path": "/api/v1/auth/register",
                       "correlationId": "cm4abc123xyz456def789ghi"
                     }
@@ -86,6 +75,29 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Email or username already registered",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "registrationConflict": {
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Registration failed",
+                      "error": "Conflict",
+                      "errorCode": "AUTH_REGISTRATION_FAILED",
+                      "timestamp": "2026-04-14T00:29:13.840Z",
+                      "path": "/api/v1/auth/register",
+                      "correlationId": "cm4abc123xyz456def789ghi"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many registration attempts"
           }
         },
         "summary": "Register a new user",
@@ -127,7 +139,7 @@
                     "message": "Invalid email or password",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_INVALID_CREDENTIALS",
-                    "timestamp": "2026-04-14T00:24:14.265Z",
+                    "timestamp": "2026-04-14T00:29:13.840Z",
                     "path": "/api/v1/auth/login",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -184,7 +196,7 @@
                       "message": "Authentication token has expired",
                       "error": "Unauthorized",
                       "errorCode": "AUTH_TOKEN_EXPIRED",
-                      "timestamp": "2026-04-14T00:24:14.265Z",
+                      "timestamp": "2026-04-14T00:29:13.840Z",
                       "path": "/api/v1/auth/refresh",
                       "correlationId": "cm4abc123xyz456def789ghi"
                     }
@@ -195,7 +207,7 @@
                       "message": "Invalid authentication token",
                       "error": "Unauthorized",
                       "errorCode": "AUTH_TOKEN_INVALID",
-                      "timestamp": "2026-04-14T00:24:14.265Z",
+                      "timestamp": "2026-04-14T00:29:13.840Z",
                       "path": "/api/v1/auth/refresh",
                       "correlationId": "cm4abc123xyz456def789ghi"
                     }
@@ -250,7 +262,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.166Z",
+                    "timestamp": "2026-04-14T00:29:13.731Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -268,7 +280,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.166Z",
+                    "timestamp": "2026-04-14T00:29:13.731Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -286,7 +298,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.166Z",
+                    "timestamp": "2026-04-14T00:29:13.731Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -407,7 +419,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.166Z",
+                    "timestamp": "2026-04-14T00:29:13.732Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -425,7 +437,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.732Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -443,7 +455,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.732Z",
                     "path": "/api/v1/tasks",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -531,7 +543,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -549,7 +561,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -567,7 +579,7 @@
                     "message": "You do not have permission to access this task",
                     "error": "Forbidden",
                     "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -585,7 +597,7 @@
                     "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -603,7 +615,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -666,7 +678,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -684,7 +696,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -702,7 +714,7 @@
                     "message": "You do not have permission to access this task",
                     "error": "Forbidden",
                     "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -720,7 +732,7 @@
                     "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -738,7 +750,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.167Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -796,7 +808,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -814,7 +826,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -832,7 +844,7 @@
                     "message": "You do not have permission to access this task",
                     "error": "Forbidden",
                     "errorCode": "TASK_FORBIDDEN",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -850,7 +862,7 @@
                     "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -868,7 +880,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -928,7 +940,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id/purge",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -946,7 +958,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id/purge",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -964,7 +976,7 @@
                     "message": "Forbidden resource",
                     "error": "Forbidden",
                     "errorCode": "AUTH_FORBIDDEN",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id/purge",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -982,7 +994,7 @@
                     "message": "Task not found",
                     "error": "Not Found",
                     "errorCode": "TASK_NOT_FOUND",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id/purge",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -1000,7 +1012,7 @@
                     "message": "ThrottlerException: Too Many Requests",
                     "error": "Too Many Requests",
                     "errorCode": "SYSTEM_RATE_LIMIT_EXCEEDED",
-                    "timestamp": "2026-04-14T00:24:14.168Z",
+                    "timestamp": "2026-04-14T00:29:13.733Z",
                     "path": "/api/v1/tasks/:id/purge",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -1044,7 +1056,7 @@
                     "message": ["Validation error"],
                     "error": "Bad Request",
                     "errorCode": "VALIDATION_FAILED",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/next-due-date",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }
@@ -1062,7 +1074,7 @@
                     "message": "Unauthorized",
                     "error": "Unauthorized",
                     "errorCode": "AUTH_UNAUTHORIZED",
-                    "timestamp": "2026-04-14T00:24:14.174Z",
+                    "timestamp": "2026-04-14T00:29:13.739Z",
                     "path": "/api/v2/tasks/next-due-date",
                     "correlationId": "cm4abc123xyz456def789ghi"
                   }

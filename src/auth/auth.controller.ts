@@ -5,6 +5,7 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiUnauthorizedResponse,
   ApiBearerAuth,
   ApiTooManyRequestsResponse,
@@ -31,13 +32,26 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
-    description: "Invalid input data or user already exists",
+    description: "Invalid input data",
     content: {
       "application/json": {
-        examples: AUTH_SWAGGER_EXAMPLES.register,
+        examples: {
+          validationError: AUTH_SWAGGER_EXAMPLES.register.validationError,
+        },
       },
     },
   })
+  @ApiConflictResponse({
+    description: "Email or username already registered",
+    content: {
+      "application/json": {
+        examples: {
+          registrationConflict: AUTH_SWAGGER_EXAMPLES.register.registrationConflict,
+        },
+      },
+    },
+  })
+  @ApiTooManyRequestsResponse({ description: "Too many registration attempts" })
   async register(@Body() registerDto: RegisterDto) {
     const result = await this.authService.register(registerDto);
 

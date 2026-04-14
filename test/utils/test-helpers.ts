@@ -24,7 +24,7 @@ export class TestDataFactory {
     return {
       email: `test-${timestamp}@example.com`,
       username: `testuser${timestamp}`,
-      password: "Test123!@#",
+      password: "Test123!@",
       firstName: "Test",
       lastName: "User",
       ...overrides,

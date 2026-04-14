@@ -1,4 +1,6 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import request from "supertest";
 import * as bcrypt from "bcrypt";
 import { AppModule } from "../../src/app.module";
@@ -52,27 +54,38 @@ describe("Rate Limiting (e2e)", () => {
 
     cleanup.trackUser(user.id);
 
-    // Login to get tokens (login uses LoginThrottlerGuard which tracks
-    // by username, so a fresh username won't be rate-limited)
-    const loginResponse = await request(app.getHttpServer())
-      .post("/api/v1/auth/login")
-      .send({ username: userData.username, password: userData.password })
-      .expect(HttpStatus.OK);
+    // Sign a JWT directly to avoid hitting the rate-limited login endpoint.
+    // The global CustomThrottlerGuard tracks by IP (127.0.0.1), and the
+    // auth e2e suite that runs before this one may have exhausted the
+    // throttle budget in Redis.
+    const jwtService = app.get(JwtService);
+    const configService = app.get(ConfigService);
 
-    accessToken = loginResponse.body.data.accessToken;
+    accessToken = await jwtService.signAsync(
+      {
+        sub: user.id,
+        jti: `test-${Date.now()}`,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      {
+        secret: configService.getOrThrow<string>("security.jwt.secret"),
+        expiresIn: "15m",
+      },
+    );
 
-    // Create a test task to query
-    const taskResponse = await request(app.getHttpServer())
-      .post("/api/v1/tasks")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({
+    // Create a test task directly via Prisma to avoid using throttled API
+    const task = await prisma.task.create({
+      data: {
         title: "Test task for rate limiting",
         description: "This task is used for rate limiting tests",
-        dueDate: new Date(Date.now() + 86400000).toISOString(),
-      })
-      .expect(HttpStatus.CREATED);
+        dueDate: new Date(Date.now() + 86400000),
+        userId: user.id,
+      },
+    });
 
-    taskId = taskResponse.body.data.id;
+    taskId = task.id;
   });
 
   afterAll(async () => {

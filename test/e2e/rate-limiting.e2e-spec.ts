@@ -239,17 +239,39 @@ describe("Rate Limiting (e2e)", () => {
 
   describe("Rate Limiting with Different User Sessions", () => {
     it("should enforce rate limits per user/IP separately", async () => {
-      // Create a second user
+      // Create a second user directly via Prisma (bypasses throttled API)
       const userData2 = TestDataFactory.createUserData();
-      const registerResponse2 = await request(app.getHttpServer())
-        .post("/api/v1/auth/register")
-        .send(userData2)
-        .expect(HttpStatus.CREATED);
+      const hashedPassword2 = await bcrypt.hash(userData2.password, 12);
 
-      const accessToken2 = registerResponse2.body.data.accessToken;
-      const userId2 = registerResponse2.body.data.user.id;
+      const user2 = await prisma.user.create({
+        data: {
+          email: userData2.email,
+          username: userData2.username,
+          password: hashedPassword2,
+          firstName: userData2.firstName,
+          lastName: userData2.lastName,
+        },
+      });
 
-      cleanup.trackUser(userId2);
+      cleanup.trackUser(user2.id);
+
+      // Sign JWT directly (bypasses throttled login endpoint)
+      const jwtService = app.get(JwtService);
+      const configService = app.get(ConfigService);
+
+      const accessToken2 = await jwtService.signAsync(
+        {
+          sub: user2.id,
+          jti: `test-${Date.now()}`,
+          username: user2.username,
+          email: user2.email,
+          role: user2.role,
+        },
+        {
+          secret: configService.getOrThrow<string>("security.jwt.secret"),
+          expiresIn: "15m",
+        },
+      );
 
       // First user makes 2 requests (hits limit)
       await Promise.all([

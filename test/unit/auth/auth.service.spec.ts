@@ -6,6 +6,7 @@ import * as bcrypt from "bcrypt";
 import { AuthService } from "../../../src/auth/auth.service";
 import { PrismaService } from "../../../src/database/prisma.service";
 import { CorrelationService } from "../../../src/common/correlation";
+import { TokenBlacklistService } from "../../../src/auth/services/token-blacklist.service";
 import {
   RegistrationConflictException,
   AuthenticationFailedException,
@@ -116,6 +117,11 @@ const mockCorrelationService = {
   setUserId: jest.fn(),
 };
 
+const mockTokenBlacklist = {
+  revoke: jest.fn(),
+  isRevoked: jest.fn(),
+};
+
 // --- Helpers ---
 
 function setupConfigDefaults(): void {
@@ -162,6 +168,7 @@ describe("AuthService", () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: CorrelationService, useValue: mockCorrelationService },
+        { provide: TokenBlacklistService, useValue: mockTokenBlacklist },
       ],
     }).compile();
 
@@ -546,6 +553,38 @@ describe("AuthService", () => {
       await service.register(mockRegisterDto);
 
       expect(mockJwtService.signAsync).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // logout
+  // ---------------------------------------------------------------
+
+  describe("logout", () => {
+    it("should blacklist the token jti with remaining TTL", async () => {
+      const jti = "test-jti-uuid";
+      // Token expires 600 seconds from now
+      const exp = Math.floor(Date.now() / 1000) + 600;
+
+      await service.logout(jti, exp);
+
+      expect(mockTokenBlacklist.revoke).toHaveBeenCalledWith(jti, expect.any(Number));
+
+      // TTL should be approximately 600 (could be 599 due to timing)
+      const actualTtl = mockTokenBlacklist.revoke.mock.calls[0][1] as number;
+
+      expect(actualTtl).toBeGreaterThanOrEqual(598);
+      expect(actualTtl).toBeLessThanOrEqual(600);
+    });
+
+    it("should not blacklist an already-expired token", async () => {
+      const jti = "expired-jti";
+      // Token expired 60 seconds ago
+      const exp = Math.floor(Date.now() / 1000) - 60;
+
+      await service.logout(jti, exp);
+
+      expect(mockTokenBlacklist.revoke).not.toHaveBeenCalled();
     });
   });
 });

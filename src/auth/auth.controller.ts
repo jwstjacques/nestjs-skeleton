@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus, Headers } from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
@@ -79,6 +79,26 @@ export class AuthController {
     const result = await this.authService.login(loginDto);
 
     return { data: result };
+  }
+
+  @Post("logout")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Logout and revoke current access token" })
+  @ApiOkResponse({ description: "Successfully logged out" })
+  @ApiUnauthorizedResponse({ description: "Invalid or expired token" })
+  async logout(@Headers("authorization") authHeader: string) {
+    // Token is already validated by the global JwtAuthGuard.
+    // Decode the payload to get jti and exp for blacklisting.
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()) as {
+      jti: string;
+      exp: number;
+    };
+
+    await this.authService.logout(payload.jti, payload.exp);
+
+    return { data: { message: "Successfully logged out" } };
   }
 
   @Public()

@@ -6,9 +6,11 @@ import { UserRole } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
 import { AuthenticationFailedException, UserInactiveException } from "../../common/exceptions";
 import { ValidatedUser } from "../interfaces/validated-user.interface";
+import { TokenBlacklistService } from "../services/token-blacklist.service";
 
 export interface JwtPayload {
   sub: string;
+  jti: string;
   username: string;
   email: string;
   role: UserRole;
@@ -19,6 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -28,6 +31,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   }
 
   async validate(payload: JwtPayload): Promise<ValidatedUser> {
+    // Check if token has been revoked (logout)
+    if (payload.jti && (await this.tokenBlacklist.isRevoked(payload.jti))) {
+      throw new AuthenticationFailedException();
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub, deletedAt: null },
     });
@@ -41,7 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     }
 
     return {
-      id: payload.sub, // Changed from userId to id for @CurrentUser("id")
+      id: payload.sub,
       username: payload.username,
       email: payload.email,
       role: payload.role,

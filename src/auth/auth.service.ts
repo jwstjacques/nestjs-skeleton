@@ -3,10 +3,12 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { User } from "@prisma/client";
 import * as bcrypt from "bcrypt";
+import { randomUUID } from "node:crypto";
 import { PrismaService } from "../database/prisma.service";
 import { CorrelationService } from "../common/correlation";
 import { RegisterDto, LoginDto, AuthResponseDto, UserResponseDto } from "./dto";
 import { JwtPayload } from "./strategies";
+import { TokenBlacklistService } from "./services/token-blacklist.service";
 import { plainToInstance } from "class-transformer";
 import type { StringValue } from "ms";
 import { Prisma } from "@prisma/client";
@@ -25,6 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly correlationService: CorrelationService,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -182,11 +185,36 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
+  /**
+   * Logout by revoking the current access token.
+   * The token's jti is added to a Redis blacklist with a TTL matching
+   * the token's remaining lifetime. Subsequent requests with this token
+   * will be rejected by the JWT strategy.
+   */
+  async logout(jti: string, tokenExp: number): Promise<void> {
+    const context = this.correlationService.getLogContext();
+
+    // Calculate remaining TTL: token exp (seconds since epoch) minus now
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const remainingTtl = Math.max(tokenExp - nowSeconds, 0);
+
+    if (remainingTtl === 0) {
+      this.logger.debug(`${context} Token already expired, no blacklist needed`);
+
+      return;
+    }
+
+    await this.tokenBlacklist.revoke(jti, remainingTtl);
+
+    this.logger.log(`${context} User logged out, token ${jti} blacklisted for ${remainingTtl}s`);
+  }
+
   private async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
     const context = this.correlationService.getLogContext();
 
     const payload: JwtPayload = {
       sub: user.id,
+      jti: randomUUID(),
       username: user.username,
       email: user.email,
       role: user.role,

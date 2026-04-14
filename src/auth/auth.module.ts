@@ -6,6 +6,7 @@ import type { StringValue } from "ms";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { JwtStrategy, JwtRefreshStrategy } from "./strategies";
+import { TokenBlacklistService } from "./services/token-blacklist.service";
 import { DatabaseModule } from "../database/database.module";
 
 @Module({
@@ -24,7 +25,7 @@ import { DatabaseModule } from "../database/database.module";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  providers: [AuthService, TokenBlacklistService, JwtStrategy, JwtRefreshStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

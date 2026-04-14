@@ -30,7 +30,7 @@ describe("Rate Limiting (e2e)", () => {
     process.env.THROTTLE_SHORT_LIMIT = "2";
     process.env.THROTTLE_SHORT_TTL = "1000";
 
-    app = await Setup.createTestApp([AppModule]);
+    app = await Setup.createTestApp([AppModule], { enableThrottling: true });
     prisma = app.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
 

@@ -5,6 +5,9 @@
 
 import { INestApplication, ValidationPipe, VersioningType } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { CustomThrottlerGuard } from "../../src/common/guards/custom-throttler.guard";
+import { LoginThrottlerGuard } from "../../src/auth/guards/login-throttler.guard";
 import request from "supertest";
 import { TransformInterceptor } from "../../src/common/interceptors/transform.interceptor";
 import { PrismaService } from "@app/database/prisma.service";
@@ -278,11 +281,28 @@ export class TestSetup {
    */
   static async createTestApp(
     imports: any[],
-    options: { enableValidation?: boolean; globalPrefix?: string } = {},
+    options: {
+      enableValidation?: boolean;
+      globalPrefix?: string;
+      enableThrottling?: boolean;
+    } = {},
   ): Promise<INestApplication> {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports,
-    }).compile();
+    let builder = Test.createTestingModule({ imports });
+
+    // Disable rate limiting by default in e2e tests to prevent 429s
+    // when tests register multiple users across describe blocks.
+    // Pass { enableThrottling: true } for rate-limiting-specific tests.
+    if (options.enableThrottling !== true) {
+      builder = builder
+        .overrideGuard(ThrottlerGuard)
+        .useValue({ canActivate: () => true })
+        .overrideGuard(CustomThrottlerGuard)
+        .useValue({ canActivate: () => true })
+        .overrideGuard(LoginThrottlerGuard)
+        .useValue({ canActivate: () => true });
+    }
+
+    const moduleFixture: TestingModule = await builder.compile();
 
     const app = moduleFixture.createNestApplication();
 

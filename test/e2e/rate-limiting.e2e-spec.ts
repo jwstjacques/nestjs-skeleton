@@ -1,7 +1,6 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import request from "supertest";
 import * as bcrypt from "bcrypt";
 import { AppModule } from "../../src/app.module";
@@ -34,29 +33,12 @@ describe("Rate Limiting (e2e)", () => {
     process.env.THROTTLE_SHORT_LIMIT = "2";
     process.env.THROTTLE_SHORT_TTL = "1000";
 
+    // enableThrottling: true overrides Redis storage with in-memory storage,
+    // giving this test suite isolated throttle state (no shared Redis counters
+    // from other test suites).
     app = await Setup.createTestApp([AppModule], { enableThrottling: true });
     prisma = app.get<PrismaService>(PrismaService);
     cleanup = new TestCleanup(prisma);
-
-    // Flush stale throttle counters from previous test suites.
-    // The auth e2e suite shares the same Redis and its counters
-    // (written with longer TTLs) persist across app instances.
-    try {
-      const throttlerStorage = app.get(ThrottlerStorageRedisService);
-
-      if (throttlerStorage.redis) {
-        // Throttler keys use pattern: {key:tierName}:hits and {key:tierName}:blocked
-        const hitKeys = await throttlerStorage.redis.keys("*:hits");
-        const blockKeys = await throttlerStorage.redis.keys("*:blocked");
-        const keys = [...hitKeys, ...blockKeys];
-
-        if (keys.length > 0) {
-          await throttlerStorage.redis.del(...keys);
-        }
-      }
-    } catch {
-      // Redis not available or no throttler keys -- continue
-    }
 
     // Create the test user directly via Prisma to avoid rate limiting
     // on the registration endpoint during setup. Then login to get tokens.
@@ -118,26 +100,11 @@ describe("Rate Limiting (e2e)", () => {
     await Setup.closeTestApp(app);
   });
 
-  // Flush throttle keys before each test to ensure clean state.
-  // Without this, a test that intentionally exceeds the limit poisons
-  // subsequent tests in the same suite.
+  // Wait for the throttle window (1s) to expire between tests.
+  // Without this, a test that intentionally exceeds the limit
+  // poisons subsequent tests in the same suite.
   beforeEach(async () => {
-    try {
-      const throttlerStorage = app.get(ThrottlerStorageRedisService);
-
-      if (throttlerStorage.redis) {
-        // Throttler keys use pattern: {key:tierName}:hits and {key:tierName}:blocked
-        const hitKeys = await throttlerStorage.redis.keys("*:hits");
-        const blockKeys = await throttlerStorage.redis.keys("*:blocked");
-        const keys = [...hitKeys, ...blockKeys];
-
-        if (keys.length > 0) {
-          await throttlerStorage.redis.del(...keys);
-        }
-      }
-    } catch {
-      // continue
-    }
+    await new Promise((resolve) => setTimeout(resolve, 1100));
   });
 
   describe("Short-term Rate Limiting (per second)", () => {

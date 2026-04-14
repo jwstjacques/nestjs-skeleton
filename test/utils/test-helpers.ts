@@ -5,6 +5,7 @@
 
 import { INestApplication, ValidationPipe, VersioningType } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ThrottlerStorage, ThrottlerStorageService } from "@nestjs/throttler";
 import request from "supertest";
 import { TransformInterceptor } from "../../src/common/interceptors/transform.interceptor";
 import { PrismaService } from "@app/database/prisma.service";
@@ -304,9 +305,17 @@ export class TestSetup {
       process.env.THROTTLE_STRICT_TTL = "60000";
     }
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports,
-    }).compile();
+    let builder = Test.createTestingModule({ imports });
+
+    // When throttling is enabled (rate-limiting tests), replace Redis
+    // throttler storage with the built-in in-memory storage. This
+    // completely isolates the test from Redis throttle state left by
+    // other test suites that run in the same Jest process.
+    if (options.enableThrottling === true) {
+      builder = builder.overrideProvider(ThrottlerStorage).useClass(ThrottlerStorageService);
+    }
+
+    const moduleFixture: TestingModule = await builder.compile();
 
     const app = moduleFixture.createNestApplication();
 

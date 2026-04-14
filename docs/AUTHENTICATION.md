@@ -256,8 +256,9 @@ Duplicate username/email:
 \`\`\`json
 {
 "statusCode": 409,
-"message": "Email already registered",
-"error": "Conflict"
+"message": "Registration failed",
+"error": "Conflict",
+"errorCode": "AUTH_REGISTRATION_FAILED"
 }
 \`\`\`
 
@@ -350,8 +351,9 @@ curl -X POST http://localhost:3000/api/v1/auth/register \\
 \`\`\`json
 {
 "statusCode": 409,
-"message": "Email already registered",
+"message": "Registration failed",
 "error": "Conflict",
+"errorCode": "AUTH_REGISTRATION_FAILED",
 "correlationId": "a1b2c3d4-e5f6-4789-90ab-cdef12345678",
 "timestamp": "2025-11-28T10:30:00.000Z",
 "path": "/api/v1/auth/register"

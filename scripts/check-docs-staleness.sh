@@ -94,6 +94,8 @@ REMOVED_NAMES=(
   "UsernameExistsException"
   "cachemodule.ts"
   "HttpHealthIndicator"
+  "Email already registered"
+  "Username already taken"
 )
 
 MODULE_ERRORS=0

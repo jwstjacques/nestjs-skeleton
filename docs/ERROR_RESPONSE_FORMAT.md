@@ -391,7 +391,7 @@ For multiple examples:
       validationError: {
         value: { /* error response */ }
       },
-      emailExists: {
+      registrationConflict: {
         value: { /* error response */ }
       }
     }

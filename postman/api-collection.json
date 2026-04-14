@@ -71,7 +71,7 @@
               "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"cmixpvpir0000p9ypdk6za4qc\",\n      \"email\": \"test@example.com\",\n      \"username\": \"testuser\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"role\": \"USER\",\n      \"isActive\": true,\n      \"createdAt\": \"2025-12-13T10:30:00.000Z\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
             },
             {
-              "name": "Email Exists",
+              "name": "Registration Conflict",
               "originalRequest": {
                 "method": "POST",
                 "header": [],
@@ -379,7 +379,7 @@
               "_postman_previewlanguage": "json",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"data\": {\n    \"id\": \"cmiympu7x00002tsaknh5dqql\",\n    \"title\": \"Test Task from API\",\n    \"description\": \"Testing the CRUD endpoints\",\n    \"status\": \"TODO\",\n    \"priority\": \"HIGH\",\n    \"dueDate\": null,\n    \"completedAt\": null,\n    \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n    \"createdAt\": \"2025-12-09T13:41:39.260Z\",\n    \"updatedAt\": \"2025-12-09T13:41:39.260Z\"\n  }\n}"
+              "body": "{\n  \"data\": {\n    \"id\": \"cmiympu7x00002tsaknh5dqql\",\n    \"title\": \"Test Task from API\",\n    \"description\": \"Testing the CRUD endpoints\",\n    \"status\": \"TODO\",\n    \"priority\": \"HIGH\",\n    \"dueDate\": null,\n    \"completedAt\": null,\n    \"version\": 0,\n    \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n    \"createdAt\": \"2025-12-09T13:41:39.260Z\",\n    \"updatedAt\": \"2025-12-09T13:41:39.260Z\"\n  }\n}"
             },
             {
               "name": "Validation Error",
@@ -435,12 +435,6 @@
                   "key": "priority",
                   "value": "HIGH",
                   "description": "Filter by priority",
-                  "disabled": true
-                },
-                {
-                  "key": "userId",
-                  "value": "",
-                  "description": "Filter by user ID",
                   "disabled": true
                 },
                 {
@@ -509,7 +503,7 @@
               "_postman_previewlanguage": "json",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"data\": {\n    \"id\": \"cmiympu7x00002tsaknh5dqql\",\n    \"title\": \"Test Task\",\n    \"description\": \"Task description\",\n    \"status\": \"TODO\",\n    \"priority\": \"HIGH\",\n    \"dueDate\": null,\n    \"completedAt\": null,\n    \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n    \"createdAt\": \"2025-12-09T13:41:39.260Z\",\n    \"updatedAt\": \"2025-12-09T13:41:39.260Z\"\n  }\n}"
+              "body": "{\n  \"data\": {\n    \"id\": \"cmiympu7x00002tsaknh5dqql\",\n    \"title\": \"Test Task\",\n    \"description\": \"Task description\",\n    \"status\": \"TODO\",\n    \"priority\": \"HIGH\",\n    \"dueDate\": null,\n    \"completedAt\": null,\n    \"version\": 0,\n    \"userId\": \"cmixpvpir0000p9ypdk6za4qc\",\n    \"createdAt\": \"2025-12-09T13:41:39.260Z\",\n    \"updatedAt\": \"2025-12-09T13:41:39.260Z\"\n  }\n}"
             },
             {
               "name": "Invalid CUID",
@@ -630,17 +624,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/tasks/statistics?userId=",
+              "raw": "{{baseUrl}}/tasks/statistics",
               "host": ["{{baseUrl}}"],
-              "path": ["tasks", "statistics"],
-              "query": [
-                {
-                  "key": "userId",
-                  "value": "",
-                  "description": "Optional: Filter statistics by user ID",
-                  "disabled": true
-                }
-              ]
+              "path": ["tasks", "statistics"]
             },
             "description": "Get task statistics including counts by status and priority."
           },
@@ -851,7 +837,35 @@
               "host": ["{{baseUrl}}"],
               "path": ["health"]
             },
-            "description": "Check application and database health status"
+            "description": "Comprehensive health check. Verifies database, Redis, memory, and disk."
+          },
+          "response": []
+        },
+        {
+          "name": "Liveness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/liveness",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "liveness"]
+            },
+            "description": "Kubernetes liveness probe. Returns 200 if the service is alive."
+          },
+          "response": []
+        },
+        {
+          "name": "Readiness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/readiness",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "readiness"]
+            },
+            "description": "Kubernetes readiness probe. Verifies database and Redis are reachable."
           },
           "response": []
         }
